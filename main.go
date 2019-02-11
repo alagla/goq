@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -11,9 +10,13 @@ const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/re
 const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
 
 func main() {
-	var quplaYAML QuplaModule
-	must(readYAML(fname, &quplaYAML))
-	fmt.Printf("%+v", quplaYAML)
+	var quplaModule QuplaModule
+	must(readYAML(fname, &quplaModule))
+	err := quplaModule.analyze()
+	if err != nil {
+		errorf("Error: %v", err)
+	}
+	//fmt.Printf("%+v", quplaModule)
 }
 
 func must(err error) {
@@ -23,7 +26,7 @@ func must(err error) {
 }
 
 func readYAML(fname string, outStruct interface{}) error {
-	fmt.Printf("reading %v\n", fname)
+	infof("reading %v", fname)
 	yamlFile, err := os.Open(fname)
 	if err != nil {
 		return err
