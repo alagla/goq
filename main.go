@@ -7,15 +7,11 @@ import (
 	"os"
 )
 
-const fname1 = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
-
-//const fname2 = "C:/Users/evaldas/Documents/proj/site_data/test.yml"
-const fname = fname1
-
+const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
 const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
 
 func main() {
-	var quplaYAML QuplaModuleYAML
+	var quplaYAML QuplaModule
 	must(readYAML(fname, &quplaYAML))
 	fmt.Printf("%+v", quplaYAML)
 }

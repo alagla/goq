@@ -108,7 +108,7 @@ type QuplaTypeDef struct {
 	Fields map[string]*struct{ Size string } `yaml:"fields"`
 }
 
-type QuplaModuleYAML struct {
+type QuplaModule struct {
 	Types     map[string]*QuplaTypeDef `yaml:"types"`
 	Luts      map[string][]string      `yaml:"luts"`
 	Functions map[string]*QuplaFuncDef `yaml:"functions"`
