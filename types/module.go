@@ -1,4 +1,4 @@
-package main
+package types
 
 type QuplaModule struct {
 	Types     map[string]*QuplaTypeDef `yaml:"types"`
@@ -7,19 +7,19 @@ type QuplaModule struct {
 	Execs     []*QuplaExecStmt         `yaml:"execs"`
 }
 
-func (module *QuplaModule) analyze() error {
+func (module *QuplaModule) Analyze() error {
 	infof("Analysing Qupla module...")
 	var numTest, numEval, numErr int
 	var err error
 	for _, exec := range module.Execs {
-		err = exec.Expr.Analyze()
+		err = exec.Expr.Analyze(module)
 		if err != nil {
 			numErr++
 			errorf("%v", err)
 		}
 		exec.isTest = exec.Expected != nil
 		if exec.isTest {
-			err = exec.Expected.Analyze()
+			err = exec.Expected.Analyze(module)
 			if err != nil {
 				numErr++
 				errorf("%v", err)

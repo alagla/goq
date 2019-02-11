@@ -1,4 +1,4 @@
-package expr
+package types
 
 type QuplaCondExpr struct {
 	If   *QuplaExpression `yaml:"if"`
@@ -6,6 +6,6 @@ type QuplaCondExpr struct {
 	Else *QuplaExpression `yaml:"else"`
 }
 
-func (conExpr *QuplaCondExpr) Analyze() error {
+func (conExpr *QuplaCondExpr) Analyze(module *QuplaModule) error {
 	return nil
 }

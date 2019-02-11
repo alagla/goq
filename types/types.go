@@ -1,6 +1,4 @@
-package main
-
-import . "github.com/lunfardo314/goq/expr"
+package types
 
 type QuplaExecStmt struct {
 	Expr     *QuplaExpression `yaml:"expr"`

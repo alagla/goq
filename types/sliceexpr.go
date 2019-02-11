@@ -1,4 +1,4 @@
-package expr
+package types
 
 type QuplaSliceExpr struct {
 	Name  string           `yaml:"name"`
@@ -6,9 +6,9 @@ type QuplaSliceExpr struct {
 	End   *QuplaExpression `yaml:"end,omitempty"`
 }
 
-func (sliceExpr *QuplaSliceExpr) Analyze() error {
-	if err := sliceExpr.Start.Analyze(); err != nil {
+func (sliceExpr *QuplaSliceExpr) Analyze(module *QuplaModule) error {
+	if err := sliceExpr.Start.Analyze(module); err != nil {
 		return err
 	}
-	return sliceExpr.End.Analyze()
+	return sliceExpr.End.Analyze(module)
 }

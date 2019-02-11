@@ -1,6 +1,8 @@
-package expr
+package types
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const (
 	ExprType_CondExpr      = 0
@@ -19,7 +21,7 @@ const (
 )
 
 type ExpressionInterface interface {
-	Analyze() error
+	Analyze(*QuplaModule) error
 }
 
 type QuplaExpression struct {
@@ -41,7 +43,7 @@ type QuplaExpression struct {
 	theExpression ExpressionInterface
 }
 
-func (expr *QuplaExpression) Analyze() error {
+func (expr *QuplaExpression) Analyze(module *QuplaModule) error {
 	if expr == nil {
 		return nil
 	}
@@ -115,5 +117,5 @@ func (expr *QuplaExpression) Analyze() error {
 	if numCases != 1 {
 		return fmt.Errorf("internal error: must be exactly one expression case. Probably incorrect YAML")
 	}
-	return expr.theExpression.Analyze()
+	return expr.theExpression.Analyze(module)
 }

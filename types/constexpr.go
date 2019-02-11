@@ -1,4 +1,4 @@
-package expr
+package types
 
 type QuplaConstExpr struct {
 	Operator string           `yaml:"operator"`
@@ -21,24 +21,24 @@ type QuplaConstNumber struct {
 	Value string `yaml:"value"`
 }
 
-func (e *QuplaConstExpr) Analyze() error {
-	if err := e.Lhs.Analyze(); err != nil {
+func (e *QuplaConstExpr) Analyze(module *QuplaModule) error {
+	if err := e.Lhs.Analyze(module); err != nil {
 		return err
 	}
-	return e.Rhs.Analyze()
+	return e.Rhs.Analyze(module)
 }
 
-func (e *QuplaConstTerm) Analyze() error {
-	if err := e.Lhs.Analyze(); err != nil {
+func (e *QuplaConstTerm) Analyze(module *QuplaModule) error {
+	if err := e.Lhs.Analyze(module); err != nil {
 		return err
 	}
-	return e.Rhs.Analyze()
+	return e.Rhs.Analyze(module)
 }
 
-func (e *QuplaConstTypeName) Analyze() error {
+func (e *QuplaConstTypeName) Analyze(module *QuplaModule) error {
 	return nil
 }
 
-func (e *QuplaConstNumber) Analyze() error {
+func (e *QuplaConstNumber) Analyze(module *QuplaModule) error {
 	return nil
 }
