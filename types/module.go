@@ -33,3 +33,11 @@ func (module *QuplaModule) Analyze() error {
 	infof("Done analyzing")
 	return nil
 }
+
+func (module *QuplaModule) FindFuncDef(name string) *QuplaFuncDef {
+	ret, ok := module.Functions[name]
+	if ok {
+		return ret
+	}
+	return nil
+}
