@@ -2,13 +2,37 @@ package types
 
 type QuplaModule struct {
 	Types     map[string]*QuplaTypeDef `yaml:"types"`
-	Luts      map[string][]string      `yaml:"luts"`
+	Luts      map[string]*QuplaLutDef  `yaml:"luts"`
 	Functions map[string]*QuplaFuncDef `yaml:"functions"`
 	Execs     []*QuplaExecStmt         `yaml:"execs"`
 }
 
-func (module *QuplaModule) Analyze() error {
-	infof("Analysing Qupla module...")
+func (module *QuplaModule) Analyze() bool {
+	al := module.AnalyzeLuts()
+	ae := module.AnalyzeExecs()
+	return al && ae
+}
+
+func (module *QuplaModule) AnalyzeLuts() bool {
+	infof("Analyzing luts...")
+	var numErr int
+	for _, lutDef := range module.Luts {
+		if err := lutDef.Analyze(module); err != nil {
+			numErr++
+			errorf("Error in lut '%v': %v", lutDef.LutTable, err)
+		}
+	}
+	infof("Number of LUTs found: %v", len(module.Luts))
+	if numErr == 0 {
+		infof("Done analyzing LUTs. No errors.")
+	} else {
+		errorf("Failed analyzing LUTs. Errors found: %v", numErr)
+	}
+	return numErr == 0
+}
+
+func (module *QuplaModule) AnalyzeExecs() bool {
+	infof("Analyzing execs...")
 	var numTest, numEval, numErr int
 	var err error
 	for _, exec := range module.Execs {
@@ -29,13 +53,25 @@ func (module *QuplaModule) Analyze() error {
 			numEval++
 		}
 	}
-	infof("Found tests: %v, evals: %v, errors: %v", numTest, numEval, numErr)
-	infof("Done analyzing")
-	return nil
+	infof("Found tests: %v, evals: %v", numTest, numEval)
+	if numErr == 0 {
+		infof("Done analyzing execs. No errors.")
+	} else {
+		errorf("Failed analyzing execs. Errors found: %v", numErr)
+	}
+	return numErr == 0
 }
 
 func (module *QuplaModule) FindFuncDef(name string) *QuplaFuncDef {
 	ret, ok := module.Functions[name]
+	if ok {
+		return ret
+	}
+	return nil
+}
+
+func (module *QuplaModule) FindLUTDef(name string) *QuplaLutDef {
+	ret, ok := module.Luts[name]
 	if ok {
 		return ret
 	}

@@ -13,11 +13,11 @@ const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
 func main() {
 	var quplaModule types.QuplaModule
 	must(readYAML(fname, &quplaModule))
-	err := quplaModule.Analyze()
-	if err != nil {
-		errorf("Error: %v", err)
+	if !quplaModule.Analyze() {
+		errorf("Failed analyzing Qupla module")
 	}
 	//fmt.Printf("%+v", quplaModule)
+	infof("Ciao!")
 }
 
 func must(err error) {
