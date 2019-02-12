@@ -3,8 +3,8 @@ package types
 import "fmt"
 
 type QuplaLutExpr struct {
-	Name string             `yaml:"name"`
-	Args []*QuplaExpression `yaml:"args"`
+	Name string                    `yaml:"name"`
+	Args []*QuplaExpressionWrapper `yaml:"args"`
 	//----
 	lutDef *QuplaLutDef
 }

@@ -1,9 +1,9 @@
 package types
 
 type QuplaCondExpr struct {
-	If   *QuplaExpression `yaml:"if"`
-	Then *QuplaExpression `yaml:"then"`
-	Else *QuplaExpression `yaml:"else"`
+	If   *QuplaExpressionWrapper `yaml:"if"`
+	Then *QuplaExpressionWrapper `yaml:"then"`
+	Else *QuplaExpressionWrapper `yaml:"else"`
 }
 
 func (conExpr *QuplaCondExpr) Analyze(module *QuplaModule) error {

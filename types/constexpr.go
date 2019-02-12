@@ -1,15 +1,15 @@
 package types
 
 type QuplaConstExpr struct {
-	Operator string           `yaml:"operator"`
-	Lhs      *QuplaExpression `yaml:"lhs"`
-	Rhs      *QuplaExpression `yaml:"rhs"`
+	Operator string                  `yaml:"operator"`
+	Lhs      *QuplaExpressionWrapper `yaml:"lhs"`
+	Rhs      *QuplaExpressionWrapper `yaml:"rhs"`
 }
 
 type QuplaConstTerm struct {
-	Operator string           `yaml:"operator"`
-	Lhs      *QuplaExpression `yaml:"lhs"`
-	Rhs      *QuplaExpression `yaml:"rhs"`
+	Operator string                  `yaml:"operator"`
+	Lhs      *QuplaExpressionWrapper `yaml:"lhs"`
+	Rhs      *QuplaExpressionWrapper `yaml:"rhs"`
 }
 
 type QuplaConstTypeName struct {

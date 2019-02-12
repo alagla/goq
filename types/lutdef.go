@@ -11,7 +11,7 @@ type QuplaLutDef struct {
 	//----
 	inputSize      int
 	outputSize     int
-	lutOutputTable []Trits
+	lutLookupTable []Trits
 }
 
 type lutTableEntry struct {
@@ -65,15 +65,26 @@ func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) error {
 		outputs = append(outputs, outTrits)
 	}
 	// index it to the final table
-	lutDef.lutOutputTable = make([]Trits, pow3[lutDef.inputSize])
+	lutDef.lutLookupTable = make([]Trits, pow3[lutDef.inputSize])
 	for i, inp := range inputs {
 		idx := tritsToIdx(inp)
-		if lutDef.lutOutputTable[idx] != nil {
+		if lutDef.lutLookupTable[idx] != nil {
 			return fmt.Errorf("duplicated input in LUT table")
 		}
-		lutDef.lutOutputTable[idx] = outputs[i]
+		lutDef.lutLookupTable[idx] = outputs[i]
 	}
 	return nil
+}
+
+func (lutDef *QuplaLutDef) lookupWithCheck(t Trits) (Trits, error) {
+	if len(t) != lutDef.inputSize {
+		return nil, fmt.Errorf("wrong input size")
+	}
+	return lutDef.lookup(t), nil
+}
+
+func (lutDef *QuplaLutDef) lookup(t Trits) Trits {
+	return lutDef.lutLookupTable[tritsToIdx(t)]
 }
 
 func tritsToIdx(trits Trits) int64 {

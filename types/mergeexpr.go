@@ -1,8 +1,8 @@
 package types
 
 type QuplaMergeExpr struct {
-	Lhs *QuplaExpression `yaml:"lhs"`
-	Rhs *QuplaExpression `yaml:"rhs"`
+	Lhs *QuplaExpressionWrapper `yaml:"lhs"`
+	Rhs *QuplaExpressionWrapper `yaml:"rhs"`
 }
 
 func (e *QuplaMergeExpr) Analyze(module *QuplaModule) error {

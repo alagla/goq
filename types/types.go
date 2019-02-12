@@ -1,20 +1,20 @@
 package types
 
 type QuplaExecStmt struct {
-	Expr     *QuplaExpression `yaml:"expr"`
-	Expected *QuplaExpression `yaml:"expected,omitempty"`
+	Expr     *QuplaExpressionWrapper `yaml:"expr"`
+	Expected *QuplaExpressionWrapper `yaml:"expected,omitempty"`
 	//---
 	isTest bool
 }
 
 type QuplaAssignStmt struct {
-	Lhs string           `yaml:"lhs"`
-	Rhs *QuplaExpression `yaml:"rhs"`
+	Lhs string                  `yaml:"lhs"`
+	Rhs *QuplaExpressionWrapper `yaml:"rhs"`
 }
 
 type QuplaFuncParam struct {
-	Name string           `yaml:"name"`
-	Type *QuplaExpression `yaml:"type"`
+	Name string                  `yaml:"name"`
+	Type *QuplaExpressionWrapper `yaml:"type"`
 }
 
 type QuplaEnvStmt struct {
@@ -23,14 +23,14 @@ type QuplaEnvStmt struct {
 }
 
 type QuplaFuncDef struct {
-	ReturnType *QuplaExpression   `yaml:"returnType"`
-	Params     []*QuplaFuncParam  `yaml:"params"`
-	Env        []*QuplaEnvStmt    `yaml:"env,omitempty"`
-	Assigns    []*QuplaAssignStmt `yaml:"assigns,omitempty"`
-	Return     *QuplaExpression   `yaml:"return"`
+	ReturnType *QuplaExpressionWrapper `yaml:"returnType"`
+	Params     []*QuplaFuncParam       `yaml:"params"`
+	Env        []*QuplaEnvStmt         `yaml:"env,omitempty"`
+	Assigns    []*QuplaAssignStmt      `yaml:"assigns,omitempty"`
+	Return     *QuplaExpressionWrapper `yaml:"return"`
 }
 
 type QuplaTypeDef struct {
 	Size   string                            `yaml:"size"`
-	Fields map[string]*struct{ Size string } `yaml:"fields"`
+	Fields map[string]*struct{ Size string } `yaml:"fields,omitempty"`
 }

@@ -1,8 +1,8 @@
 package types
 
 type QuplaTypeExpr struct {
-	Type   *QuplaExpression   `yaml:"type"`
-	Fields []*QuplaExpression `yaml:"fields"`
+	Type   *QuplaExpressionWrapper   `yaml:"type"`
+	Fields []*QuplaExpressionWrapper `yaml:"fields"`
 }
 
 func (e *QuplaTypeExpr) Analyze(mod *QuplaModule) error {

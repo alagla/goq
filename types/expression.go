@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	ExprType_CondExpr      = 0
+	ExprType_Undef         = 0
+	ExprType_CondExpr      = ExprType_Undef + 1
 	ExprType_LutExpr       = ExprType_CondExpr + 1
 	ExprType_SliceExpr     = ExprType_LutExpr + 1
 	ExprType_ValueExpr     = ExprType_SliceExpr + 1
@@ -24,7 +25,7 @@ type ExpressionInterface interface {
 	Analyze(*QuplaModule) error
 }
 
-type QuplaExpression struct {
+type QuplaExpressionWrapper struct {
 	CondExpr      *QuplaCondExpr      `yaml:"CondExpr,omitempty"`
 	LutExpr       *QuplaLutExpr       `yaml:"LutExpr,omitempty"`
 	SliceExpr     *QuplaSliceExpr     `yaml:"SliceExpr,omitempty"`
@@ -43,7 +44,7 @@ type QuplaExpression struct {
 	theExpression ExpressionInterface
 }
 
-func (expr *QuplaExpression) Analyze(module *QuplaModule) error {
+func (expr *QuplaExpressionWrapper) Analyze(module *QuplaModule) error {
 	if expr == nil {
 		return nil
 	}
@@ -118,4 +119,12 @@ func (expr *QuplaExpression) Analyze(module *QuplaModule) error {
 		return fmt.Errorf("internal error: must be exactly one expression case. Probably incorrect YAML")
 	}
 	return expr.theExpression.Analyze(module)
+}
+
+func (expr *QuplaExpressionWrapper) IsType(exprType int) bool {
+	return expr.exprType == exprType
+}
+
+func (expr *QuplaExpressionWrapper) Unwrap() interface{} {
+	return expr.theExpression
 }
