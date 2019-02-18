@@ -7,11 +7,6 @@ type QuplaExecStmt struct {
 	isTest bool
 }
 
-type QuplaAssignStmt struct {
-	Lhs string                  `yaml:"lhs"`
-	Rhs *QuplaExpressionWrapper `yaml:"rhs"`
-}
-
 type QuplaFuncParam struct {
 	Name string                  `yaml:"name"`
 	Type *QuplaExpressionWrapper `yaml:"type"`
@@ -23,11 +18,11 @@ type QuplaEnvStmt struct {
 }
 
 type QuplaFuncDef struct {
-	ReturnType *QuplaExpressionWrapper `yaml:"returnType"`
-	Params     []*QuplaFuncParam       `yaml:"params"`
-	Env        []*QuplaEnvStmt         `yaml:"env,omitempty"`
-	Assigns    []*QuplaAssignStmt      `yaml:"assigns,omitempty"`
-	Return     *QuplaExpressionWrapper `yaml:"return"`
+	ReturnType *QuplaExpressionWrapper            `yaml:"returnType"`
+	Params     []*QuplaFuncParam                  `yaml:"params"`
+	Env        []*QuplaEnvStmt                    `yaml:"env,omitempty"`
+	Assigns    map[string]*QuplaExpressionWrapper `yaml:"assigns,omitempty"`
+	Return     *QuplaExpressionWrapper            `yaml:"return"`
 }
 
 type QuplaTypeDef struct {
