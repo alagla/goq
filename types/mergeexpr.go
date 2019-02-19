@@ -1,13 +1,25 @@
 package types
 
 type QuplaMergeExpr struct {
-	Lhs *QuplaExpressionWrapper `yaml:"lhs"`
-	Rhs *QuplaExpressionWrapper `yaml:"rhs"`
+	LhsWrap *QuplaExpressionWrapper `yaml:"lhs"`
+	RhsWrap *QuplaExpressionWrapper `yaml:"rhs"`
+	//----
+	lhsExpr ExpressionInterface
+	rhsExpr ExpressionInterface
 }
 
 func (e *QuplaMergeExpr) Analyze(module *QuplaModule) error {
-	if err := e.Lhs.Analyze(module); err != nil {
+	var err error
+	e.lhsExpr, err = e.LhsWrap.Unwarp()
+	if err != nil {
 		return err
 	}
-	return e.Rhs.Analyze(module)
+	e.rhsExpr, err = e.RhsWrap.Unwarp()
+	if err != nil {
+		return err
+	}
+	if err := e.lhsExpr.Analyze(module); err != nil {
+		return err
+	}
+	return e.rhsExpr.Analyze(module)
 }

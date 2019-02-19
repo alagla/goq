@@ -1,15 +1,26 @@
 package types
 
+import (
+	"fmt"
+	"strings"
+)
+
 type QuplaConstExpr struct {
 	Operator string                  `yaml:"operator"`
-	Lhs      *QuplaExpressionWrapper `yaml:"lhs"`
-	Rhs      *QuplaExpressionWrapper `yaml:"rhs"`
+	LhsWrap  *QuplaExpressionWrapper `yaml:"lhs"`
+	RhsWrap  *QuplaExpressionWrapper `yaml:"rhs"`
+	//---
+	lhsExpr ExpressionInterface
+	rhsExpr ExpressionInterface
 }
 
 type QuplaConstTerm struct {
 	Operator string                  `yaml:"operator"`
-	Lhs      *QuplaExpressionWrapper `yaml:"lhs"`
-	Rhs      *QuplaExpressionWrapper `yaml:"rhs"`
+	LhsWrap  *QuplaExpressionWrapper `yaml:"lhs"`
+	RhsWrap  *QuplaExpressionWrapper `yaml:"rhs"`
+	//---
+	lhsExpr ExpressionInterface
+	rhsExpr ExpressionInterface
 }
 
 type QuplaConstTypeName struct {
@@ -22,17 +33,37 @@ type QuplaConstNumber struct {
 }
 
 func (e *QuplaConstExpr) Analyze(module *QuplaModule) error {
-	if err := e.Lhs.Analyze(module); err != nil {
+	var err error
+	if !strings.Contains("+-", e.Operator) {
+		return fmt.Errorf("wrong operator symbol %v", e.Operator)
+	}
+	if e.lhsExpr, err = e.LhsWrap.Unwarp(); err != nil {
 		return err
 	}
-	return e.Rhs.Analyze(module)
+	if e.rhsExpr, err = e.RhsWrap.Unwarp(); err != nil {
+		return err
+	}
+	if err := e.rhsExpr.Analyze(module); err != nil {
+		return err
+	}
+	return e.rhsExpr.Analyze(module)
 }
 
 func (e *QuplaConstTerm) Analyze(module *QuplaModule) error {
-	if err := e.Lhs.Analyze(module); err != nil {
+	var err error
+	if !strings.Contains("*/%", e.Operator) {
+		return fmt.Errorf("wrong operator symbol %v", e.Operator)
+	}
+	if e.lhsExpr, err = e.LhsWrap.Unwarp(); err != nil {
 		return err
 	}
-	return e.Rhs.Analyze(module)
+	if e.rhsExpr, err = e.RhsWrap.Unwarp(); err != nil {
+		return err
+	}
+	if err := e.rhsExpr.Analyze(module); err != nil {
+		return err
+	}
+	return e.rhsExpr.Analyze(module)
 }
 
 func (e *QuplaConstTypeName) Analyze(module *QuplaModule) error {

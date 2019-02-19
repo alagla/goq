@@ -1,10 +1,16 @@
 package types
 
+type ExpressionInterface interface {
+	Analyze(*QuplaModule) error
+}
+
 type QuplaExecStmt struct {
-	Expr     *QuplaExpressionWrapper `yaml:"expr"`
-	Expected *QuplaExpressionWrapper `yaml:"expected,omitempty"`
+	ExprWrap     *QuplaExpressionWrapper `yaml:"expr"`
+	ExpectedWrap *QuplaExpressionWrapper `yaml:"expected,omitempty"`
 	//---
-	isTest bool
+	isTest       bool
+	expr         ExpressionInterface
+	exprExpected ExpressionInterface
 }
 
 type QuplaFuncParam struct {

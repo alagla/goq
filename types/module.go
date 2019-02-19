@@ -36,20 +36,35 @@ func (module *QuplaModule) AnalyzeExecs() bool {
 	var numTest, numEval, numErr int
 	var err error
 	for _, exec := range module.Execs {
-		err = exec.Expr.Analyze(module)
+		exec.expr, err = exec.ExprWrap.Unwarp()
 		if err != nil {
 			numErr++
 			errorf("%v", err)
+			continue
 		}
-		exec.isTest = exec.Expected != nil
+		err = exec.expr.Analyze(module)
+		if err != nil {
+			numErr++
+			errorf("%v", err)
+			continue
+		}
+		exec.isTest = exec.ExpectedWrap != nil
 		if exec.isTest {
-			err = exec.Expected.Analyze(module)
+			exec.exprExpected, err = exec.ExpectedWrap.Unwarp()
 			if err != nil {
 				numErr++
 				errorf("%v", err)
+				continue
+			}
+			err = exec.exprExpected.Analyze(module)
+			if err != nil {
+				numErr++
+				errorf("%v", err)
+				continue
 			}
 			numTest++
 		} else {
+			exec.exprExpected = nil
 			numEval++
 		}
 	}

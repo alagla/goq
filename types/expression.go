@@ -4,29 +4,8 @@ import (
 	"fmt"
 )
 
-const (
-	ExprType_Undef         = 0
-	ExprType_CondExpr      = ExprType_Undef + 1
-	ExprType_LutExpr       = ExprType_CondExpr + 1
-	ExprType_SliceExpr     = ExprType_LutExpr + 1
-	ExprType_ValueExpr     = ExprType_SliceExpr + 1
-	ExprType_FuncExpr      = ExprType_ValueExpr + 1
-	ExprType_FieldExpr     = ExprType_FuncExpr + 1
-	ExprType_ConstNumber   = ExprType_FieldExpr + 1
-	ExprType_ConstTypeName = ExprType_ConstNumber + 1
-	ExprType_ConstTerm     = ExprType_ConstTypeName + 1
-	ExprType_ConstExpr     = ExprType_ConstTerm + 1
-	ExprType_ConcatExpr    = ExprType_ConstExpr + 1
-	ExprType_MergeExpr     = ExprType_ConcatExpr + 1
-	ExprType_TypeExpr      = ExprType_MergeExpr + 1
-)
-
-type ExpressionInterface interface {
-	Analyze(*QuplaModule) error
-}
-
 type QuplaExpressionWrapper struct {
-	CondExpr      *QuplaCondExpr      `yaml:"CondExpr,omitempty"`
+	CondExpr      *QuplaCondExpr      `yaml:"CondExprWrapper,omitempty"`
 	LutExpr       *QuplaLutExpr       `yaml:"LutExpr,omitempty"`
 	SliceExpr     *QuplaSliceExpr     `yaml:"SliceExpr,omitempty"`
 	ValueExpr     *QuplaValueExpr     `yaml:"ValueExpr,omitempty"`
@@ -39,92 +18,69 @@ type QuplaExpressionWrapper struct {
 	ConcatExpr    *QuplaConcatExpr    `yaml:"ConcatExpr,omitempty"`
 	MergeExpr     *QuplaMergeExpr     `yaml:"MergeExpr,omitempty"`
 	TypeExpr      *QuplaTypeExpr      `yaml:"TypeExpr,omitempty"`
-	//-----
-	exprType      int
-	theExpression ExpressionInterface
 }
 
-func (expr *QuplaExpressionWrapper) Analyze(module *QuplaModule) error {
+func (expr *QuplaExpressionWrapper) Unwarp() (ExpressionInterface, error) {
 	if expr == nil {
-		return nil
+		return nil, nil
 	}
+	var ret ExpressionInterface
 	var numCases int
 
 	if expr.CondExpr != nil {
-		expr.exprType = ExprType_CondExpr
-		expr.theExpression = expr.CondExpr
+		ret = expr.CondExpr
 		numCases++
 	}
 	if expr.LutExpr != nil {
-		expr.exprType = ExprType_LutExpr
-		expr.theExpression = expr.LutExpr
+		ret = expr.LutExpr
 		numCases++
 	}
 	if expr.SliceExpr != nil {
-		expr.exprType = ExprType_SliceExpr
-		expr.theExpression = expr.SliceExpr
+		ret = expr.SliceExpr
 		numCases++
 	}
 	if expr.ValueExpr != nil {
-		expr.exprType = ExprType_ValueExpr
-		expr.theExpression = expr.ValueExpr
+		ret = expr.ValueExpr
 		numCases++
 	}
 	if expr.FuncExpr != nil {
-		expr.exprType = ExprType_FuncExpr
-		expr.theExpression = expr.FuncExpr
+		ret = expr.FuncExpr
 		numCases++
 	}
 	if expr.FieldExpr != nil {
-		expr.exprType = ExprType_FieldExpr
-		expr.theExpression = expr.FieldExpr
+		ret = expr.FieldExpr
 		numCases++
 	}
 	if expr.ConstNumber != nil {
-		expr.exprType = ExprType_ConstNumber
-		expr.theExpression = expr.ConstNumber
+		ret = expr.ConstNumber
 		numCases++
 	}
 	if expr.ConstTypeName != nil {
-		expr.exprType = ExprType_ConstTypeName
-		expr.theExpression = expr.ConstTypeName
+		ret = expr.ConstTypeName
 		numCases++
 	}
 	if expr.ConstTerm != nil {
-		expr.exprType = ExprType_ConstTerm
-		expr.theExpression = expr.ConstTerm
+		ret = expr.ConstTerm
 		numCases++
 	}
 	if expr.ConstExpr != nil {
-		expr.exprType = ExprType_ConstExpr
-		expr.theExpression = expr.ConstExpr
+		ret = expr.ConstExpr
 		numCases++
 	}
 	if expr.ConcatExpr != nil {
-		expr.exprType = ExprType_ConcatExpr
-		expr.theExpression = expr.ConcatExpr
+		ret = expr.ConcatExpr
 		numCases++
 	}
 	if expr.MergeExpr != nil {
-		expr.exprType = ExprType_MergeExpr
-		expr.theExpression = expr.MergeExpr
+		ret = expr.MergeExpr
 		numCases++
 	}
 	if expr.TypeExpr != nil {
-		expr.exprType = ExprType_TypeExpr
-		expr.theExpression = expr.TypeExpr
+		ret = expr.TypeExpr
 		numCases++
 	}
 	if numCases != 1 {
-		return fmt.Errorf("internal error: must be exactly one expression case. Probably incorrect YAML")
+		return nil, fmt.Errorf("internal error: must be exactly one expression case")
 	}
-	return expr.theExpression.Analyze(module)
-}
-
-func (expr *QuplaExpressionWrapper) IsType(exprType int) bool {
-	return expr.exprType == exprType
-}
-
-func (expr *QuplaExpressionWrapper) Unwrap() interface{} {
-	return expr.theExpression
+	return ret, nil
 }
