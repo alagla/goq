@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/iotaledger/iota.go/trinary"
 	"strconv"
 	"strings"
 )
@@ -29,17 +30,20 @@ type QuplaConstTerm struct {
 }
 
 type QuplaConstTypeName struct {
-	TypeName string `yaml:"typeName"`
+	TypeName string `yaml:"typeName"` // not used
 	Size     string `yaml:"size"`
 	//---
-	size    int
-	typeDef *QuplaTypeDef
+	size int
 }
 
 type QuplaConstNumber struct {
 	Value string `yaml:"value"`
 	//--
 	value int
+}
+
+type ConstValue struct {
+	Trits trinary.Trits
 }
 
 func ToConstExpression(e ExpressionInterface) (ConstExpression, bool) {
@@ -105,10 +109,6 @@ func (e *QuplaConstTerm) Analyze(module *QuplaModule) error {
 }
 
 func (e *QuplaConstTypeName) Analyze(module *QuplaModule) error {
-	e.typeDef = module.FindTypeDef(e.TypeName)
-	if e.typeDef == nil {
-		return fmt.Errorf("can't find typdef for '%v'", e.TypeName)
-	}
 	var err error
 	if e.size, err = strconv.Atoi(e.Size); err != nil {
 		return err
@@ -141,8 +141,14 @@ func (e *QuplaConstTerm) GetConstValue() int {
 	case "*":
 		return lv * rv
 	case "/":
+		if rv == 0 {
+			panic("divide by zero")
+		}
 		return lv / rv
 	case "%":
+		if rv == 0 {
+			panic("divide by zero")
+		}
 		return lv % rv
 	}
 	panic("bad operator")
@@ -154,4 +160,24 @@ func (e *QuplaConstTypeName) GetConstValue() int {
 
 func (e *QuplaConstNumber) GetConstValue() int {
 	return e.value
+}
+
+func GetTritValue(e ConstExpression, size int) *ConstValue {
+	v := e.GetConstValue()
+	t := trinary.IntToTrits(int64(v))
+	switch {
+	case size < len(t):
+		panic(fmt.Errorf("value doesn't fit into %v trits", size))
+	case size == len(t):
+		return &ConstValue{
+			Trits: t,
+		}
+	case size > len(t):
+		ret := make(trinary.Trits, size, size)
+		copy(ret, t)
+		return &ConstValue{
+			Trits: ret,
+		}
+	}
+	panic("inconsistency")
 }

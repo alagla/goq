@@ -1,7 +1,7 @@
 package types
 
 type QuplaValueExpr struct {
-	Trits  string `yaml:"trits"`
+	Trits  string `yaml:"Trits"`
 	Trytes string `yaml:"trytes"`
 }
 

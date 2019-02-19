@@ -5,7 +5,7 @@ import (
 )
 
 type QuplaExpressionWrapper struct {
-	CondExpr      *QuplaCondExpr      `yaml:"CondExprWrapper,omitempty"`
+	CondExpr      *QuplaCondExpr      `yaml:"CondExpr,omitempty"`
 	LutExpr       *QuplaLutExpr       `yaml:"LutExpr,omitempty"`
 	SliceExpr     *QuplaSliceExpr     `yaml:"SliceExpr,omitempty"`
 	ValueExpr     *QuplaValueExpr     `yaml:"ValueExpr,omitempty"`

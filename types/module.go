@@ -10,7 +10,27 @@ type QuplaModule struct {
 func (module *QuplaModule) Analyze() bool {
 	al := module.AnalyzeLuts()
 	ae := module.AnalyzeExecs()
-	return al && ae
+	af := module.AnalyzeFuncDefs()
+	return al && ae && af
+}
+
+func (module *QuplaModule) AnalyzeFuncDefs() bool {
+	infof("Analyzing function definitions...")
+	var numErr int
+	for name, fd := range module.Functions {
+		fd.SetName(name)
+		if err := fd.Analyze(module); err != nil {
+			numErr++
+			errorf("Error in function '%v': %v", name, err)
+		}
+	}
+	infof("Number of function definitons found: %v", len(module.Functions))
+	if numErr == 0 {
+		infof("Done analyzing function definitions. No errors.")
+	} else {
+		errorf("Failed analyzing function definitions. Errors found: %v", numErr)
+	}
+	return numErr == 0
 }
 
 func (module *QuplaModule) AnalyzeLuts() bool {
