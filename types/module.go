@@ -92,3 +92,11 @@ func (module *QuplaModule) FindLUTDef(name string) *QuplaLutDef {
 	}
 	return nil
 }
+
+func (module *QuplaModule) FindTypeDef(name string) *QuplaTypeDef {
+	ret, ok := module.Types[name]
+	if ok {
+		return ret
+	}
+	return nil
+}
