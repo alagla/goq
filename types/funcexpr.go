@@ -10,23 +10,20 @@ type QuplaFuncExpr struct {
 	args    []ExpressionInterface
 }
 
-func (e *QuplaFuncExpr) Analyze(module *QuplaModule) error {
+func (e *QuplaFuncExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
 	e.funcDef = module.FindFuncDef(e.Name)
 	if e.funcDef == nil {
-		return fmt.Errorf("can't find function definition '%v'", e.Name)
+		return nil, fmt.Errorf("can't find function definition '%v'", e.Name)
 	}
 	var err error
 	var fe ExpressionInterface
 
 	e.args = make([]ExpressionInterface, 0, len(e.ArgsWrap))
 	for _, arg := range e.ArgsWrap {
-		if fe, err = arg.Unwarp(); err != nil {
-			return err
-		}
-		if err := fe.Analyze(module); err != nil {
-			return err
+		if fe, err = arg.Analyze(module); err != nil {
+			return nil, err
 		}
 		e.args = append(e.args, fe)
 	}
-	return nil
+	return e, nil
 }

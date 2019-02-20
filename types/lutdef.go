@@ -14,19 +14,14 @@ type QuplaLutDef struct {
 	lutLookupTable []Trits
 }
 
-type lutTableEntry struct {
-	inputs  Trits
-	outputs Trits
-}
-
 var pow3 = []int{1, 3, 9, 27}
 
-func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) error {
+func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) (ExpressionInterface, error) {
 	if len(lutDef.LutTable) == 0 {
-		return fmt.Errorf("No LUT entries found")
+		return nil, fmt.Errorf("No LUT entries found")
 	}
 	if len(lutDef.LutTable) > 27 {
-		return fmt.Errorf("lut table can't have more than 27 entries")
+		return nil, fmt.Errorf("lut table can't have more than 27 entries")
 	}
 	inputs := make([]Trits, 0, len(lutDef.LutTable))
 	outputs := make([]Trits, 0, len(lutDef.LutTable))
@@ -35,7 +30,7 @@ func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) error {
 	for _, entry := range lutDef.LutTable {
 		sides := strings.Split(entry, "=")
 		if len(sides) != 2 {
-			return fmt.Errorf("wrong LUT entry: %v", entry)
+			return nil, fmt.Errorf("wrong LUT entry: %v", entry)
 		}
 		sides[0] = strings.TrimSpace(sides[0])
 		sides[1] = strings.TrimSpace(sides[1])
@@ -44,23 +39,23 @@ func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) error {
 			lutDef.inputSize = len(sides[0])
 			lutDef.outputSize = len(sides[1])
 			if lutDef.inputSize < 1 || lutDef.inputSize > 3 || lutDef.outputSize < 1 {
-				return fmt.Errorf("wrong input or output size")
+				return nil, fmt.Errorf("wrong input or output size")
 			}
 		}
 		if len(sides[0]) != lutDef.inputSize {
-			return fmt.Errorf("input len expected to be %v", lutDef.inputSize)
+			return nil, fmt.Errorf("input len expected to be %v", lutDef.inputSize)
 		}
 		if len(sides[1]) != lutDef.outputSize {
-			return fmt.Errorf("ouput len expected to be %v", lutDef.outputSize)
+			return nil, fmt.Errorf("ouput len expected to be %v", lutDef.outputSize)
 		}
 		inTrits, err := quplaTritStringToTrits(sides[0])
 		if err != nil {
-			return err
+			return nil, err
 		}
 		inputs = append(inputs, inTrits)
 		outTrits, err := quplaTritStringToTrits(sides[1])
 		if err != nil {
-			return err
+			return nil, err
 		}
 		outputs = append(outputs, outTrits)
 	}
@@ -69,11 +64,11 @@ func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) error {
 	for i, inp := range inputs {
 		idx := tritsToIdx(inp)
 		if lutDef.lutLookupTable[idx] != nil {
-			return fmt.Errorf("duplicated input in LUT table")
+			return nil, fmt.Errorf("duplicated input in LUT table")
 		}
 		lutDef.lutLookupTable[idx] = outputs[i]
 	}
-	return nil
+	return lutDef, nil
 }
 
 func (lutDef *QuplaLutDef) lookupWithCheck(t Trits) (Trits, error) {

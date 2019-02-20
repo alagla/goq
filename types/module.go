@@ -19,7 +19,7 @@ func (module *QuplaModule) AnalyzeFuncDefs() bool {
 	var numErr int
 	for name, fd := range module.Functions {
 		fd.SetName(name)
-		if err := fd.Analyze(module); err != nil {
+		if _, err := fd.Analyze(module); err != nil {
 			numErr++
 			errorf("Error in function '%v': %v", name, err)
 		}
@@ -37,7 +37,7 @@ func (module *QuplaModule) AnalyzeLuts() bool {
 	infof("Analyzing luts...")
 	var numErr int
 	for _, lutDef := range module.Luts {
-		if err := lutDef.Analyze(module); err != nil {
+		if _, err := lutDef.Analyze(module); err != nil {
 			numErr++
 			errorf("Error in lut '%v': %v", lutDef.LutTable, err)
 		}
@@ -56,13 +56,7 @@ func (module *QuplaModule) AnalyzeExecs() bool {
 	var numTest, numEval, numErr int
 	var err error
 	for _, exec := range module.Execs {
-		exec.expr, err = exec.ExprWrap.Unwarp()
-		if err != nil {
-			numErr++
-			errorf("%v", err)
-			continue
-		}
-		err = exec.expr.Analyze(module)
+		exec.expr, err = exec.ExprWrap.Analyze(module)
 		if err != nil {
 			numErr++
 			errorf("%v", err)
@@ -70,13 +64,7 @@ func (module *QuplaModule) AnalyzeExecs() bool {
 		}
 		exec.isTest = exec.ExpectedWrap != nil
 		if exec.isTest {
-			exec.exprExpected, err = exec.ExpectedWrap.Unwarp()
-			if err != nil {
-				numErr++
-				errorf("%v", err)
-				continue
-			}
-			err = exec.exprExpected.Analyze(module)
+			exec.exprExpected, err = exec.ExpectedWrap.Analyze(module)
 			if err != nil {
 				numErr++
 				errorf("%v", err)

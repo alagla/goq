@@ -10,24 +10,20 @@ type QuplaLutExpr struct {
 	lutDef  *QuplaLutDef
 }
 
-func (e *QuplaLutExpr) Analyze(module *QuplaModule) error {
+func (e *QuplaLutExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
 	var err error
 	var ae ExpressionInterface
 	e.argExpr = make([]ExpressionInterface, 0, len(e.Args))
 	for _, a := range e.Args {
-		ae, err = a.Unwarp()
+		ae, err = a.Analyze(module)
 		if err != nil {
-			return err
-		}
-		err = ae.Analyze(module)
-		if err != nil {
-			return err
+			return nil, err
 		}
 		e.argExpr = append(e.argExpr, ae)
 	}
 	e.lutDef = module.FindLUTDef(e.Name)
 	if e.lutDef == nil {
-		return fmt.Errorf("can't find LUT definition for '%v'", e.Name)
+		return nil, fmt.Errorf("can't find LUT definition for '%v'", e.Name)
 	}
-	return nil
+	return e, nil
 }

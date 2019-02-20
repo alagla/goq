@@ -28,30 +28,24 @@ func (def *QuplaFuncDef) SetName(name string) {
 	def.name = name
 }
 
-func (def *QuplaFuncDef) Analyze(module *QuplaModule) error {
-	var err error
-	// return size
-	ei, err := def.ReturnType.Unwarp()
+func (def *QuplaFuncDef) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+	// return size. Must be cont expression
+	ce, err := def.ReturnType.Analyze(module)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if err = ei.Analyze(module); err != nil {
-		return err
+	var sz int64
+	if sz, err = GetConstValue(ce); err != nil {
+		return nil, err
 	}
-	if _, ok := ei.(*QuplaConstTypeName); !ok {
-		return fmt.Errorf("in funcdef '%v': return type must be ConstTypeName", def.name)
-	}
-	ce, _ := ToConstExpression(ei)
-	def.retSize = ce.GetConstValue()
+	def.retSize = int(sz)
 
 	// return expression
-	def.retExpr, err = def.ReturnExprWrap.Unwarp()
+	if def.retExpr, err = def.ReturnExprWrap.Analyze(module); err != nil {
+		return nil, err
+	}
 	if def.retExpr == nil {
-		return fmt.Errorf("in funcdef '%v': return expression can't be nil", def.name)
+		return nil, fmt.Errorf("in funcdef '%v': return expression can't be nil", def.name)
 	}
-	if err = def.retExpr.Analyze(module); err != nil {
-		return err
-	}
-
-	return nil
+	return def, nil
 }

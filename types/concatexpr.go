@@ -8,16 +8,13 @@ type QuplaConcatExpr struct {
 	rhsExpr ExpressionInterface
 }
 
-func (e *QuplaConcatExpr) Analyze(module *QuplaModule) error {
+func (e *QuplaConcatExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
 	var err error
-	if e.lhsExpr, err = e.LhsWrap.Unwarp(); err != nil {
-		return err
+	if e.lhsExpr, err = e.LhsWrap.Analyze(module); err != nil {
+		return nil, err
 	}
-	if e.rhsExpr, err = e.RhsWrap.Unwarp(); err != nil {
-		return err
+	if e.rhsExpr, err = e.RhsWrap.Analyze(module); err != nil {
+		return nil, err
 	}
-	if err := e.rhsExpr.Analyze(module); err != nil {
-		return err
-	}
-	return e.rhsExpr.Analyze(module)
+	return e, nil
 }

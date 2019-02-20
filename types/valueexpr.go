@@ -5,6 +5,6 @@ type QuplaValueExpr struct {
 	Trytes string `yaml:"trytes"`
 }
 
-func (valueExpr *QuplaValueExpr) Analyze(module *QuplaModule) error {
-	return nil
+func (valueExpr *QuplaValueExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+	return valueExpr, nil
 }

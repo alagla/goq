@@ -20,63 +20,76 @@ type QuplaExpressionWrapper struct {
 	TypeExpr      *QuplaTypeExpr      `yaml:"TypeExpr,omitempty"`
 }
 
-func (expr *QuplaExpressionWrapper) Unwarp() (ExpressionInterface, error) {
-	if expr == nil {
+func (e *QuplaExpressionWrapper) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+	if e == nil {
 		return nil, nil
 	}
+	ret, err := e.unwarp()
+	if err != nil {
+		return nil, err
+	}
+	if ret != nil {
+		if ret, err = ret.Analyze(module); err != nil {
+			return nil, err
+		}
+	}
+	return ret, nil
+}
+
+func (e *QuplaExpressionWrapper) unwarp() (ExpressionInterface, error) {
 	var ret ExpressionInterface
 	var numCases int
 
-	if expr.CondExpr != nil {
-		ret = expr.CondExpr
+	if e.CondExpr != nil {
+		ret = e.CondExpr
 		numCases++
 	}
-	if expr.LutExpr != nil {
-		ret = expr.LutExpr
+	if e.LutExpr != nil {
+		ret = e.LutExpr
 		numCases++
 	}
-	if expr.SliceExpr != nil {
-		ret = expr.SliceExpr
+	if e.SliceExpr != nil {
+		ret = e.SliceExpr
 		numCases++
 	}
-	if expr.ValueExpr != nil {
-		ret = expr.ValueExpr
+	if e.ValueExpr != nil {
+		ret = e.ValueExpr
 		numCases++
 	}
-	if expr.FuncExpr != nil {
-		ret = expr.FuncExpr
+	if e.FuncExpr != nil {
+		ret = e.FuncExpr
 		numCases++
 	}
-	if expr.FieldExpr != nil {
-		ret = expr.FieldExpr
+	if e.FieldExpr != nil {
+		ret = e.FieldExpr
 		numCases++
 	}
-	if expr.ConstNumber != nil {
-		ret = expr.ConstNumber
+	if e.ConstNumber != nil {
+		ret = e.ConstNumber
 		numCases++
 	}
-	if expr.ConstTypeName != nil {
-		ret = expr.ConstTypeName
+	if e.ConstTypeName != nil {
+		ret = e.ConstTypeName
 		numCases++
 	}
-	if expr.ConstTerm != nil {
-		ret = expr.ConstTerm
+	if e.ConstTerm != nil {
+		ret = e.ConstTerm
 		numCases++
 	}
-	if expr.ConstExpr != nil {
-		ret = expr.ConstExpr
+	if e.ConstExpr != nil {
+		ret = e.ConstExpr
 		numCases++
 	}
-	if expr.ConcatExpr != nil {
-		ret = expr.ConcatExpr
+	if e.ConcatExpr != nil {
+		ret = e.ConcatExpr
 		numCases++
 	}
-	if expr.MergeExpr != nil {
-		ret = expr.MergeExpr
+	if e.MergeExpr != nil {
+		ret = e.MergeExpr
 		numCases++
 	}
-	if expr.TypeExpr != nil {
-		ret = expr.TypeExpr
+	if e.TypeExpr != nil {
+		ret = e.TypeExpr
 		numCases++
 	}
 	if numCases != 1 {

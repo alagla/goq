@@ -1,7 +1,7 @@
 package types
 
 type ExpressionInterface interface {
-	Analyze(*QuplaModule) error
+	Analyze(*QuplaModule) (ExpressionInterface, error)
 }
 
 type QuplaExecStmt struct {

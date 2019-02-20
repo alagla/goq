@@ -15,169 +15,167 @@ type QuplaConstExpr struct {
 	Operator string                  `yaml:"operator"`
 	LhsWrap  *QuplaExpressionWrapper `yaml:"lhs"`
 	RhsWrap  *QuplaExpressionWrapper `yaml:"rhs"`
-	//---
-	lhsExpr ConstExpression
-	rhsExpr ConstExpression
 }
 
 type QuplaConstTerm struct {
 	Operator string                  `yaml:"operator"`
 	LhsWrap  *QuplaExpressionWrapper `yaml:"lhs"`
 	RhsWrap  *QuplaExpressionWrapper `yaml:"rhs"`
-	//---
-	lhsExpr ConstExpression
-	rhsExpr ConstExpression
 }
 
 type QuplaConstTypeName struct {
 	TypeName string `yaml:"typeName"` // not used
 	Size     string `yaml:"size"`
-	//---
-	size int
 }
 
 type QuplaConstNumber struct {
 	Value string `yaml:"value"`
-	//--
-	value int
 }
 
 type ConstValue struct {
+	Value int64
 	Trits trinary.Trits
 }
 
-func ToConstExpression(e ExpressionInterface) (ConstExpression, bool) {
+func IsConstExpression(e ExpressionInterface) bool {
+	if e == nil {
+		return false //???????
+	}
 	switch e.(type) {
 	case *QuplaConstExpr:
-		return e.(ConstExpression), true
+		return true
 	case *QuplaConstTerm:
-		return e.(ConstExpression), true
+		return true
 	case *QuplaConstTypeName:
-		return e.(ConstExpression), true
+		return true
 	case *QuplaConstNumber:
-		return e.(ConstExpression), true
+		return true
+	case *ConstValue:
+		return true
 	}
-	return nil, false
+	return false
 }
 
-func (e *QuplaConstExpr) Analyze(module *QuplaModule) error {
+func (e *ConstValue) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+	return e, nil
+}
+
+func (e *QuplaConstExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
 	var err error
-	var ei ExpressionInterface
+	var lei, rei ExpressionInterface
 	var ok bool
 	if !strings.Contains("+-", e.Operator) {
-		return fmt.Errorf("wrong operator symbol %v", e.Operator)
+		return nil, fmt.Errorf("wrong operator symbol %v", e.Operator)
 	}
-	ei, err = e.LhsWrap.Unwarp()
-	if err = ei.Analyze(module); err != nil {
-		return err
+	if lei, err = e.LhsWrap.Analyze(module); err != nil {
+		return nil, err
 	}
-	if e.lhsExpr, ok = ToConstExpression(ei); !ok {
-		return fmt.Errorf("must be const expression")
+	if rei, err = e.RhsWrap.Analyze(module); err != nil {
+		return nil, err
 	}
-	ei, err = e.RhsWrap.Unwarp()
-	if err = ei.Analyze(module); err != nil {
-		return err
+	if !IsConstExpression(e.LhsWrap) || !IsConstExpression(e.RhsWrap) {
+		return nil, fmt.Errorf("operands must be constant expression")
 	}
-	if e.rhsExpr, ok = ToConstExpression(ei); !ok {
-		return fmt.Errorf("must be const expression")
+	var rv, lv *ConstValue
+	if lv, ok = lei.(*ConstValue); !ok {
+		return nil, fmt.Errorf("inconsistency I")
 	}
-	return nil
-}
-
-func (e *QuplaConstTerm) Analyze(module *QuplaModule) error {
-	var err error
-	var ei ExpressionInterface
-	var ok bool
-	if !strings.Contains("*/%", e.Operator) {
-		return fmt.Errorf("wrong operator symbol %v", e.Operator)
+	if rv, ok = rei.(*ConstValue); !ok {
+		return nil, fmt.Errorf("inconsistency II")
 	}
-	ei, err = e.LhsWrap.Unwarp()
-	if err = ei.Analyze(module); err != nil {
-		return err
-	}
-	if e.lhsExpr, ok = ToConstExpression(ei); !ok {
-		return fmt.Errorf("must be const expression")
-	}
-	ei, err = e.RhsWrap.Unwarp()
-	if err = ei.Analyze(module); err != nil {
-		return err
-	}
-	if e.rhsExpr, ok = ToConstExpression(ei); !ok {
-		return fmt.Errorf("must be const expression")
-	}
-	return nil
-}
-
-func (e *QuplaConstTypeName) Analyze(module *QuplaModule) error {
-	var err error
-	if e.size, err = strconv.Atoi(e.Size); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (e *QuplaConstNumber) Analyze(module *QuplaModule) error {
-	var err error
-	e.value, err = strconv.Atoi(e.Value)
-	return err
-}
-
-func (e *QuplaConstExpr) GetConstValue() int {
-	lv := e.lhsExpr.GetConstValue()
-	rv := e.rhsExpr.GetConstValue()
+	var ret *ConstValue
 	switch e.Operator {
 	case "+":
-		return lv + rv
+		ret = NewConstValue(lv.Value+rv.Value, 0)
 	case "-":
-		return lv - rv
+		ret = NewConstValue(lv.Value-rv.Value, 0)
 	}
-	panic("bad operator")
+	return ret, nil
 }
 
-func (e *QuplaConstTerm) GetConstValue() int {
-	lv := e.lhsExpr.GetConstValue()
-	rv := e.rhsExpr.GetConstValue()
+func (e *QuplaConstTerm) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+	var err error
+	var lei, rei ExpressionInterface
+	var ok bool
+	if !strings.Contains("*/%", e.Operator) {
+		return nil, fmt.Errorf("wrong operator symbol %v", e.Operator)
+	}
+	if lei, err = e.LhsWrap.Analyze(module); err != nil {
+		return nil, err
+	}
+	if rei, err = e.RhsWrap.Analyze(module); err != nil {
+		return nil, err
+	}
+	if !IsConstExpression(e.LhsWrap) || !IsConstExpression(e.RhsWrap) {
+		return nil, fmt.Errorf("operands must be constant expression")
+	}
+	var rv, lv *ConstValue
+	if lv, ok = lei.(*ConstValue); !ok {
+		return nil, fmt.Errorf("inconsistency I")
+	}
+	if rv, ok = rei.(*ConstValue); !ok {
+		return nil, fmt.Errorf("inconsistency II")
+	}
+	var ret *ConstValue
 	switch e.Operator {
 	case "*":
-		return lv * rv
+		ret = NewConstValue(lv.Value*rv.Value, 0)
 	case "/":
-		if rv == 0 {
-			panic("divide by zero")
+		if rv.Value != 0 {
+			ret = NewConstValue(lv.Value/rv.Value, 0)
+		} else {
+			return nil, fmt.Errorf("division by 0 in constant expression")
 		}
-		return lv / rv
 	case "%":
-		if rv == 0 {
-			panic("divide by zero")
+		if rv.Value != 0 {
+			ret = NewConstValue(lv.Value%rv.Value, 0)
+		} else {
+			return nil, fmt.Errorf("division by 0 in constant expression")
 		}
-		return lv % rv
 	}
-	panic("bad operator")
+	return ret, nil
 }
 
-func (e *QuplaConstTypeName) GetConstValue() int {
-	return e.size
+func (e *QuplaConstTypeName) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+	var err error
+	var ret int
+	if ret, err = strconv.Atoi(e.Size); err != nil {
+		return nil, err
+	}
+	return NewConstValue(int64(ret), 0), nil
 }
 
-func (e *QuplaConstNumber) GetConstValue() int {
-	return e.value
+func (e *QuplaConstNumber) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+	ret, err := strconv.Atoi(e.Value)
+	if err != nil {
+		return nil, err
+	}
+	return NewConstValue(int64(ret), 0), nil
 }
 
-func GetTritValue(e ConstExpression, size int) *ConstValue {
-	v := e.GetConstValue()
-	t := trinary.IntToTrits(int64(v))
+func NewConstValue(value int64, size int) *ConstValue {
+	t := trinary.IntToTrits(value)
 	switch {
-	case size < len(t):
-		panic(fmt.Errorf("value doesn't fit into %v trits", size))
-	case size == len(t):
+	case size <= len(t):
 		return &ConstValue{
+			Value: value,
 			Trits: t,
 		}
 	case size > len(t):
 		ret := make(trinary.Trits, size, size)
 		copy(ret, t)
 		return &ConstValue{
+			Value: value,
 			Trits: ret,
 		}
 	}
 	panic("inconsistency")
+}
+
+func GetConstValue(expr ExpressionInterface) (int64, error) {
+	cv, ok := expr.(*ConstValue)
+	if !ok {
+		return 0, fmt.Errorf("not a constant value")
+	}
+	return cv.Value, nil
 }

@@ -9,25 +9,19 @@ type QuplaSliceExpr struct {
 	endExpr   ExpressionInterface
 }
 
-func (e *QuplaSliceExpr) Analyze(module *QuplaModule) error {
+func (e *QuplaSliceExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
 	var err error
 	if e.startExpr != nil {
-		if e.startExpr, err = e.StartExprWrap.Unwarp(); err != nil {
-			return err
-		}
-		if err := e.startExpr.Analyze(module); err != nil {
-			return err
+		if e.startExpr, err = e.StartExprWrap.Analyze(module); err != nil {
+			return nil, err
 		}
 	} else {
-		return nil
+		return e, nil
 	}
 	if e.endExpr != nil {
-		if e.endExpr, err = e.EndExprWrap.Unwarp(); err != nil {
-			return err
-		}
-		if err = e.endExpr.Analyze(module); err != nil {
-			return err
+		if e.endExpr, err = e.EndExprWrap.Analyze(module); err != nil {
+			return nil, err
 		}
 	}
-	return nil
+	return e, nil
 }
