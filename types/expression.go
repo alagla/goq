@@ -20,7 +20,7 @@ type QuplaExpressionWrapper struct {
 	TypeExpr      *QuplaTypeExpr      `yaml:"TypeExpr,omitempty"`
 }
 
-func (e *QuplaExpressionWrapper) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (e *QuplaExpressionWrapper) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	if e == nil {
 		return nil, nil
 	}
@@ -29,7 +29,7 @@ func (e *QuplaExpressionWrapper) Analyze(module *QuplaModule) (ExpressionInterfa
 		return nil, err
 	}
 	if ret != nil {
-		if ret, err = ret.Analyze(module); err != nil {
+		if ret, err = ret.Analyze(module, scope); err != nil {
 			return nil, err
 		}
 	}

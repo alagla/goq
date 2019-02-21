@@ -10,16 +10,16 @@ type QuplaCondExpr struct {
 	elseExpr ExpressionInterface
 }
 
-func (e *QuplaCondExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (e *QuplaCondExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
 
-	if e.ifExpr, err = e.If.Analyze(module); err != nil {
+	if e.ifExpr, err = e.If.Analyze(module, scope); err != nil {
 		return nil, err
 	}
-	if e.thenExpr, err = e.Then.Analyze(module); err != nil {
+	if e.thenExpr, err = e.Then.Analyze(module, scope); err != nil {
 		return nil, err
 	}
-	if e.elseExpr, err = e.Else.Analyze(module); err != nil {
+	if e.elseExpr, err = e.Else.Analyze(module, scope); err != nil {
 		return nil, err
 	}
 	return e, nil

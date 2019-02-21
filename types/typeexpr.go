@@ -9,15 +9,15 @@ type QuplaTypeExpr struct {
 	fields   map[string]ExpressionInterface
 }
 
-func (e *QuplaTypeExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (e *QuplaTypeExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	e.fields = make(map[string]ExpressionInterface)
 	var err error
-	if e.typeExpr, err = e.TypeExprWrap.Analyze(module); err != nil {
+	if e.typeExpr, err = e.TypeExprWrap.Analyze(module, scope); err != nil {
 		return nil, err
 	}
 	var fe ExpressionInterface
 	for name, expr := range e.Fields {
-		if fe, err = expr.Analyze(module); err != nil {
+		if fe, err = expr.Analyze(module, scope); err != nil {
 			return nil, err
 		}
 		e.fields[name] = fe

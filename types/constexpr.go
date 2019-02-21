@@ -55,21 +55,21 @@ func IsConstExpression(e ExpressionInterface) bool {
 	return false
 }
 
-func (e *ConstValue) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (e *ConstValue) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	return e, nil
 }
 
-func (e *QuplaConstExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (e *QuplaConstExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
 	if !strings.Contains("+-", e.Operator) {
 		return nil, fmt.Errorf("wrong operator symbol %v", e.Operator)
 	}
-	if lei, err = e.LhsWrap.Analyze(module); err != nil {
+	if lei, err = e.LhsWrap.Analyze(module, scope); err != nil {
 		return nil, err
 	}
-	if rei, err = e.RhsWrap.Analyze(module); err != nil {
+	if rei, err = e.RhsWrap.Analyze(module, scope); err != nil {
 		return nil, err
 	}
 	if !IsConstExpression(e.LhsWrap) || !IsConstExpression(e.RhsWrap) {
@@ -92,17 +92,17 @@ func (e *QuplaConstExpr) Analyze(module *QuplaModule) (ExpressionInterface, erro
 	return ret, nil
 }
 
-func (e *QuplaConstTerm) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (e *QuplaConstTerm) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
 	if !strings.Contains("*/%", e.Operator) {
 		return nil, fmt.Errorf("wrong operator symbol %v", e.Operator)
 	}
-	if lei, err = e.LhsWrap.Analyze(module); err != nil {
+	if lei, err = e.LhsWrap.Analyze(module, scope); err != nil {
 		return nil, err
 	}
-	if rei, err = e.RhsWrap.Analyze(module); err != nil {
+	if rei, err = e.RhsWrap.Analyze(module, scope); err != nil {
 		return nil, err
 	}
 	if !IsConstExpression(e.LhsWrap) || !IsConstExpression(e.RhsWrap) {
@@ -135,7 +135,7 @@ func (e *QuplaConstTerm) Analyze(module *QuplaModule) (ExpressionInterface, erro
 	return ret, nil
 }
 
-func (e *QuplaConstTypeName) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (e *QuplaConstTypeName) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
 	var ret int
 	if ret, err = strconv.Atoi(e.Size); err != nil {
@@ -144,7 +144,7 @@ func (e *QuplaConstTypeName) Analyze(module *QuplaModule) (ExpressionInterface, 
 	return NewConstValue(int64(ret)), nil
 }
 
-func (e *QuplaConstNumber) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (e *QuplaConstNumber) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	ret, err := strconv.Atoi(e.Value)
 	if err != nil {
 		return nil, err

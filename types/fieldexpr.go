@@ -7,9 +7,9 @@ type QuplaFieldExpr struct {
 	condExpr ExpressionInterface
 }
 
-func (e *QuplaFieldExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (e *QuplaFieldExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
-	e.condExpr, err = e.CondExprWrapper.Analyze(module)
+	e.condExpr, err = e.CondExprWrapper.Analyze(module, scope)
 	if err != nil {
 		return nil, err
 	}

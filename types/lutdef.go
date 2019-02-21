@@ -16,7 +16,7 @@ type QuplaLutDef struct {
 
 var pow3 = []int{1, 3, 9, 27}
 
-func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (lutDef *QuplaLutDef) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	if len(lutDef.LutTable) == 0 {
 		return nil, fmt.Errorf("No LUT entries found")
 	}

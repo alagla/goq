@@ -8,13 +8,13 @@ type QuplaMergeExpr struct {
 	rhsExpr ExpressionInterface
 }
 
-func (e *QuplaMergeExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (e *QuplaMergeExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
-	e.lhsExpr, err = e.LhsWrap.Analyze(module)
+	e.lhsExpr, err = e.LhsWrap.Analyze(module, scope)
 	if err != nil {
 		return nil, err
 	}
-	e.rhsExpr, err = e.RhsWrap.Analyze(module)
+	e.rhsExpr, err = e.RhsWrap.Analyze(module, scope)
 	if err != nil {
 		return nil, err
 	}

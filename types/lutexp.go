@@ -3,19 +3,19 @@ package types
 import "fmt"
 
 type QuplaLutExpr struct {
-	Name string                    `yaml:"name"`
+	Name string                    `yaml:"Name"`
 	Args []*QuplaExpressionWrapper `yaml:"args"`
 	//----
 	argExpr []ExpressionInterface
 	lutDef  *QuplaLutDef
 }
 
-func (e *QuplaLutExpr) Analyze(module *QuplaModule) (ExpressionInterface, error) {
+func (e *QuplaLutExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
 	var ae ExpressionInterface
 	e.argExpr = make([]ExpressionInterface, 0, len(e.Args))
 	for _, a := range e.Args {
-		ae, err = a.Analyze(module)
+		ae, err = a.Analyze(module, scope)
 		if err != nil {
 			return nil, err
 		}

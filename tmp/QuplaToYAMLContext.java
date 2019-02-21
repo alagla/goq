@@ -41,10 +41,6 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
     }
 
     private void evalExpression(BaseExpr expr){
-//        if (expr instanceof FieldExpr){
-//            evalFieldExpr((FieldExpr) expr);
-//            return;
-//        }
         if (expr instanceof SubExpr){
             expr = ((SubExpr)expr).expr;
         }
@@ -54,17 +50,6 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
         expr.eval(this);
         undent();
     }
-
-//    @Override
-//    public void evalSubExpr(final BaseSubExpr sub)
-//    {
-//        if (sub instanceof FieldExpr){
-//            evalFieldExpr((FieldExpr) sub);
-//            return;
-//        }
-//        super.evalSubExpr(sub);
-//    }
-//
 
     @Override
     public void eval(final QuplaModule module) {
@@ -288,16 +273,12 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
             indent();
 
             for (BaseExpr p : func.params){
-                append("- ");
-                indent();
                 final NameExpr var = (NameExpr) p;
-                append("name: " + var.name);
-                newline();
-                append("type: " );
+
+                append(var.name + ": ");
                 newline();
                 indent();
                 evalExpression(var.type);
-                undent();
                 undent();
             }
             undent();
@@ -489,18 +470,6 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
         undent();
     }
 
-//    private void evalFieldExpr(FieldExpr fieldExpr) {
-//        append("fieldName: ");
-//        append(fieldExpr.name);
-//        newline();
-//
-//        append("condExpr: ");
-//        newline();
-//        indent();
-//        evalExpression(fieldExpr.expr);
-//        undent();
-//    }
-//
     private void evalConstTypeName(ConstTypeName constTypeName){
         append("typeName: ");
         append(constTypeName.name);
