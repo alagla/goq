@@ -3,7 +3,7 @@ package types
 import "fmt"
 
 type QuplaFuncExpr struct {
-	Name     string                    `yaml:"Name"`
+	Name     string                    `yaml:"name"`
 	ArgsWrap []*QuplaExpressionWrapper `yaml:"args"`
 	//---
 	funcDef *QuplaFuncDef

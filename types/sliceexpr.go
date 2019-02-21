@@ -3,7 +3,7 @@ package types
 import "fmt"
 
 type QuplaSliceExpr struct {
-	Name          string                  `yaml:"Name"`
+	Name          string                  `yaml:"name"`
 	StartExprWrap *QuplaExpressionWrapper `yaml:"start,omitempty"`
 	EndExprWrap   *QuplaExpressionWrapper `yaml:"end,omitempty"`
 	//----
