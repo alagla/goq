@@ -11,11 +11,11 @@ type QuplaFuncExpr struct {
 }
 
 func (e *QuplaFuncExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
-	e.funcDef = module.FindFuncDef(e.Name)
-	if e.funcDef == nil {
-		return nil, fmt.Errorf("can't find function definition '%v'", e.Name)
-	}
 	var err error
+	e.funcDef, err = module.FindFuncDef(e.Name)
+	if err != nil {
+		return nil, err
+	}
 	var fe ExpressionInterface
 
 	e.args = make([]ExpressionInterface, 0, len(e.ArgsWrap))
@@ -26,4 +26,18 @@ func (e *QuplaFuncExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expre
 		e.args = append(e.args, fe)
 	}
 	return e, nil
+}
+
+func (e *QuplaFuncExpr) Size() int64 {
+	if e == nil {
+		return 0
+	}
+	return e.funcDef.Size()
+}
+
+func (e *QuplaFuncExpr) RequireSize(size int64) error {
+	if size != e.Size() {
+		return fmt.Errorf("size mismatch in FuncExpr")
+	}
+	return nil
 }

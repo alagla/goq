@@ -22,7 +22,7 @@ type QuplaExpressionWrapper struct {
 
 func (e *QuplaExpressionWrapper) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	if e == nil {
-		return nil, nil
+		return &QuplaNullExpr{}, nil
 	}
 	ret, err := e.unwarp()
 	if err != nil {
@@ -34,6 +34,14 @@ func (e *QuplaExpressionWrapper) Analyze(module *QuplaModule, scope *QuplaFuncDe
 		}
 	}
 	return ret, nil
+}
+
+func (e *QuplaExpressionWrapper) Size() int64 {
+	return 0
+}
+
+func (e *QuplaExpressionWrapper) RequireSize(_ int64) error {
+	return nil
 }
 
 func (e *QuplaExpressionWrapper) unwarp() (ExpressionInterface, error) {
@@ -91,6 +99,9 @@ func (e *QuplaExpressionWrapper) unwarp() (ExpressionInterface, error) {
 	if e.TypeExpr != nil {
 		ret = e.TypeExpr
 		numCases++
+	}
+	if numCases == 0 {
+		return &QuplaNullExpr{}, nil
 	}
 	if numCases != 1 {
 		return nil, fmt.Errorf("internal error: must be exactly one expression case")

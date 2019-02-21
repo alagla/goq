@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 type QuplaModule struct {
 	Types     map[string]*QuplaTypeDef `yaml:"types"`
 	Luts      map[string]*QuplaLutDef  `yaml:"luts"`
@@ -8,47 +10,7 @@ type QuplaModule struct {
 }
 
 func (module *QuplaModule) Analyze() bool {
-	al := module.AnalyzeLuts()
-	af := module.AnalyzeFuncDefs()
-	ae := module.AnalyzeExecs()
-	return al && ae && af
-}
-
-func (module *QuplaModule) AnalyzeFuncDefs() bool {
-	infof("Analyzing function definitions...")
-	var numErr int
-	for name, fd := range module.Functions {
-		fd.SetName(name)
-		if _, err := fd.Analyze(module, nil); err != nil {
-			numErr++
-			errorf("Error in function '%v': %v", name, err)
-		}
-	}
-	infof("Number of function definitions found: %v", len(module.Functions))
-	if numErr == 0 {
-		infof("Done analyzing function definitions. No errors.")
-	} else {
-		errorf("Failed analyzing function definitions. Errors found: %v", numErr)
-	}
-	return numErr == 0
-}
-
-func (module *QuplaModule) AnalyzeLuts() bool {
-	infof("Analyzing luts...")
-	var numErr int
-	for _, lutDef := range module.Luts {
-		if _, err := lutDef.Analyze(module, nil); err != nil {
-			numErr++
-			errorf("Error in lut '%v': %v", lutDef.LutTable, err)
-		}
-	}
-	infof("Number of LUTs found: %v", len(module.Luts))
-	if numErr == 0 {
-		infof("Done analyzing LUTs. No errors.")
-	} else {
-		errorf("Failed analyzing LUTs. Errors found: %v", numErr)
-	}
-	return numErr == 0
+	return module.AnalyzeExecs()
 }
 
 func (module *QuplaModule) AnalyzeExecs() bool {
@@ -85,20 +47,33 @@ func (module *QuplaModule) AnalyzeExecs() bool {
 	return numErr == 0
 }
 
-func (module *QuplaModule) FindFuncDef(name string) *QuplaFuncDef {
+func (module *QuplaModule) FindFuncDef(name string) (*QuplaFuncDef, error) {
+	var err error
+	var fd *QuplaFuncDef
 	ret, ok := module.Functions[name]
 	if ok {
-		return ret
+		ret.SetName(name)
+		fd, err = ret.Analyze(module)
+		if err != nil {
+			return nil, err
+		}
+		module.Functions[name] = fd
+		return module.Functions[name], nil
 	}
-	return nil
+	return nil, fmt.Errorf("can't find function definition '%v'", name)
 }
 
-func (module *QuplaModule) FindLUTDef(name string) *QuplaLutDef {
+func (module *QuplaModule) FindLUTDef(name string) (*QuplaLutDef, error) {
+	var err error
 	ret, ok := module.Luts[name]
 	if ok {
-		return ret
+		module.Luts[name], err = ret.Analyze(module)
+		if err != nil {
+			return nil, err
+		}
+		return module.Luts[name], nil
 	}
-	return nil
+	return nil, fmt.Errorf("can't find LUT definition '%v'", name)
 }
 
 func (module *QuplaModule) FindTypeDef(name string) *QuplaTypeDef {

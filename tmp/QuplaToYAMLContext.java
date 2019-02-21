@@ -541,10 +541,6 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
             return;
         }
 
-//        if (expr instanceof FieldExpr){
-//            evalFieldExpr((FieldExpr)expr);
-//            return;
-//        }
         append("'evalBaseExpr not implemented: " + expr.toString() + "'");
         newline();
     }

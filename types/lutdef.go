@@ -9,6 +9,7 @@ import (
 type QuplaLutDef struct {
 	LutTable []string `yaml:"lutTable"`
 	//----
+	analyzed       bool
 	inputSize      int
 	outputSize     int
 	lutLookupTable []Trits
@@ -16,7 +17,12 @@ type QuplaLutDef struct {
 
 var pow3 = []int{1, 3, 9, 27}
 
-func (lutDef *QuplaLutDef) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
+func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) (*QuplaLutDef, error) {
+	if lutDef.analyzed {
+		return lutDef, nil
+	}
+	lutDef.analyzed = true
+
 	if len(lutDef.LutTable) == 0 {
 		return nil, fmt.Errorf("No LUT entries found")
 	}
@@ -69,6 +75,10 @@ func (lutDef *QuplaLutDef) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Ex
 		lutDef.lutLookupTable[idx] = outputs[i]
 	}
 	return lutDef, nil
+}
+
+func (lutDef *QuplaLutDef) Size() int64 {
+	return int64(lutDef.outputSize)
 }
 
 func (lutDef *QuplaLutDef) lookupWithCheck(t Trits) (Trits, error) {

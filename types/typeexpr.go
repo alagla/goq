@@ -1,11 +1,14 @@
 package types
 
+import "fmt"
+
 // ----- ?????? do we need it?
 type QuplaTypeExpr struct {
 	TypeExprWrap *QuplaExpressionWrapper            `yaml:"type"`
 	Fields       map[string]*QuplaExpressionWrapper `yaml:"fields"`
 	//---
 	typeExpr ExpressionInterface
+	size     int64
 	fields   map[string]ExpressionInterface
 }
 
@@ -15,6 +18,11 @@ func (e *QuplaTypeExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expre
 	if e.typeExpr, err = e.TypeExprWrap.Analyze(module, scope); err != nil {
 		return nil, err
 	}
+
+	if e.size, err = GetConstValue(e.typeExpr); err != nil {
+		return nil, err
+	}
+
 	var fe ExpressionInterface
 	for name, expr := range e.Fields {
 		if fe, err = expr.Analyze(module, scope); err != nil {
@@ -23,4 +31,26 @@ func (e *QuplaTypeExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expre
 		e.fields[name] = fe
 	}
 	return e, nil
+}
+
+func (e *QuplaTypeExpr) Size() int64 {
+	if e == nil {
+		return 0
+	}
+	return e.size
+}
+
+func (e *QuplaTypeExpr) RequireSize(size int64) error {
+	if size != e.Size() {
+		return fmt.Errorf("size mismatch")
+	}
+	var sumFld int64
+
+	for _, f := range e.fields {
+		sumFld += f.Size()
+	}
+	if sumFld != size {
+		return fmt.Errorf("sum of field sizes != type size")
+	}
+	return nil
 }

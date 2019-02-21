@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 type QuplaConcatExpr struct {
 	LhsWrap *QuplaExpressionWrapper `yaml:"lhs"`
 	RhsWrap *QuplaExpressionWrapper `yaml:"rhs"`
@@ -17,4 +19,23 @@ func (e *QuplaConcatExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Exp
 		return nil, err
 	}
 	return e, nil
+}
+
+func (e *QuplaConcatExpr) Size() int64 {
+	if e == nil {
+		return 0
+	}
+	ls := e.lhsExpr.Size()
+	rs := e.rhsExpr.Size()
+	if ls < rs {
+		return rs
+	}
+	return ls
+}
+
+func (e *QuplaConcatExpr) RequireSize(size int64) error {
+	if e.Size() != size {
+		return fmt.Errorf("size mismatch in the concat expression")
+	}
+	return nil
 }

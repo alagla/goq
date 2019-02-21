@@ -14,8 +14,9 @@ type QuplaFuncDef struct {
 	Assigns        map[string]*QuplaExpressionWrapper `yaml:"assigns,omitempty"`
 	ReturnExprWrap *QuplaExpressionWrapper            `yaml:"return"`
 	//-------
+	analyzed bool
 	Name     string
-	retSize  int
+	retSize  int64
 	retExpr  ExpressionInterface
 	varScope map[string]*LocalVariable
 }
@@ -32,15 +33,21 @@ func (def *QuplaFuncDef) SetName(name string) {
 	def.Name = name
 }
 
-func (def *QuplaFuncDef) Analyze(module *QuplaModule, _ *QuplaFuncDef) (ExpressionInterface, error) {
+func (def *QuplaFuncDef) Analyze(module *QuplaModule) (*QuplaFuncDef, error) {
+	if def.analyzed {
+		return def, nil
+	}
+	def.analyzed = true
 	var err error
-	// build var scope
-	if err = def.buildVarScope(module); err != nil {
-		return nil, err
-	}
-	if err = def.analyzeAssigns(module); err != nil {
-		return nil, err
-	}
+
+	debugf("Analyzing func def '%v'", def.Name)
+	defer func(perr *error) {
+		if *perr == nil {
+			debugf("Finished analyzing func def '%v'", def.Name)
+		} else {
+			errorf("Error while analyzing func def '%v': %v", def.Name, *perr)
+		}
+	}(&err)
 
 	// return size. Must be const expression
 	ce, err := def.ReturnType.Analyze(module, def)
@@ -51,7 +58,12 @@ func (def *QuplaFuncDef) Analyze(module *QuplaModule, _ *QuplaFuncDef) (Expressi
 	if sz, err = GetConstValue(ce); err != nil {
 		return nil, err
 	}
-	def.retSize = int(sz)
+	def.retSize = sz
+
+	// build var scope
+	if err = def.analyzeVarScope(module); err != nil {
+		return nil, err
+	}
 
 	// return expression
 	if def.retExpr, err = def.ReturnExprWrap.Analyze(module, def); err != nil {
@@ -61,6 +73,10 @@ func (def *QuplaFuncDef) Analyze(module *QuplaModule, _ *QuplaFuncDef) (Expressi
 		return nil, fmt.Errorf("in funcdef '%v': return expression can't be nil", def.Name)
 	}
 	return def, nil
+}
+
+func (def *QuplaFuncDef) Size() int64 {
+	return def.retSize
 }
 
 func (def *QuplaFuncDef) FindVar(name string) *LocalVariable {
@@ -74,7 +90,7 @@ func (def *QuplaFuncDef) FindVar(name string) *LocalVariable {
 	return ret
 }
 
-func (def *QuplaFuncDef) buildVarScope(module *QuplaModule) error {
+func (def *QuplaFuncDef) analyzeVarScope(module *QuplaModule) error {
 	var numParams, numVars int
 	def.varScope = make(map[string]*LocalVariable)
 	// params
@@ -97,8 +113,8 @@ func (def *QuplaFuncDef) buildVarScope(module *QuplaModule) error {
 		}
 		numParams++
 	}
-	// local variables
 
+	// local variables
 	for name, a := range def.Assigns {
 		if def.FindVar(name) != nil {
 			return fmt.Errorf("duplicate Name '%v'", name)
@@ -106,26 +122,19 @@ func (def *QuplaFuncDef) buildVarScope(module *QuplaModule) error {
 		def.varScope[name] = &LocalVariable{
 			name:  name,
 			isArg: false,
-			size:  0, // todo
-			expr:  a, // not analyzed yet
+			expr:  a,
 		}
 		numVars++
 	}
-	debugf("FuncDef '%v': %v params, %v local variables", def.Name, numParams, numVars)
-	return nil
-}
-
-func (def *QuplaFuncDef) analyzeAssigns(module *QuplaModule) error {
-	var err error
-	for name := range def.Assigns {
-		v := def.FindVar(name)
-		if v == nil {
-			return fmt.Errorf("inconsistency: variable '%v' is not in the scope", name)
-		}
+	// analyze rhs
+	for _, v := range def.varScope {
 		if !v.isArg {
-			if v.expr, err = v.expr.Analyze(module, def); err != nil {
+			a, err := v.expr.Analyze(module, def)
+			if err != nil {
 				return err
 			}
+			v.expr = a
+			v.size = a.Size()
 		}
 	}
 	return nil

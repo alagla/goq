@@ -21,9 +21,23 @@ func (e *QuplaLutExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expres
 		}
 		e.argExpr = append(e.argExpr, ae)
 	}
-	e.lutDef = module.FindLUTDef(e.Name)
-	if e.lutDef == nil {
-		return nil, fmt.Errorf("can't find LUT definition for '%v'", e.Name)
+	e.lutDef, err = module.FindLUTDef(e.Name)
+	if err != nil {
+		return nil, err
 	}
 	return e, nil
+}
+
+func (e *QuplaLutExpr) Size() int64 {
+	if e == nil {
+		return 0
+	}
+	return e.lutDef.Size()
+}
+
+func (e *QuplaLutExpr) RequireSize(size int64) error {
+	if size != e.Size() {
+		return fmt.Errorf("size mismatch in LutExpr")
+	}
+	return nil
 }
