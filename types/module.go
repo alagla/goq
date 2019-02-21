@@ -24,7 +24,7 @@ func (module *QuplaModule) AnalyzeFuncDefs() bool {
 			errorf("Error in function '%v': %v", name, err)
 		}
 	}
-	infof("Number of function definitons found: %v", len(module.Functions))
+	infof("Number of function definitions found: %v", len(module.Functions))
 	if numErr == 0 {
 		infof("Done analyzing function definitions. No errors.")
 	} else {

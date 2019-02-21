@@ -34,7 +34,6 @@ type QuplaConstNumber struct {
 
 type ConstValue struct {
 	Value int64
-	Trits trinary.Trits
 }
 
 func IsConstExpression(e ExpressionInterface) bool {
@@ -86,9 +85,9 @@ func (e *QuplaConstExpr) Analyze(module *QuplaModule) (ExpressionInterface, erro
 	var ret *ConstValue
 	switch e.Operator {
 	case "+":
-		ret = NewConstValue(lv.Value+rv.Value, 0)
+		ret = NewConstValue(lv.Value + rv.Value)
 	case "-":
-		ret = NewConstValue(lv.Value-rv.Value, 0)
+		ret = NewConstValue(lv.Value - rv.Value)
 	}
 	return ret, nil
 }
@@ -119,16 +118,16 @@ func (e *QuplaConstTerm) Analyze(module *QuplaModule) (ExpressionInterface, erro
 	var ret *ConstValue
 	switch e.Operator {
 	case "*":
-		ret = NewConstValue(lv.Value*rv.Value, 0)
+		ret = NewConstValue(lv.Value * rv.Value)
 	case "/":
 		if rv.Value != 0 {
-			ret = NewConstValue(lv.Value/rv.Value, 0)
+			ret = NewConstValue(lv.Value / rv.Value)
 		} else {
 			return nil, fmt.Errorf("division by 0 in constant expression")
 		}
 	case "%":
 		if rv.Value != 0 {
-			ret = NewConstValue(lv.Value%rv.Value, 0)
+			ret = NewConstValue(lv.Value % rv.Value)
 		} else {
 			return nil, fmt.Errorf("division by 0 in constant expression")
 		}
@@ -142,7 +141,7 @@ func (e *QuplaConstTypeName) Analyze(module *QuplaModule) (ExpressionInterface, 
 	if ret, err = strconv.Atoi(e.Size); err != nil {
 		return nil, err
 	}
-	return NewConstValue(int64(ret), 0), nil
+	return NewConstValue(int64(ret)), nil
 }
 
 func (e *QuplaConstNumber) Analyze(module *QuplaModule) (ExpressionInterface, error) {
@@ -150,26 +149,26 @@ func (e *QuplaConstNumber) Analyze(module *QuplaModule) (ExpressionInterface, er
 	if err != nil {
 		return nil, err
 	}
-	return NewConstValue(int64(ret), 0), nil
+	return NewConstValue(int64(ret)), nil
 }
 
-func NewConstValue(value int64, size int) *ConstValue {
-	t := trinary.IntToTrits(value)
-	switch {
-	case size <= len(t):
-		return &ConstValue{
-			Value: value,
-			Trits: t,
-		}
-	case size > len(t):
-		ret := make(trinary.Trits, size, size)
-		copy(ret, t)
-		return &ConstValue{
-			Value: value,
-			Trits: ret,
-		}
+func NewConstValue(value int64) *ConstValue {
+	return &ConstValue{
+		Value: value,
 	}
-	panic("inconsistency")
+}
+
+func (e *ConstValue) GetTrits(size int) (trinary.Trits, error) {
+	t := trinary.IntToTrits(e.Value)
+	if size < len(t) {
+		return nil, fmt.Errorf("size %v to small for value %v", size, e.Value)
+	}
+	if size == len(t) {
+		return t, nil
+	}
+	ret := make(trinary.Trits, size, size)
+	copy(ret, t)
+	return ret, nil
 }
 
 func GetConstValue(expr ExpressionInterface) (int64, error) {

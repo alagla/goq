@@ -41,10 +41,10 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
     }
 
     private void evalExpression(BaseExpr expr){
-        if (expr instanceof FieldExpr){
-            evalFieldExpr((FieldExpr) expr);
-            return;
-        }
+//        if (expr instanceof FieldExpr){
+//            evalFieldExpr((FieldExpr) expr);
+//            return;
+//        }
         if (expr instanceof SubExpr){
             expr = ((SubExpr)expr).expr;
         }
@@ -477,27 +477,30 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
         append("fields: ");
         newline();
 
+        indent();
         for (final BaseExpr expr : type.fields) {
-            append("-");
+            FieldExpr f = (FieldExpr)expr;
+            append(f.name + ":");
             newline();
             indent();
-            evalExpression(expr);
+            evalExpression(f.expr);
             undent();
         }
-    }
-
-    private void evalFieldExpr(FieldExpr fieldExpr) {
-        append("fieldName: ");
-        append(fieldExpr.name);
-        newline();
-
-        append("condExpr: ");
-        newline();
-        indent();
-        evalExpression(fieldExpr.expr);
         undent();
     }
 
+//    private void evalFieldExpr(FieldExpr fieldExpr) {
+//        append("fieldName: ");
+//        append(fieldExpr.name);
+//        newline();
+//
+//        append("condExpr: ");
+//        newline();
+//        indent();
+//        evalExpression(fieldExpr.expr);
+//        undent();
+//    }
+//
     private void evalConstTypeName(ConstTypeName constTypeName){
         append("typeName: ");
         append(constTypeName.name);
@@ -569,10 +572,10 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
             return;
         }
 
-        if (expr instanceof FieldExpr){
-            evalFieldExpr((FieldExpr)expr);
-            return;
-        }
+//        if (expr instanceof FieldExpr){
+//            evalFieldExpr((FieldExpr)expr);
+//            return;
+//        }
         append("'evalBaseExpr not implemented: " + expr.toString() + "'");
         newline();
     }
