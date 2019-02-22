@@ -186,8 +186,12 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
 
     @Override
     public void evalSlice(SliceExpr slice) {
-        append("name: ");
+        append("var: ");
         append(slice.name);
+        newline();
+        append("offset: " + slice.start);
+        newline();
+        append("size: " + slice.size);
         newline();
 
         if (slice.fields.size() > 0){
@@ -277,8 +281,17 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
 
                 append(var.name + ": ");
                 newline();
+
+                indent();
+                append("size: " + var.size);
+                newline();
+                append("type: ");
+                newline();
+
                 indent();
                 evalExpression(var.type);
+                undent();
+
                 undent();
             }
             undent();
@@ -310,12 +323,13 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
         indent();
         for (final BaseExpr se : func.stateExprs) {
             StateExpr stateExpr = (StateExpr)se;
-            append("- ");
-            append("var: ");
-            append(stateExpr.name);
+            append(stateExpr.name + ": ");
+            newline();
 
             indent();
+            append("size: " + stateExpr.stateType.size);
             newline();
+
             append("type: ");
             append(stateExpr.stateType.name);
             newline();
