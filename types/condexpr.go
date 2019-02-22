@@ -1,7 +1,5 @@
 package types
 
-import "fmt"
-
 type QuplaCondExpr struct {
 	If   *QuplaExpressionWrapper `yaml:"if"`
 	Then *QuplaExpressionWrapper `yaml:"then"`
@@ -37,11 +35,4 @@ func (e *QuplaCondExpr) Size() int64 {
 		return ee
 	}
 	return te
-}
-
-func (e *QuplaCondExpr) RequireSize(size int64) error {
-	if e.Size() != size {
-		return fmt.Errorf("size mismatch in the conditional expression")
-	}
-	return nil
 }

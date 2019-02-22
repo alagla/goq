@@ -1,9 +1,10 @@
 package types
 
+import "fmt"
+
 type ExpressionInterface interface {
 	Analyze(*QuplaModule, *QuplaFuncDef) (ExpressionInterface, error)
 	Size() int64
-	RequireSize(int64) error
 }
 
 type QuplaExecStmt struct {
@@ -30,6 +31,21 @@ func (e *QuplaNullExpr) Size() int64 {
 	return 0
 }
 
-func (e *QuplaNullExpr) RequireSize(_ int64) error {
+func MatchSizes(e1, e2 ExpressionInterface) error {
+	s1 := e1.Size()
+	s2 := e2.Size()
+
+	if s1 != s2 {
+		return fmt.Errorf("sizes doesn't match: %v != %v", s1, s2)
+	}
+	return nil
+}
+
+func RequireSize(e ExpressionInterface, size int64) error {
+	s := e.Size()
+
+	if s != size {
+		return fmt.Errorf("sizes doesn't match: required %v != %v", size, s)
+	}
 	return nil
 }

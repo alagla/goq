@@ -40,10 +40,6 @@ func (e *QuplaExpressionWrapper) Size() int64 {
 	return 0
 }
 
-func (e *QuplaExpressionWrapper) RequireSize(_ int64) error {
-	return nil
-}
-
 func (e *QuplaExpressionWrapper) unwarp() (ExpressionInterface, error) {
 	var ret ExpressionInterface
 	var numCases int

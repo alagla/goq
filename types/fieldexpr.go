@@ -1,7 +1,5 @@
 package types
 
-import "fmt"
-
 type QuplaFieldExpr struct {
 	FieldName       string                  `yaml:"fieldName"`
 	CondExprWrapper *QuplaExpressionWrapper `yaml:"condExpr"`
@@ -23,11 +21,4 @@ func (e *QuplaFieldExpr) Size() int64 {
 		return 0
 	}
 	return e.condExpr.Size()
-}
-
-func (e *QuplaFieldExpr) RequireSize(size int64) error {
-	if size != e.Size() {
-		return fmt.Errorf("size mismatch in FieldExpr")
-	}
-	return nil
 }

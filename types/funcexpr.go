@@ -1,7 +1,5 @@
 package types
 
-import "fmt"
-
 type QuplaFuncExpr struct {
 	Name     string                    `yaml:"name"`
 	ArgsWrap []*QuplaExpressionWrapper `yaml:"args"`
@@ -33,11 +31,4 @@ func (e *QuplaFuncExpr) Size() int64 {
 		return 0
 	}
 	return e.funcDef.Size()
-}
-
-func (e *QuplaFuncExpr) RequireSize(size int64) error {
-	if size != e.Size() {
-		return fmt.Errorf("size mismatch in FuncExpr")
-	}
-	return nil
 }

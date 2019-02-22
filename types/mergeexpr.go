@@ -1,7 +1,5 @@
 package types
 
-import "fmt"
-
 type QuplaMergeExpr struct {
 	LhsWrap *QuplaExpressionWrapper `yaml:"lhs"`
 	RhsWrap *QuplaExpressionWrapper `yaml:"rhs"`
@@ -33,11 +31,4 @@ func (e *QuplaMergeExpr) Size() int64 {
 		return rs
 	}
 	return ls
-}
-
-func (e *QuplaMergeExpr) RequireSize(size int64) error {
-	if size != e.Size() {
-		return fmt.Errorf("size mismatch in MergeExpr")
-	}
-	return nil
 }

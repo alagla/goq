@@ -40,7 +40,7 @@ func (e *QuplaTypeExpr) Size() int64 {
 	return e.size
 }
 
-func (e *QuplaTypeExpr) RequireSize(size int64) error {
+func (e *QuplaTypeExpr) CheckSize(size int64) error {
 	if size != e.Size() {
 		return fmt.Errorf("size mismatch")
 	}

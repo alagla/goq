@@ -38,9 +38,6 @@ type ConstValue struct {
 }
 
 func IsConstExpression(e ExpressionInterface) bool {
-	if e == nil {
-		return false //???????
-	}
 	switch e.(type) {
 	case *QuplaConstExpr:
 		return true
@@ -69,7 +66,7 @@ func (e *QuplaConstExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expr
 	if rei, err = e.RhsWrap.Analyze(module, scope); err != nil {
 		return nil, err
 	}
-	if !IsConstExpression(e.LhsWrap) || !IsConstExpression(e.RhsWrap) {
+	if !IsConstExpression(lei) || !IsConstExpression(rei) {
 		return nil, fmt.Errorf("operands must be constant expression")
 	}
 	var rv, lv *ConstValue
@@ -93,10 +90,6 @@ func (e *QuplaConstExpr) Size() int64 {
 	return 0
 }
 
-func (e *QuplaConstExpr) RequireSize(_ int64) error {
-	return nil
-}
-
 func (e *QuplaConstTerm) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
 	var lei, rei ExpressionInterface
@@ -110,7 +103,7 @@ func (e *QuplaConstTerm) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expr
 	if rei, err = e.RhsWrap.Analyze(module, scope); err != nil {
 		return nil, err
 	}
-	if !IsConstExpression(e.LhsWrap) || !IsConstExpression(e.RhsWrap) {
+	if !IsConstExpression(lei) || !IsConstExpression(rei) {
 		return nil, fmt.Errorf("operands must be constant expression")
 	}
 	var rv, lv *ConstValue
@@ -144,10 +137,6 @@ func (e *QuplaConstTerm) Size() int64 {
 	return 0
 }
 
-func (e *QuplaConstTerm) RequireSize(_ int64) error {
-	return nil
-}
-
 func (e *QuplaConstTypeName) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
 	var ret int
@@ -161,10 +150,6 @@ func (e *QuplaConstTypeName) Size() int64 {
 	return 0
 }
 
-func (e *QuplaConstTypeName) RequireSize(_ int64) error {
-	return nil
-}
-
 func (e *QuplaConstNumber) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	ret, err := strconv.Atoi(e.Value)
 	if err != nil {
@@ -175,10 +160,6 @@ func (e *QuplaConstNumber) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Ex
 
 func (e *QuplaConstNumber) Size() int64 {
 	return 0
-}
-
-func (e *QuplaConstNumber) RequireSize(_ int64) error {
-	return nil
 }
 
 func (e *ConstValue) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
@@ -206,15 +187,6 @@ func (e *ConstValue) GetTrits() trinary.Trits {
 	ret := make(trinary.Trits, 0, e.size)
 	copy(ret, t)
 	return ret
-}
-
-func (e *ConstValue) RequireSize(size int64) error {
-	t := trinary.IntToTrits(e.Value)
-	if size > int64(len(t)) {
-		return fmt.Errorf("size mismatch in the conditional expression")
-	}
-	e.size = size
-	return nil
 }
 
 func GetConstValue(expr ExpressionInterface) (int64, error) {

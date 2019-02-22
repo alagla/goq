@@ -32,6 +32,12 @@ func (module *QuplaModule) AnalyzeExecs() bool {
 				errorf("%v", err)
 				continue
 			}
+			// check sizes
+			if err = MatchSizes(exec.expr, exec.exprExpected); err != nil {
+				numErr++
+				errorf("%v", err)
+				continue
+			}
 			numTest++
 		} else {
 			exec.exprExpected = nil
@@ -53,6 +59,9 @@ func (module *QuplaModule) FindFuncDef(name string) (*QuplaFuncDef, error) {
 	ret, ok := module.Functions[name]
 	if ok {
 		ret.SetName(name)
+		if name == "fullAdd_3" {
+			fmt.Printf("kuku")
+		}
 		fd, err = ret.Analyze(module)
 		if err != nil {
 			return nil, err
@@ -67,6 +76,7 @@ func (module *QuplaModule) FindLUTDef(name string) (*QuplaLutDef, error) {
 	var err error
 	ret, ok := module.Luts[name]
 	if ok {
+		ret.SetName(name)
 		module.Luts[name], err = ret.Analyze(module)
 		if err != nil {
 			return nil, err

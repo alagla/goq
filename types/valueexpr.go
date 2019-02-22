@@ -42,10 +42,3 @@ func (e *QuplaValueExpr) Size() int64 {
 	}
 	return int64(len(e.TritValue))
 }
-
-func (e *QuplaValueExpr) RequireSize(size int64) error {
-	if size != e.Size() {
-		return fmt.Errorf("size mismatch in ValueExpr")
-	}
-	return nil
-}

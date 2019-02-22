@@ -9,6 +9,7 @@ import (
 type QuplaLutDef struct {
 	LutTable []string `yaml:"lutTable"`
 	//----
+	name           string
 	analyzed       bool
 	inputSize      int
 	outputSize     int
@@ -16,6 +17,10 @@ type QuplaLutDef struct {
 }
 
 var pow3 = []int{1, 3, 9, 27}
+
+func (lutDef *QuplaLutDef) SetName(name string) {
+	lutDef.name = name
+}
 
 func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) (*QuplaLutDef, error) {
 	if lutDef.analyzed {
