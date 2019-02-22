@@ -59,9 +59,9 @@ func (module *QuplaModule) FindFuncDef(name string) (*QuplaFuncDef, error) {
 	ret, ok := module.Functions[name]
 	if ok {
 		ret.SetName(name)
-		if name == "fullAdd_3" {
-			fmt.Printf("kuku")
-		}
+		//if name == "fullAdd_3" {
+		//	fmt.Printf("kuku")
+		//}
 		fd, err = ret.Analyze(module)
 		if err != nil {
 			return nil, err

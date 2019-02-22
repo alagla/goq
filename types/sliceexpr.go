@@ -10,14 +10,17 @@ type QuplaSliceExpr struct {
 	localVar  *LocalVariable
 	startExpr ExpressionInterface
 	sizeExpr  ExpressionInterface
-	offset    int64
-	size      int64
+	start     int64
+	end       int64
 }
 
 func (e *QuplaSliceExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
 
-	e.localVar = scope.FindVar(e.Name)
+	if e.localVar, err = scope.FindVar(e.Name, module); err != nil {
+		return nil, err
+	}
+
 	if e.localVar == nil {
 		var sc string
 		if scope != nil {
@@ -31,25 +34,28 @@ func (e *QuplaSliceExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expr
 		if e.startExpr, err = e.StartExprWrap.Analyze(module, scope); err != nil {
 			return nil, err
 		}
-		if e.offset, err = GetConstValue(e.startExpr); err != nil || e.offset >= e.localVar.size {
-			return nil, fmt.Errorf("offset must be constant expression less than var size in SliceExpr")
+		if e.start, err = GetConstValue(e.startExpr); err != nil || e.start < 0 || e.start >= e.localVar.size {
+			return nil, fmt.Errorf("wrong start offset in SliceExpr")
 		}
-		e.size = 1
+		e.end = e.start + 1
 	} else {
 		e.startExpr = nil
-		e.offset = 0
-		e.size = e.localVar.size
+		e.start = 0
+		e.end = e.localVar.size
 		return e, nil
 	}
 	if e.EndExprWrap != nil {
 		if e.sizeExpr, err = e.EndExprWrap.Analyze(module, scope); err != nil {
 			return nil, err
 		}
-		if e.size, err = GetConstValue(e.sizeExpr); err != nil || e.size <= 0 {
-			return nil, fmt.Errorf("size must be positive constant expression in SliceExpr")
+		var s int64
+		if s, err = GetConstValue(e.sizeExpr); err != nil || s > e.localVar.size {
+			return nil, fmt.Errorf("wrong slice size in SliceExpr")
 		}
+		e.end = e.start + s
 	} else {
 		e.sizeExpr = nil
+		e.end = e.start + 1
 	}
 	return e, nil
 }
@@ -58,5 +64,5 @@ func (e *QuplaSliceExpr) Size() int64 {
 	if e == nil {
 		return 0
 	}
-	return e.size
+	return e.end - e.start
 }

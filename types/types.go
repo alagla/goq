@@ -17,7 +17,7 @@ type QuplaExecStmt struct {
 }
 
 type QuplaTypeDef struct {
-	Size   string                            `yaml:"size"`
+	Size   string                            `yaml:"end"`
 	Fields map[string]*struct{ Size string } `yaml:"fields,omitempty"`
 }
 

@@ -42,7 +42,7 @@ func (e *QuplaTypeExpr) Size() int64 {
 
 func (e *QuplaTypeExpr) CheckSize(size int64) error {
 	if size != e.Size() {
-		return fmt.Errorf("size mismatch")
+		return fmt.Errorf("end mismatch")
 	}
 	var sumFld int64
 
@@ -50,7 +50,7 @@ func (e *QuplaTypeExpr) CheckSize(size int64) error {
 		sumFld += f.Size()
 	}
 	if sumFld != size {
-		return fmt.Errorf("sum of field sizes != type size")
+		return fmt.Errorf("sum of field sizes != type end")
 	}
 	return nil
 }

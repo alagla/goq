@@ -1,6 +1,8 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type QuplaEnvStmt struct {
 	Name string `yaml:"Name"`
@@ -23,10 +25,11 @@ type QuplaFuncDef struct {
 
 // represents local variable or parameter in func def
 type LocalVariable struct {
-	name  string
-	isArg bool
-	size  int64
-	expr  ExpressionInterface
+	name     string
+	isArg    bool
+	size     int64
+	expr     ExpressionInterface
+	analyzed bool
 }
 
 func (def *QuplaFuncDef) SetName(name string) {
@@ -40,11 +43,9 @@ func (def *QuplaFuncDef) Analyze(module *QuplaModule) (*QuplaFuncDef, error) {
 	def.analyzed = true
 	var err error
 
-	debugf("Analyzing func def '%v'", def.Name)
+	//debugf("Analyzing func def '%v'", def.Name)
 	defer func(perr *error) {
-		if *perr == nil {
-			debugf("Finished analyzing func def '%v'", def.Name)
-		} else {
+		if *perr != nil {
 			errorf("Error while analyzing func def '%v': %v", def.Name, *perr)
 		}
 	}(&err)
@@ -61,9 +62,7 @@ func (def *QuplaFuncDef) Analyze(module *QuplaModule) (*QuplaFuncDef, error) {
 	def.retSize = sz
 
 	// build var scope
-	if err = def.analyzeVarScope(module); err != nil {
-		return nil, err
-	}
+	def.createVarScope()
 
 	// return expression
 	if def.retExpr, err = def.ReturnExprWrap.Analyze(module, def); err != nil {
@@ -79,63 +78,66 @@ func (def *QuplaFuncDef) Size() int64 {
 	return def.retSize
 }
 
-func (def *QuplaFuncDef) FindVar(name string) *LocalVariable {
-	if def == nil || def.varScope == nil {
-		return nil
+func (def *QuplaFuncDef) InScope(name string) bool {
+	if def.varScope == nil {
+		panic(fmt.Errorf("var scope not ready for %v", def.Name))
 	}
-	ret, ok := def.varScope[name]
-	if !ok {
-		return nil
-	}
-	return ret
+	_, ok := def.varScope[name]
+	return ok
 }
 
-func (def *QuplaFuncDef) analyzeVarScope(module *QuplaModule) error {
-	var numParams, numVars int
+func (def *QuplaFuncDef) FindVar(name string, module *QuplaModule) (*LocalVariable, error) {
+	if !def.InScope(name) {
+		return nil, nil
+	}
+	ret := def.varScope[name]
+	if ret.analyzed {
+		return ret, nil
+	}
+	var err error
+	if ret.isArg {
+		// param
+		if ret.expr == nil {
+			panic("ret.expr == nil")
+		}
+		t, err := ret.expr.Analyze(module, nil)
+		if err != nil {
+			return nil, err
+		}
+		if ret.size, err = GetConstValue(t); err != nil {
+			return nil, err
+		}
+		ret.expr = nil
+		ret.analyzed = true
+		return ret, nil
+	}
+	// local var
+	if ret.expr == nil {
+		ret.analyzed = true
+		return ret, nil // ???
+	}
+	if ret.expr, err = ret.expr.Analyze(module, def); err != nil {
+		return nil, err
+	}
+	ret.size = ret.expr.Size()
+	ret.analyzed = true
+	return ret, nil
+}
+
+func (def *QuplaFuncDef) createVarScope() {
 	def.varScope = make(map[string]*LocalVariable)
-	// params
 	for name, t := range def.Params {
-		if def.FindVar(name) != nil {
-			return fmt.Errorf("duplicate Name '%v'", name)
-		}
-		t, err := t.Analyze(module, nil)
-		if err != nil {
-			return err
-		}
-		size, err := GetConstValue(t)
-		if err != nil {
-			return err
-		}
 		def.varScope[name] = &LocalVariable{
 			name:  name,
 			isArg: true,
-			size:  size,
+			expr:  t,
 		}
-		numParams++
 	}
-
-	// local variables
 	for name, a := range def.Assigns {
-		if def.FindVar(name) != nil {
-			return fmt.Errorf("duplicate Name '%v'", name)
-		}
 		def.varScope[name] = &LocalVariable{
 			name:  name,
 			isArg: false,
 			expr:  a,
 		}
-		numVars++
 	}
-	// analyze rhs
-	for _, v := range def.varScope {
-		if !v.isArg {
-			a, err := v.expr.Analyze(module, def)
-			if err != nil {
-				return err
-			}
-			v.expr = a
-			v.size = a.Size()
-		}
-	}
-	return nil
 }
