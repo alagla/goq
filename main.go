@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/lunfardo314/goq/types"
+	"github.com/lunfardo314/goq/program"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -11,7 +11,7 @@ const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/re
 const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
 
 func main() {
-	quplaModule := types.NewQuplaModule()
+	quplaModule := program.NewQuplaModule()
 	must(readYAML(fname, &quplaModule))
 	if !quplaModule.Analyze() {
 		errorf("Failed analyzing Qupla module")

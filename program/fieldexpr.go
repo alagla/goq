@@ -1,4 +1,4 @@
-package types
+package program
 
 type QuplaFieldExpr struct {
 	FieldName       string                  `yaml:"fieldName"`

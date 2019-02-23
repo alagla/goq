@@ -1,4 +1,4 @@
-package types
+package program
 
 type QuplaFuncExpr struct {
 	Name     string                    `yaml:"name"`
