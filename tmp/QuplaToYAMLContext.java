@@ -3,7 +3,6 @@ package org.iota.qupla.qupla.context;
 import org.iota.qupla.qupla.context.base.QuplaBaseContext;
 import org.iota.qupla.qupla.expression.*;
 import org.iota.qupla.qupla.expression.base.BaseExpr;
-import org.iota.qupla.qupla.expression.base.BaseSubExpr;
 import org.iota.qupla.qupla.expression.constant.ConstExpr;
 import org.iota.qupla.qupla.expression.constant.ConstNumber;
 import org.iota.qupla.qupla.expression.constant.ConstTerm;
@@ -279,10 +278,12 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
             for (BaseExpr p : func.params){
                 final NameExpr var = (NameExpr) p;
 
-                append(var.name + ": ");
+                append("- ");
                 newline();
-
                 indent();
+
+                append("argName: " + var.name);
+                newline();
                 append("size: " + var.size);
                 newline();
                 append("type: ");
