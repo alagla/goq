@@ -1,6 +1,8 @@
 package program
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type QuplaLutExpr struct {
 	Name string                    `yaml:"name"`
@@ -41,4 +43,15 @@ func (e *QuplaLutExpr) Size() int64 {
 		return 0
 	}
 	return e.lutDef.Size()
+}
+
+func (e *QuplaLutExpr) Eval(proc *Processor) bool {
+	var null bool
+	for i, a := range e.argExpr {
+		null = proc.Eval(a, int64(i))
+		if null {
+			return true
+		}
+	}
+	return e.lutDef.Lookup(proc.Slice(0, int64(e.lutDef.outputSize)), proc.Slice(0, int64(e.lutDef.inputSize)))
 }

@@ -34,3 +34,7 @@ func (e *QuplaFuncExpr) Size() int64 {
 	}
 	return e.funcDef.Size()
 }
+
+func (e *QuplaFuncExpr) Eval(proc *Processor) bool {
+	return true
+}

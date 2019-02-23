@@ -1,6 +1,8 @@
 package program
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type QuplaSliceExpr struct {
 	Var           string                  `yaml:"var"`
@@ -39,4 +41,8 @@ func (e *QuplaSliceExpr) Size() int64 {
 		return 0
 	}
 	return e.SliceSize
+}
+
+func (e *QuplaSliceExpr) Eval(proc *Processor) bool {
+	return proc.Eval(e.localVar.expr, -e.Offset)
 }

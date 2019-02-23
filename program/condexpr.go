@@ -1,6 +1,8 @@
 package program
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type QuplaCondExpr struct {
 	If   *QuplaExpressionWrapper `yaml:"if"`
@@ -45,4 +47,18 @@ func (e *QuplaCondExpr) Size() int64 {
 		return 0
 	}
 	return e.thenExpr.Size()
+}
+
+func (e *QuplaCondExpr) Eval(proc *Processor) bool {
+	null := proc.Eval(e.ifExpr, e.thenExpr.Size())
+	if null {
+		return true
+	}
+	switch proc.Trit(e.thenExpr.Size()) {
+	case 1:
+		return proc.Eval(e.thenExpr, 0)
+	case -1:
+		return proc.Eval(e.elseExpr, 0)
+	}
+	panic("trit value")
 }

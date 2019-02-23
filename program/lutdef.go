@@ -87,15 +87,13 @@ func (lutDef *QuplaLutDef) Size() int64 {
 	return int64(lutDef.outputSize)
 }
 
-func (lutDef *QuplaLutDef) lookupWithCheck(t Trits) (Trits, error) {
-	if len(t) != lutDef.inputSize {
-		return nil, fmt.Errorf("wrong input size")
+func (lutDef *QuplaLutDef) Lookup(res, args Trits) bool {
+	t := lutDef.lutLookupTable[tritsToIdx(args)]
+	if t == nil {
+		return true
 	}
-	return lutDef.lookup(t), nil
-}
-
-func (lutDef *QuplaLutDef) lookup(t Trits) Trits {
-	return lutDef.lutLookupTable[tritsToIdx(t)]
+	copy(res, t)
+	return false
 }
 
 func tritsToIdx(trits Trits) int64 {

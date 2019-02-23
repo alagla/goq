@@ -44,3 +44,7 @@ func (e *QuplaValueExpr) Size() int64 {
 	}
 	return int64(len(e.TritValue))
 }
+
+func (e *QuplaValueExpr) Eval(proc *Processor) bool {
+	return true
+}

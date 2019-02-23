@@ -37,6 +37,26 @@ type ConstValue struct {
 	size  int64
 }
 
+func (d *QuplaConstExpr) Eval(proc *Processor) bool {
+	return true
+}
+
+func (d *QuplaConstTerm) Eval(proc *Processor) bool {
+	return true
+}
+
+func (d *QuplaConstTypeName) Eval(proc *Processor) bool {
+	return true
+}
+
+func (d *QuplaConstNumber) Eval(proc *Processor) bool {
+	return true
+}
+
+func (d *ConstValue) Eval(proc *Processor) bool {
+	return true
+}
+
 func IsConstExpression(e ExpressionInterface) bool {
 	switch e.(type) {
 	case *QuplaConstExpr:

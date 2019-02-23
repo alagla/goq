@@ -23,3 +23,7 @@ func (e *QuplaFieldExpr) Size() int64 {
 	}
 	return e.condExpr.Size()
 }
+
+func (e *QuplaFieldExpr) Eval(proc *Processor) bool {
+	return true
+}

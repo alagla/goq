@@ -40,6 +40,10 @@ func (e *QuplaExpressionWrapper) Size() int64 {
 	return 0
 }
 
+func (e *QuplaExpressionWrapper) Eval(proc *Processor) bool {
+	return true
+}
+
 func (e *QuplaExpressionWrapper) unwarp() (ExpressionInterface, error) {
 	var ret ExpressionInterface
 	var numCases int

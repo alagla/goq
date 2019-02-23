@@ -1,6 +1,8 @@
 package program
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type QuplaConcatExpr struct {
 	LhsWrap *QuplaExpressionWrapper `yaml:"lhs"`
@@ -31,4 +33,12 @@ func (e *QuplaConcatExpr) Size() int64 {
 		return 0
 	}
 	return e.lhsExpr.Size() + e.rhsExpr.Size()
+}
+
+func (e *QuplaConcatExpr) Eval(proc *Processor) bool {
+	null := proc.Eval(e.lhsExpr, 0)
+	if null {
+		return true
+	}
+	return proc.Eval(e.rhsExpr, e.lhsExpr.Size())
 }

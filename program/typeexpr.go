@@ -1,6 +1,8 @@
 package program
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // ----- ?????? do we need it?
 type QuplaTypeExpr struct {
@@ -55,4 +57,8 @@ func (e *QuplaTypeExpr) CheckSize() error {
 		return fmt.Errorf("sum of field sizes != type end")
 	}
 	return nil
+}
+
+func (e *QuplaTypeExpr) Eval(proc *Processor) bool {
+	return true
 }

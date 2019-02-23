@@ -1,10 +1,13 @@
 package program
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type ExpressionInterface interface {
 	Analyze(*QuplaModule, *QuplaFuncDef) (ExpressionInterface, error)
 	Size() int64
+	Eval(*Processor) bool
 }
 
 type QuplaExecStmt struct {
@@ -36,6 +39,10 @@ func (e *QuplaNullExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expre
 
 func (e *QuplaNullExpr) Size() int64 {
 	return e.size
+}
+
+func (e *QuplaNullExpr) Eval(proc *Processor) bool {
+	return true
 }
 
 func (e *QuplaNullExpr) SetSize(size int64) {
