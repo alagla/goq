@@ -15,6 +15,7 @@ func (e *QuplaFuncExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expre
 		return nil, err
 	}
 	var fe ExpressionInterface
+	module.IncStat("numFuncExpr")
 
 	e.args = make([]ExpressionInterface, 0, len(e.ArgsWrap))
 	for _, arg := range e.ArgsWrap {

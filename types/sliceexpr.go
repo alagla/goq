@@ -18,6 +18,7 @@ func (e *QuplaSliceExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expr
 	if e.localVar, err = scope.FindVar(e.Var, module); err != nil {
 		return nil, err
 	}
+	module.IncStat("numSliceExpr")
 	if e.localVar == nil {
 		var sc string
 		if scope != nil {

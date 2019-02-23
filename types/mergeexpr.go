@@ -12,6 +12,8 @@ type QuplaMergeExpr struct {
 
 func (e *QuplaMergeExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
+	module.IncStat("numMergeExpr")
+
 	e.lhsExpr, err = e.LhsWrap.Analyze(module, scope)
 	if err != nil {
 		return nil, err

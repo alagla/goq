@@ -15,6 +15,8 @@ type QuplaTypeExpr struct {
 func (e *QuplaTypeExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	e.fields = make(map[string]ExpressionInterface)
 	var err error
+	module.IncStat("numTypeExpr")
+
 	if e.typeExpr, err = e.TypeExprWrap.Analyze(module, scope); err != nil {
 		return nil, err
 	}

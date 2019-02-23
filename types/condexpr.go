@@ -14,6 +14,7 @@ type QuplaCondExpr struct {
 
 func (e *QuplaCondExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
+	module.IncStat("numCond")
 
 	if e.ifExpr, err = e.If.Analyze(module, scope); err != nil {
 		return nil, err

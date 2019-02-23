@@ -12,6 +12,8 @@ type QuplaConcatExpr struct {
 
 func (e *QuplaConcatExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
+	module.IncStat("numConcat")
+
 	if e.lhsExpr, err = e.LhsWrap.Analyze(module, scope); err != nil {
 		return nil, err
 	}

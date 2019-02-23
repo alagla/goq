@@ -9,6 +9,7 @@ type QuplaFieldExpr struct {
 
 func (e *QuplaFieldExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
+	module.IncStat("numFieldExpr")
 	e.condExpr, err = e.CondExprWrapper.Analyze(module, scope)
 	if err != nil {
 		return nil, err

@@ -67,6 +67,7 @@ func (def *QuplaFuncDef) Analyze(module *QuplaModule) (*QuplaFuncDef, error) {
 	}
 	def.analyzed = true
 	var err error
+	module.IncStat("numFuncDef")
 
 	//debugf("Analyzing func def '%v'", def.Name)
 	defer func(perr *error) {

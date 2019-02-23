@@ -11,12 +11,12 @@ const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/re
 const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
 
 func main() {
-	var quplaModule types.QuplaModule
+	quplaModule := types.NewQuplaModule()
 	must(readYAML(fname, &quplaModule))
 	if !quplaModule.Analyze() {
 		errorf("Failed analyzing Qupla module")
 	}
-	//fmt.Printf("%+v", quplaModule)
+	quplaModule.PrintStats()
 	infof("Ciao!")
 }
 

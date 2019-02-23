@@ -13,6 +13,8 @@ type QuplaValueExpr struct {
 }
 
 func (e *QuplaValueExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
+	module.IncStat("numValueExpr")
+
 	if e.Trits == "" {
 		return nil, fmt.Errorf("invalid trit string '%v'", e.Trits)
 	}

@@ -7,6 +7,15 @@ type QuplaModule struct {
 	Luts      map[string]*QuplaLutDef  `yaml:"luts"`
 	Functions map[string]*QuplaFuncDef `yaml:"functions"`
 	Execs     []*QuplaExecStmt         `yaml:"execs"`
+	//---
+	stats map[string]int
+}
+
+func (module *QuplaModule) IncStat(key string) {
+	if _, ok := module.stats[key]; !ok {
+		module.stats[key] = 0
+	}
+	module.stats[key]++
 }
 
 func (module *QuplaModule) Analyze() bool {
@@ -14,43 +23,53 @@ func (module *QuplaModule) Analyze() bool {
 }
 
 func (module *QuplaModule) AnalyzeExecs() bool {
-	infof("Analyzing execs...")
-	var numTest, numEval, numErr int
+	infof("Analyzing...")
 	var err error
+	ret := true
 	for _, exec := range module.Execs {
 		exec.expr, err = exec.ExprWrap.Analyze(module, nil)
 		if err != nil {
-			numErr++
+			module.IncStat("numErr")
 			errorf("%v", err)
+			ret = false
 			continue
 		}
 		exec.isTest = exec.ExpectedWrap != nil
 		if exec.isTest {
 			exec.exprExpected, err = exec.ExpectedWrap.Analyze(module, nil)
 			if err != nil {
-				numErr++
+				module.IncStat("numErr")
 				errorf("%v", err)
+				ret = false
 				continue
 			}
 			// check sizes
 			if err = MatchSizes(exec.expr, exec.exprExpected); err != nil {
-				numErr++
+				module.IncStat("numErr")
 				errorf("%v", err)
+				ret = false
 				continue
 			}
-			numTest++
+			module.IncStat("numTest")
 		} else {
 			exec.exprExpected = nil
-			numEval++
+			module.IncStat("numEval")
 		}
 	}
-	infof("Found tests: %v, evals: %v", numTest, numEval)
-	if numErr == 0 {
-		infof("Done analyzing execs. No errors.")
-	} else {
-		errorf("Failed analyzing execs. Errors found: %v", numErr)
+	return ret
+}
+
+func NewQuplaModule() *QuplaModule {
+	return &QuplaModule{
+		stats: make(map[string]int),
 	}
-	return numErr == 0
+}
+
+func (module *QuplaModule) PrintStats() {
+	fmt.Printf("Stats: \n")
+	for k, v := range module.stats {
+		fmt.Printf("  %v : %v\n", k, v)
+	}
 }
 
 func (module *QuplaModule) FindFuncDef(name string) (*QuplaFuncDef, error) {

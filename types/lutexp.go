@@ -17,6 +17,8 @@ func (e *QuplaLutExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expres
 	if err != nil {
 		return nil, err
 	}
+	module.IncStat("numLUTExpr")
+
 	e.argExpr = make([]ExpressionInterface, 0, len(e.Args))
 	for _, a := range e.Args {
 		ae, err = a.Analyze(module, scope)

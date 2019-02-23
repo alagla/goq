@@ -27,6 +27,7 @@ func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) (*QuplaLutDef, error) {
 		return lutDef, nil
 	}
 	lutDef.analyzed = true
+	module.IncStat("numLUTDef")
 
 	if len(lutDef.LutTable) == 0 {
 		return nil, fmt.Errorf("No LUT entries found")
