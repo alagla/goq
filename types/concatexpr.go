@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 type QuplaConcatExpr struct {
 	LhsWrap *QuplaExpressionWrapper `yaml:"lhs"`
 	RhsWrap *QuplaExpressionWrapper `yaml:"rhs"`
@@ -16,6 +18,9 @@ func (e *QuplaConcatExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Exp
 	if e.rhsExpr, err = e.RhsWrap.Analyze(module, scope); err != nil {
 		return nil, err
 	}
+	if e.rhsExpr.Size() == 0 || e.lhsExpr.Size() == 0 {
+		return nil, fmt.Errorf("size of concat opeation can't be 0: scope '%v'", scope.GetName())
+	}
 	return e, nil
 }
 
@@ -23,10 +28,5 @@ func (e *QuplaConcatExpr) Size() int64 {
 	if e == nil {
 		return 0
 	}
-	ls := e.lhsExpr.Size()
-	rs := e.rhsExpr.Size()
-	if ls < rs {
-		return rs
-	}
-	return ls
+	return e.lhsExpr.Size() + e.rhsExpr.Size()
 }

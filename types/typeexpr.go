@@ -30,6 +30,9 @@ func (e *QuplaTypeExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expre
 		}
 		e.fields[name] = fe
 	}
+	if err = e.CheckSize(); err != nil {
+		return nil, err
+	}
 	return e, nil
 }
 
@@ -40,16 +43,13 @@ func (e *QuplaTypeExpr) Size() int64 {
 	return e.size
 }
 
-func (e *QuplaTypeExpr) CheckSize(size int64) error {
-	if size != e.Size() {
-		return fmt.Errorf("end mismatch")
-	}
+func (e *QuplaTypeExpr) CheckSize() error {
 	var sumFld int64
 
 	for _, f := range e.fields {
 		sumFld += f.Size()
 	}
-	if sumFld != size {
+	if sumFld != e.size {
 		return fmt.Errorf("sum of field sizes != type end")
 	}
 	return nil

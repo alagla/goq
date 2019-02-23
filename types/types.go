@@ -21,14 +21,25 @@ type QuplaTypeDef struct {
 	Fields map[string]*struct{ Size string } `yaml:"fields,omitempty"`
 }
 
-type QuplaNullExpr struct{}
+type QuplaNullExpr struct {
+	size int64
+}
+
+func IsNullExpr(e interface{}) bool {
+	_, ok := e.(*QuplaNullExpr)
+	return ok
+}
 
 func (e *QuplaNullExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	return e, nil
 }
 
 func (e *QuplaNullExpr) Size() int64 {
-	return 0
+	return e.size
+}
+
+func (e *QuplaNullExpr) SetSize(size int64) {
+	e.size = size
 }
 
 func MatchSizes(e1, e2 ExpressionInterface) error {

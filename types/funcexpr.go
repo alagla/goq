@@ -23,7 +23,8 @@ func (e *QuplaFuncExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expre
 		}
 		e.args = append(e.args, fe)
 	}
-	return e, nil
+	err = e.funcDef.checkArgSizes(e.args)
+	return e, err
 }
 
 func (e *QuplaFuncExpr) Size() int64 {
