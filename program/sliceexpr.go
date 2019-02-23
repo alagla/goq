@@ -11,26 +11,22 @@ type QuplaSliceExpr struct {
 	StartExprWrap *QuplaExpressionWrapper `yaml:"start,omitempty"` // not used
 	EndExprWrap   *QuplaExpressionWrapper `yaml:"end,omitempty"`   // not used
 	//----
-	localVar *LocalVariable
+	localVarIdx int
+	varScope    *QuplaFuncDef
 }
 
 func (e *QuplaSliceExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
 	var err error
 
-	if e.localVar, err = scope.FindVar(e.Var, module); err != nil {
+	if e.localVarIdx, err = scope.FindVarIdx(e.Var, module); err != nil {
 		return nil, err
 	}
 	module.IncStat("numSliceExpr")
-	if e.localVar == nil {
-		var sc string
-		if scope != nil {
-			sc = scope.name
-		} else {
-			sc = "nil"
-		}
-		return nil, fmt.Errorf("can't find local variable '%v' in scope '%v'", e.Var, sc)
+	if e.localVarIdx < 0 {
+		return nil, fmt.Errorf("can't find local variable '%v' in scope '%v'", e.Var, scope.GetName())
 	}
-	if e.Offset+e.SliceSize > e.localVar.size {
+	e.varScope = scope
+	if e.Offset+e.SliceSize > scope.VarByIdx(e.localVarIdx).size {
 		return nil, fmt.Errorf("wrong offset/size for the slice of '%v'", e.Var)
 	}
 	return e, nil
@@ -44,5 +40,5 @@ func (e *QuplaSliceExpr) Size() int64 {
 }
 
 func (e *QuplaSliceExpr) Eval(proc *Processor) bool {
-	return proc.Eval(e.localVar.expr, -e.Offset)
+	return proc.Eval(e.varScope.VarByIdx(e.localVarIdx).expr, -e.Offset)
 }

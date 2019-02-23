@@ -32,7 +32,7 @@ type QuplaFuncDef struct {
 	name     string
 	retSize  int64
 	retExpr  ExpressionInterface
-	varScope map[string]*LocalVariable
+	varScope []*LocalVariable
 }
 
 const (
@@ -108,26 +108,42 @@ func (def *QuplaFuncDef) Size() int64 {
 	return def.retSize
 }
 
+func (def *QuplaFuncDef) GetVarIdx(name string) int {
+	for i, lv := range def.varScope {
+		if lv.name == name {
+			return i
+		}
+	}
+	return -1
+}
+
 func (def *QuplaFuncDef) InScope(name string) bool {
 	if def.varScope == nil {
 		panic(fmt.Errorf("var scope not ready for %v", def.name))
 	}
-	_, ok := def.varScope[name]
-	return ok
+	return def.GetVarIdx(name) >= 0
 }
 
-func (def *QuplaFuncDef) FindVar(name string, module *QuplaModule) (*LocalVariable, error) {
-	if !def.InScope(name) {
-		return nil, nil
+func (def *QuplaFuncDef) VarByIdx(idx int) *LocalVariable {
+	if idx < 0 {
+		return nil
 	}
-	ret := def.varScope[name]
+	return def.varScope[idx]
+}
+
+func (def *QuplaFuncDef) FindVarIdx(name string, module *QuplaModule) (int, error) {
+	idx := def.GetVarIdx(name)
+	if idx < 0 {
+		return -1, nil
+	}
+	ret := def.varScope[idx]
 	if ret.analyzed {
-		return ret, nil
+		return idx, nil
 	}
 	if ret.expr == nil {
 		ret.analyzed = true
 		ret.size = 0
-		return ret, nil // ???
+		return idx, nil // ???
 	}
 	var err error
 
@@ -135,60 +151,69 @@ func (def *QuplaFuncDef) FindVar(name string, module *QuplaModule) (*LocalVariab
 	case VARTYPE_LOCAL:
 		ret.analyzed = true
 		if ret.expr, err = ret.expr.Analyze(module, def); err != nil {
-			return nil, err
+			return idx, err
 		}
 		ret.size = ret.expr.Size()
 	case VARTYPE_STATE:
 		ret.analyzed = true
 		if ret.expr, err = ret.expr.Analyze(module, def); err != nil {
-			return nil, err
+			return idx, err
 		}
 		if ret.size != ret.expr.Size() {
-			return nil, fmt.Errorf("expression and state variable has different sizes in the assign")
+			return -1, fmt.Errorf("expression and state variable has different sizes in the assign")
 		}
 	}
-	return ret, nil // ???
+	return idx, nil // ???
 }
 
 func (def *QuplaFuncDef) createVarScope() error {
-	def.varScope = make(map[string]*LocalVariable)
+	def.varScope = make([]*LocalVariable, 0, 10)
 	for _, arg := range def.Params {
-		if _, ok := def.varScope[arg.ArgName]; ok {
+		if def.InScope(arg.ArgName) {
 			return fmt.Errorf("duplicate arg name '%v'", arg.ArgName)
 		}
-		def.varScope[arg.ArgName] = &LocalVariable{
+		def.varScope = append(def.varScope, &LocalVariable{
 			name:     arg.ArgName,
 			vartype:  VARTYPE_ARG,
 			size:     arg.Size,
 			analyzed: true,
-		}
+		})
 	}
+	var idx int
 	for name, s := range def.State {
-		v, ok := def.varScope[name]
-		if ok && v.vartype == VARTYPE_ARG {
-			return fmt.Errorf("function parameter can't be declared state variable: '%v' in '%v'", name, def.name)
-		}
-		def.varScope[name] = &LocalVariable{
-			name:     name,
-			vartype:  VARTYPE_STATE,
-			size:     s.Size,
-			analyzed: true,
+		idx = def.GetVarIdx(name)
+		if idx >= 0 {
+			v := def.varScope[idx]
+			if v.vartype == VARTYPE_ARG {
+				return fmt.Errorf("function parameter can't be declared state variable: '%v' in '%v'", name, def.name)
+			}
+			v.vartype = VARTYPE_STATE
+			v.size = s.Size
+			v.analyzed = true
+		} else {
+			def.varScope = append(def.varScope, &LocalVariable{
+				name:     name,
+				vartype:  VARTYPE_STATE,
+				size:     s.Size,
+				analyzed: true,
+			})
 		}
 	}
 	for name, a := range def.Assigns {
-		v, ok := def.varScope[name]
-		if ok {
+		idx = def.GetVarIdx(name)
+		if idx >= 0 {
+			v := def.varScope[idx]
 			if v.vartype == VARTYPE_ARG {
 				return fmt.Errorf("cannot assign to function parameter: '%v' in '%v'", name, def.name)
 			}
 			// state
 			v.expr = a
 		} else {
-			def.varScope[name] = &LocalVariable{
+			def.varScope = append(def.varScope, &LocalVariable{
 				name:    name,
 				vartype: VARTYPE_LOCAL,
 				expr:    a,
-			}
+			})
 		}
 	}
 	return nil
@@ -197,7 +222,7 @@ func (def *QuplaFuncDef) createVarScope() error {
 func (def *QuplaFuncDef) analyzeAssigns(module *QuplaModule) error {
 	var err error
 	for name := range def.Assigns {
-		if _, err = def.FindVar(name, module); err != nil {
+		if _, err = def.FindVarIdx(name, module); err != nil {
 			return err
 		}
 	}
