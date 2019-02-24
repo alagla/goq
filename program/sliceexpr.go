@@ -40,11 +40,11 @@ func (e *QuplaSliceExpr) Size() int64 {
 	return e.SliceSize
 }
 
-func (e *QuplaSliceExpr) Eval(buffer Trits) bool {
-	null := e.varScope.VarByIdx(e.localVarIdx).expr.Eval(buffer)
+func (e *QuplaSliceExpr) Eval(callFrame *CallFrame, result Trits) bool {
+	res, null := callFrame.EvalVar(e.localVarIdx) // must be big enough to fit whole result
 	if null {
 		return true
 	}
-	copy(buffer, buffer[e.Offset:e.Offset+e.SliceSize])
-	return true
+	copy(result, res[e.Offset:e.Offset+e.SliceSize])
+	return false
 }

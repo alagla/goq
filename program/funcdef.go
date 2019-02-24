@@ -33,15 +33,17 @@ type QuplaFuncDef struct {
 	retSize   int64
 	retExpr   ExpressionInterface
 	localVars []*LocalVariable
-	numParams int // idx < numParams represents parameter, idx >= represents local var (assign)
+	numParams int   // idx < numParams represents parameter, idx >= represents local var (assign)
+	bufLen    int64 // total length of the local var buffer
 }
 
 // represents local variablein func def
 type LocalVariable struct {
 	name     string
 	isState  bool
-	size     int64
-	expr     ExpressionInterface
+	offset   int64               // offset in call context buffer
+	size     int64               // size of the variable
+	expr     ExpressionInterface // for assigns only
 	analyzed bool
 }
 
@@ -87,6 +89,9 @@ func (def *QuplaFuncDef) Analyze(module *QuplaModule) (*QuplaFuncDef, error) {
 		return nil, err
 	}
 	if err = def.analyzeAssigns(module); err != nil {
+		return nil, err
+	}
+	if err = def.finalizeLocalVars(); err != nil {
 		return nil, err
 	}
 	// return expression
@@ -214,6 +219,19 @@ func (def *QuplaFuncDef) analyzeAssigns(module *QuplaModule) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (def *QuplaFuncDef) finalizeLocalVars() error {
+	var curOffset int64
+	for _, v := range def.localVars {
+		if v.size == 0 {
+			return fmt.Errorf("can't determine var size '%v': '%v'", v.name, def.GetName())
+		}
+		v.offset = curOffset
+		curOffset += v.size
+	}
+	def.bufLen = int64(curOffset)
 	return nil
 }
 

@@ -37,23 +37,23 @@ type ConstValue struct {
 	size  int64
 }
 
-func (d *QuplaConstExpr) Eval(_ Trits) bool {
+func (_ *QuplaConstExpr) Eval(_ *CallFrame, _ Trits) bool {
 	return true
 }
 
-func (d *QuplaConstTerm) Eval(_ Trits) bool {
+func (_ *QuplaConstTerm) Eval(_ *CallFrame, _ Trits) bool {
 	return true
 }
 
-func (d *QuplaConstTypeName) Eval(_ Trits) bool {
+func (_ *QuplaConstTypeName) Eval(_ *CallFrame, _ Trits) bool {
 	return true
 }
 
-func (d *QuplaConstNumber) Eval(_ Trits) bool {
+func (_ *QuplaConstNumber) Eval(_ *CallFrame, _ Trits) bool {
 	return true
 }
 
-func (d *ConstValue) Eval(_ Trits) bool {
+func (_ *ConstValue) Eval(_ *CallFrame, _ Trits) bool {
 	return true
 }
 

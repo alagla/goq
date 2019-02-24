@@ -2,7 +2,7 @@ package program
 
 import (
 	"fmt"
-	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/iotaledger/iota.go/trinary"
 )
 
 type QuplaConcatExpr struct {
@@ -36,10 +36,10 @@ func (e *QuplaConcatExpr) Size() int64 {
 	return e.lhsExpr.Size() + e.rhsExpr.Size()
 }
 
-func (e *QuplaConcatExpr) Eval(buffer Trits) bool {
-	null := e.lhsExpr.Eval(buffer)
+func (e *QuplaConcatExpr) Eval(callFrame *CallFrame, result trinary.Trits) bool {
+	null := e.lhsExpr.Eval(callFrame, result)
 	if null {
 		return true
 	}
-	return e.rhsExpr.Eval(buffer[e.lhsExpr.Size():])
+	return e.rhsExpr.Eval(callFrame, result[e.lhsExpr.Size():])
 }

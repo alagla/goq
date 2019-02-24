@@ -8,16 +8,7 @@ import (
 type ExpressionInterface interface {
 	Analyze(*QuplaModule, *QuplaFuncDef) (ExpressionInterface, error)
 	Size() int64
-	Eval(Trits) bool
-}
-
-type QuplaExecStmt struct {
-	ExprWrap     *QuplaExpressionWrapper `yaml:"expr"`
-	ExpectedWrap *QuplaExpressionWrapper `yaml:"expected,omitempty"`
-	//---
-	isTest       bool
-	expr         ExpressionInterface
-	exprExpected ExpressionInterface
+	Eval(*CallFrame, Trits) bool
 }
 
 type QuplaTypeDef struct {
@@ -42,7 +33,7 @@ func (e *QuplaNullExpr) Size() int64 {
 	return e.size
 }
 
-func (e *QuplaNullExpr) Eval(_ Trits) bool {
+func (e *QuplaNullExpr) Eval(_ *CallFrame, _ Trits) bool {
 	return true
 }
 

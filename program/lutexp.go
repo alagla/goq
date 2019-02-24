@@ -46,13 +46,14 @@ func (e *QuplaLutExpr) Size() int64 {
 	return e.lutDef.Size()
 }
 
-func (e *QuplaLutExpr) Eval(buffer Trits) bool {
+func (e *QuplaLutExpr) Eval(callFrame *CallFrame, result Trits) bool {
 	var null bool
+	var buf [3]int8 // no more than 3 inputs
 	for i, a := range e.argExpr {
-		null = a.Eval(buffer[i:])
+		null = a.Eval(callFrame, buf[i:i+1])
 		if null {
 			return true
 		}
 	}
-	return e.lutDef.Lookup(buffer, buffer)
+	return e.lutDef.Lookup(result, buf[:e.lutDef.inputSize])
 }

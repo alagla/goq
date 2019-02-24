@@ -17,6 +17,9 @@ func main() {
 		errorf("Failed analyzing Qupla module")
 	}
 	quplaModule.PrintStats()
+	if err := quplaModule.Execs[0].Execute(); err != nil {
+		errorf("error: %v", err)
+	}
 	infof("Ciao!")
 }
 

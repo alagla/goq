@@ -45,6 +45,6 @@ func (e *QuplaValueExpr) Size() int64 {
 	return int64(len(e.TritValue))
 }
 
-func (e *QuplaValueExpr) Eval(_ Trits) bool {
+func (e *QuplaValueExpr) Eval(_ *CallFrame, _ Trits) bool {
 	return true
 }
