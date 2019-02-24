@@ -40,5 +40,10 @@ func (e *QuplaSliceExpr) Size() int64 {
 }
 
 func (e *QuplaSliceExpr) Eval(proc *Processor) bool {
-	return proc.Eval(e.varScope.VarByIdx(e.localVarIdx).expr, -e.Offset)
+	null := proc.Eval(e.varScope.VarByIdx(e.localVarIdx).expr, 0)
+	if null {
+		return true
+	}
+	copy(proc.Slice(0, e.SliceSize), proc.Slice(e.Offset, e.SliceSize))
+	return true
 }
