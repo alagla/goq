@@ -2,6 +2,7 @@ package program
 
 import (
 	"fmt"
+	. "github.com/iotaledger/iota.go/trinary"
 )
 
 // ----- ?????? do we need it?
@@ -59,6 +60,6 @@ func (e *QuplaTypeExpr) CheckSize() error {
 	return nil
 }
 
-func (e *QuplaTypeExpr) Eval(proc *Processor) bool {
+func (e *QuplaTypeExpr) Eval(_ Trits) bool {
 	return true
 }

@@ -2,6 +2,7 @@ package program
 
 import (
 	"fmt"
+	. "github.com/iotaledger/iota.go/trinary"
 )
 
 type QuplaCondExpr struct {
@@ -49,16 +50,16 @@ func (e *QuplaCondExpr) Size() int64 {
 	return e.thenExpr.Size()
 }
 
-func (e *QuplaCondExpr) Eval(proc *Processor) bool {
-	null := proc.Eval(e.ifExpr, e.thenExpr.Size())
+func (e *QuplaCondExpr) Eval(buffer Trits) bool {
+	null := e.ifExpr.Eval(buffer)
 	if null {
 		return true
 	}
-	switch proc.Trit(e.thenExpr.Size()) {
+	switch buffer[0] {
 	case 1:
-		return proc.Eval(e.thenExpr, 0)
+		return e.thenExpr.Eval(buffer)
 	case -1:
-		return proc.Eval(e.elseExpr, 0)
+		return e.elseExpr.Eval(buffer)
 	}
 	panic("trit value")
 }

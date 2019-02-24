@@ -1,5 +1,7 @@
 package program
 
+import . "github.com/iotaledger/iota.go/trinary"
+
 type QuplaFuncExpr struct {
 	Name     string                    `yaml:"name"`
 	ArgsWrap []*QuplaExpressionWrapper `yaml:"args"`
@@ -35,6 +37,6 @@ func (e *QuplaFuncExpr) Size() int64 {
 	return e.funcDef.Size()
 }
 
-func (e *QuplaFuncExpr) Eval(proc *Processor) bool {
+func (e *QuplaFuncExpr) Eval(buffer Trits) bool {
 	return true
 }

@@ -2,6 +2,7 @@ package program
 
 import (
 	"fmt"
+	. "github.com/iotaledger/iota.go/trinary"
 )
 
 type QuplaLutExpr struct {
@@ -45,13 +46,13 @@ func (e *QuplaLutExpr) Size() int64 {
 	return e.lutDef.Size()
 }
 
-func (e *QuplaLutExpr) Eval(proc *Processor) bool {
+func (e *QuplaLutExpr) Eval(buffer Trits) bool {
 	var null bool
 	for i, a := range e.argExpr {
-		null = proc.Eval(a, int64(i))
+		null = a.Eval(buffer[i:])
 		if null {
 			return true
 		}
 	}
-	return e.lutDef.Lookup(proc.Slice(0, int64(e.lutDef.outputSize)), proc.Slice(0, int64(e.lutDef.inputSize)))
+	return e.lutDef.Lookup(buffer, buffer)
 }

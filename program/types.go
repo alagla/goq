@@ -2,12 +2,13 @@ package program
 
 import (
 	"fmt"
+	. "github.com/iotaledger/iota.go/trinary"
 )
 
 type ExpressionInterface interface {
 	Analyze(*QuplaModule, *QuplaFuncDef) (ExpressionInterface, error)
 	Size() int64
-	Eval(*Processor) bool
+	Eval(Trits) bool
 }
 
 type QuplaExecStmt struct {
@@ -41,7 +42,7 @@ func (e *QuplaNullExpr) Size() int64 {
 	return e.size
 }
 
-func (e *QuplaNullExpr) Eval(proc *Processor) bool {
+func (e *QuplaNullExpr) Eval(_ Trits) bool {
 	return true
 }
 

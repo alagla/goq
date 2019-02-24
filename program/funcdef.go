@@ -218,12 +218,9 @@ func (def *QuplaFuncDef) analyzeAssigns(module *QuplaModule) error {
 }
 
 func (def *QuplaFuncDef) checkArgSizes(args []ExpressionInterface) error {
-	if len(args) != len(def.Params) {
-		return fmt.Errorf("sizes of param and arg lists mismach in %v", def.GetName())
-	}
 	for i := range args {
-		if args[i].Size() != def.Params[i].Size {
-			return fmt.Errorf("size of param and arg # %v mismach in %v", i, def.GetName())
+		if i >= def.numParams || args[i].Size() != def.localVars[i].size {
+			return fmt.Errorf("param and arg # %v mismach in %v", i, def.GetName())
 		}
 	}
 	return nil

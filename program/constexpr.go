@@ -2,7 +2,7 @@ package program
 
 import (
 	"fmt"
-	"github.com/iotaledger/iota.go/trinary"
+	. "github.com/iotaledger/iota.go/trinary"
 	"strconv"
 	"strings"
 )
@@ -37,23 +37,23 @@ type ConstValue struct {
 	size  int64
 }
 
-func (d *QuplaConstExpr) Eval(proc *Processor) bool {
+func (d *QuplaConstExpr) Eval(_ Trits) bool {
 	return true
 }
 
-func (d *QuplaConstTerm) Eval(proc *Processor) bool {
+func (d *QuplaConstTerm) Eval(_ Trits) bool {
 	return true
 }
 
-func (d *QuplaConstTypeName) Eval(proc *Processor) bool {
+func (d *QuplaConstTypeName) Eval(_ Trits) bool {
 	return true
 }
 
-func (d *QuplaConstNumber) Eval(proc *Processor) bool {
+func (d *QuplaConstNumber) Eval(_ Trits) bool {
 	return true
 }
 
-func (d *ConstValue) Eval(proc *Processor) bool {
+func (d *ConstValue) Eval(_ Trits) bool {
 	return true
 }
 
@@ -196,15 +196,15 @@ func NewConstValue(value int64) *ConstValue {
 	}
 }
 
-func (e *ConstValue) GetTrits() trinary.Trits {
-	t := trinary.IntToTrits(e.Value)
+func (e *ConstValue) GetTrits() Trits {
+	t := IntToTrits(e.Value)
 	if e.size == 0 {
 		return t
 	}
 	if e.size == int64(len(t)) {
 		return t
 	}
-	ret := make(trinary.Trits, 0, e.size)
+	ret := make(Trits, 0, e.size)
 	copy(ret, t)
 	return ret
 }

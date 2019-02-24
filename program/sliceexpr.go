@@ -2,6 +2,7 @@ package program
 
 import (
 	"fmt"
+	. "github.com/iotaledger/iota.go/trinary"
 )
 
 type QuplaSliceExpr struct {
@@ -39,11 +40,11 @@ func (e *QuplaSliceExpr) Size() int64 {
 	return e.SliceSize
 }
 
-func (e *QuplaSliceExpr) Eval(proc *Processor) bool {
-	null := proc.Eval(e.varScope.VarByIdx(e.localVarIdx).expr, 0)
+func (e *QuplaSliceExpr) Eval(buffer Trits) bool {
+	null := e.varScope.VarByIdx(e.localVarIdx).expr.Eval(buffer)
 	if null {
 		return true
 	}
-	copy(proc.Slice(0, e.SliceSize), proc.Slice(e.Offset, e.SliceSize))
+	copy(buffer, buffer[e.Offset:e.Offset+e.SliceSize])
 	return true
 }

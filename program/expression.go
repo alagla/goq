@@ -2,6 +2,7 @@ package program
 
 import (
 	"fmt"
+	. "github.com/iotaledger/iota.go/trinary"
 )
 
 type QuplaExpressionWrapper struct {
@@ -40,7 +41,7 @@ func (e *QuplaExpressionWrapper) Size() int64 {
 	return 0
 }
 
-func (e *QuplaExpressionWrapper) Eval(proc *Processor) bool {
+func (e *QuplaExpressionWrapper) Eval(_ Trits) bool {
 	return true
 }
 

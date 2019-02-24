@@ -1,5 +1,7 @@
 package program
 
+import . "github.com/iotaledger/iota.go/trinary"
+
 type QuplaFieldExpr struct {
 	FieldName       string                  `yaml:"fieldName"`
 	CondExprWrapper *QuplaExpressionWrapper `yaml:"condExpr"`
@@ -24,6 +26,6 @@ func (e *QuplaFieldExpr) Size() int64 {
 	return e.condExpr.Size()
 }
 
-func (e *QuplaFieldExpr) Eval(proc *Processor) bool {
+func (e *QuplaFieldExpr) Eval(_ Trits) bool {
 	return true
 }
