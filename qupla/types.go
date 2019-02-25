@@ -1,12 +1,15 @@
-package program
+package qupla
 
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 )
 
+type ExpressionFactory interface {
+	AnalyzeExpression(interface{}, *QuplaModule, *QuplaFuncDef) (ExpressionInterface, error)
+}
+
 type ExpressionInterface interface {
-	Analyze(*QuplaModule, *QuplaFuncDef) (ExpressionInterface, error)
 	Size() int64
 	Eval(*CallFrame, Trits) bool
 }

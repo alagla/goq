@@ -1,40 +1,18 @@
-package program
+package qupla
 
 import (
 	"fmt"
+	. "github.com/lunfardo314/goq/quplayaml"
 )
 
-type QuplaEnvStmt struct {
-	Name string `yaml:"name"`
-	Join bool   `yaml:"join"`
-}
-
-type QuplaFuncArg struct {
-	ArgName string                  `yaml:"argName"`
-	Size    int64                   `yaml:"size"`
-	Type    *QuplaExpressionWrapper `yaml:"type"` // not used
-}
-
-type QuplaStateVar struct {
-	Size int64  `yaml:"size"`
-	Type string `yaml:"type"`
-}
-
 type QuplaFuncDef struct {
-	ReturnType     *QuplaExpressionWrapper            `yaml:"returnType"` // only size is necessary
-	Params         []*QuplaFuncArg                    `yaml:"params"`
-	State          map[string]*QuplaStateVar          `yaml:"state"`
-	Env            []*QuplaEnvStmt                    `yaml:"env,omitempty"`
-	Assigns        map[string]*QuplaExpressionWrapper `yaml:"assigns,omitempty"`
-	ReturnExprWrap *QuplaExpressionWrapper            `yaml:"return"`
-	//-------
-	analyzed  bool
-	name      string
-	retSize   int64
-	retExpr   ExpressionInterface
-	localVars []*LocalVariable
-	numParams int   // idx < numParams represents parameter, idx >= represents local var (assign)
-	bufLen    int64 // total length of the local var buffer
+	yamlSource *QuplaFuncDefYAML // needed for analysis phase only
+	name       string
+	retSize    int64
+	retExpr    ExpressionInterface
+	localVars  []*LocalVariable
+	numParams  int   // idx < numParams represents parameter, idx >= represents local var (assign)
+	bufLen     int64 // total length of the local var buffer
 }
 
 // represents local variablein func def
@@ -58,14 +36,14 @@ func (def *QuplaFuncDef) GetName() string {
 	return def.name
 }
 
-func (def *QuplaFuncDef) Analyze(module *QuplaModule) (*QuplaFuncDef, error) {
-	if def.analyzed {
-		return def, nil
-	}
-	def.analyzed = true
+func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) (*QuplaFuncDef, error) {
 	var err error
 	module.IncStat("numFuncDef")
 
+	def := &QuplaFuncDef{
+		yamlSource: defYAML,
+		name:       name,
+	}
 	//debugf("Analyzing func def '%v'", def.Name)
 	defer func(perr *error) {
 		if *perr != nil {
@@ -74,7 +52,9 @@ func (def *QuplaFuncDef) Analyze(module *QuplaModule) (*QuplaFuncDef, error) {
 	}(&err)
 
 	// return size. Must be const expression
-	ce, err := def.ReturnType.Analyze(module, def)
+	// this must be first because in recursive calls return size must be known
+	// scope must be nil because const value do not scope
+	ce, err := module.AnalyzeExpression(defYAML.ReturnType, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -88,14 +68,14 @@ func (def *QuplaFuncDef) Analyze(module *QuplaModule) (*QuplaFuncDef, error) {
 	if err = def.createVarScope(); err != nil {
 		return nil, err
 	}
-	if err = def.analyzeAssigns(module); err != nil {
+	if err = def.analyzeAssigns(defYAML, module); err != nil {
 		return nil, err
 	}
 	if err = def.finalizeLocalVars(); err != nil {
 		return nil, err
 	}
 	// return expression
-	if def.retExpr, err = def.ReturnExprWrap.Analyze(module, def); err != nil {
+	if def.retExpr, err = module.AnalyzeExpression(defYAML.ReturnExpr, def); err != nil {
 		return nil, err
 	}
 	if def.retExpr == nil {
@@ -128,6 +108,7 @@ func (def *QuplaFuncDef) VarByIdx(idx int) *LocalVariable {
 	return def.localVars[idx]
 }
 
+// it tries to find var idx. Analyzes var if not analyzed yet
 func (def *QuplaFuncDef) FindVarIdx(name string, module *QuplaModule) (int, error) {
 	idx := def.GetVarIdx(name)
 	if idx < 0 {
@@ -147,7 +128,11 @@ func (def *QuplaFuncDef) FindVarIdx(name string, module *QuplaModule) (int, erro
 	if idx >= def.numParams {
 		v := def.localVars[idx]
 		ret.analyzed = true
-		if ret.expr, err = ret.expr.Analyze(module, def); err != nil {
+		e, ok := def.yamlSource.Assigns[name]
+		if !ok {
+			return -1, fmt.Errorf("inconsistency with vars")
+		}
+		if ret.expr, err = module.AnalyzeExpression(e, def); err != nil {
 			return idx, err
 		}
 		if v.isState {
@@ -162,10 +147,11 @@ func (def *QuplaFuncDef) FindVarIdx(name string, module *QuplaModule) (int, erro
 }
 
 func (def *QuplaFuncDef) createVarScope() error {
-	def.localVars = make([]*LocalVariable, 0, len(def.Params)+len(def.Assigns))
+	src := def.yamlSource
+	def.localVars = make([]*LocalVariable, 0, len(src.Params)+len(src.Assigns))
 	// first numParams indices belong to parameters
-	def.numParams = len(def.Params)
-	for _, arg := range def.Params {
+	def.numParams = len(src.Params)
+	for _, arg := range src.Params {
 		if def.InScope(arg.ArgName) {
 			return fmt.Errorf("duplicate arg name '%v'", arg.ArgName)
 		}
@@ -177,7 +163,7 @@ func (def *QuplaFuncDef) createVarScope() error {
 	}
 	// the rest indices belong to local vars (incl state)
 	var idx int
-	for name, s := range def.State {
+	for name, s := range src.State {
 		idx = def.GetVarIdx(name)
 		if idx >= 0 {
 			return fmt.Errorf("wrong declared state variable: '%v' in '%v'", name, def.name)
@@ -189,7 +175,7 @@ func (def *QuplaFuncDef) createVarScope() error {
 			})
 		}
 	}
-	for name, a := range def.Assigns {
+	for name := range src.Assigns {
 		idx = def.GetVarIdx(name)
 		if idx >= 0 {
 			if idx < def.numParams {
@@ -198,26 +184,29 @@ func (def *QuplaFuncDef) createVarScope() error {
 				v := def.localVars[idx]
 				if !v.isState {
 					return fmt.Errorf("several assignment to the same var '%v' in '%v' is not allowed", name, def.name)
-				} else {
-					v.expr = a
 				}
 			}
 		} else {
 			def.localVars = append(def.localVars, &LocalVariable{
 				name: name,
-				expr: a,
 			})
 		}
 	}
 	return nil
 }
 
-func (def *QuplaFuncDef) analyzeAssigns(module *QuplaModule) error {
+func (def *QuplaFuncDef) analyzeAssigns(defYAML *QuplaFuncDefYAML, module *QuplaModule) error {
 	var err error
-	for name := range def.Assigns {
-		if _, err = def.FindVarIdx(name, module); err != nil {
+	var idx int
+	for name := range defYAML.Assigns {
+		if idx, err = def.FindVarIdx(name, module); err != nil {
 			return err
 		}
+		s := def.localVars[idx].expr.Size()
+		if def.localVars[idx].isState && s != def.localVars[idx].size {
+			return fmt.Errorf("sizes doesn't match for var '%v' in '%v'", name, def.GetName())
+		}
+		def.localVars[idx].size = s
 	}
 	return nil
 }

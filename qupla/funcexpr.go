@@ -1,14 +1,12 @@
-package program
+package qupla
 
 import (
-	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/quplayaml"
 )
 
 type QuplaFuncExpr struct {
-	Name     string                    `yaml:"name"`
-	ArgsWrap []*QuplaExpressionWrapper `yaml:"args"`
-	//---
+	name    string
 	funcDef *QuplaFuncDef
 	args    []ExpressionInterface
 }
@@ -21,24 +19,27 @@ type CallFrame struct {
 	isNull    []bool         // flag if value was evaluated to null
 }
 
-func (e *QuplaFuncExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
+func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaFuncExpr, error) {
 	var err error
-	e.funcDef, err = module.FindFuncDef(e.Name)
+	ret := &QuplaFuncExpr{
+		name: exprYAML.Name,
+	}
+	ret.funcDef, err = module.FindFuncDef(exprYAML.Name)
 	if err != nil {
 		return nil, err
 	}
 	var fe ExpressionInterface
 	module.IncStat("numFuncExpr")
 
-	e.args = make([]ExpressionInterface, 0, len(e.ArgsWrap))
-	for _, arg := range e.ArgsWrap {
-		if fe, err = arg.Analyze(module, scope); err != nil {
+	ret.args = make([]ExpressionInterface, 0, len(exprYAML.Args))
+	for _, arg := range exprYAML.Args {
+		if fe, err = module.AnalyzeExpression(arg, scope); err != nil {
 			return nil, err
 		}
-		e.args = append(e.args, fe)
+		ret.args = append(ret.args, fe)
 	}
-	err = e.funcDef.checkArgSizes(e.args)
-	return e, err
+	err = ret.funcDef.checkArgSizes(ret.args)
+	return ret, err
 }
 
 func (e *QuplaFuncExpr) Size() int64 {
@@ -60,17 +61,14 @@ func (e *QuplaFuncExpr) NewCallFrame(parent *CallFrame) *CallFrame {
 }
 
 func (e *QuplaFuncExpr) Eval(parentFrame *CallFrame, result Trits) bool {
-	tracef("eval funcExpr '%v'", e.Name)
+	tracef("eval funcExpr '%v'", e.name)
 
 	frame := e.NewCallFrame(parentFrame)
 	return e.funcDef.retExpr.Eval(frame, result)
 }
 
 func (frame *CallFrame) EvalVar(idx int) (Trits, bool) {
-	tracef("eval var funcExpr '%v', idx = %v", frame.context.Name, idx)
-	if frame.context.Name == "equal_1" {
-		fmt.Printf("------------------ debug trap\n")
-	}
+	tracef("eval var funcExpr '%v', idx = %v", frame.context.name, idx)
 	null := false
 	resOffset := frame.context.funcDef.localVars[idx].offset
 	resSize := frame.context.funcDef.localVars[idx].size

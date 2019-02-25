@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/lunfardo314/goq/program"
+	"github.com/lunfardo314/goq/qupla"
+	"github.com/lunfardo314/goq/quplayaml"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -11,16 +12,20 @@ const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/re
 const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
 
 func main() {
-	program.SetLog(nil, true)
+	qupla.SetLog(nil, true)
 
-	quplaModule := program.NewQuplaModule()
-	must(readYAML(fname, &quplaModule))
-	if !quplaModule.Analyze() {
-		errorf("Failed analyzing Qupla module")
+	moduleYAML, err := quplayaml.NewQuplaModuleFromYAML(fname)
+	if err != nil {
+		errorf("err: %v", err)
+		os.Exit(1)
 	}
-	quplaModule.PrintStats()
-	if err := quplaModule.Execs[0].Execute(); err != nil {
-		errorf("error: %v", err)
+	// echo for testing
+	_ = moduleYAML.WriteToFile(testout)
+
+	_, succ := qupla.AnalyzeQuplaModule(moduleYAML, &qupla.ExpressionFactoryFromYAML{})
+
+	if !succ {
+		errorf("Failed analyzing Qupla module")
 	}
 	infof("Ciao!")
 }

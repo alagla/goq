@@ -1,8 +1,9 @@
-package program
+package qupla
 
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/quplayaml"
 	"strconv"
 	"strings"
 )
@@ -11,61 +12,28 @@ type ConstExpression interface {
 	GetConstValue() int
 }
 
-type QuplaConstExpr struct {
-	Operator string                  `yaml:"operator"`
-	LhsWrap  *QuplaExpressionWrapper `yaml:"lhs"`
-	RhsWrap  *QuplaExpressionWrapper `yaml:"rhs"`
-}
-
-type QuplaConstTerm struct {
-	Operator string                  `yaml:"operator"`
-	LhsWrap  *QuplaExpressionWrapper `yaml:"lhs"`
-	RhsWrap  *QuplaExpressionWrapper `yaml:"rhs"`
-}
-
-type QuplaConstTypeName struct {
-	TypeName   string `yaml:"typeName"` // not used
-	SizeString string `yaml:"size"`
-}
-
-type QuplaConstNumber struct {
-	Value string `yaml:"value"`
-}
-
 type ConstValue struct {
 	Value int64
 	size  int64
 }
 
-func (_ *QuplaConstExpr) Eval(_ *CallFrame, _ Trits) bool {
-	return true
-}
-
-func (_ *QuplaConstTerm) Eval(_ *CallFrame, _ Trits) bool {
-	return true
-}
-
-func (_ *QuplaConstTypeName) Eval(_ *CallFrame, _ Trits) bool {
-	return true
-}
-
-func (_ *QuplaConstNumber) Eval(_ *CallFrame, _ Trits) bool {
-	return true
+func (e *ConstValue) Size() int64 {
+	return 0 //todo
 }
 
 func (_ *ConstValue) Eval(_ *CallFrame, _ Trits) bool {
-	return true
+	return true // todo
 }
 
-func IsConstExpression(e ExpressionInterface) bool {
+func IsConstExpression(e interface{}) bool {
 	switch e.(type) {
-	case *QuplaConstExpr:
+	case *QuplaConstExprYAML:
 		return true
-	case *QuplaConstTerm:
+	case *QuplaConstTermYAML:
 		return true
-	case *QuplaConstTypeName:
+	case *QuplaConstTypeNameYAML:
 		return true
-	case *QuplaConstNumber:
+	case *QuplaConstNumberYAML:
 		return true
 	case *ConstValue:
 		return true
@@ -73,17 +41,17 @@ func IsConstExpression(e ExpressionInterface) bool {
 	return false
 }
 
-func (e *QuplaConstExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
+func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*ConstValue, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
-	if !strings.Contains("+-", e.Operator) {
-		return nil, fmt.Errorf("wrong operator symbol %v", e.Operator)
+	if !strings.Contains("+-", exprYAML.Operator) {
+		return nil, fmt.Errorf("wrong operator symbol %v", exprYAML.Operator)
 	}
-	if lei, err = e.LhsWrap.Analyze(module, scope); err != nil {
+	if lei, err = module.AnalyzeExpression(exprYAML.Lhs, scope); err != nil {
 		return nil, err
 	}
-	if rei, err = e.RhsWrap.Analyze(module, scope); err != nil {
+	if rei, err = module.AnalyzeExpression(exprYAML.Rhs, scope); err != nil {
 		return nil, err
 	}
 	if !IsConstExpression(lei) || !IsConstExpression(rei) {
@@ -97,7 +65,7 @@ func (e *QuplaConstExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expr
 		return nil, fmt.Errorf("inconsistency II")
 	}
 	var ret *ConstValue
-	switch e.Operator {
+	switch exprYAML.Operator {
 	case "+":
 		ret = NewConstValue(lv.Value + rv.Value)
 	case "-":
@@ -106,21 +74,17 @@ func (e *QuplaConstExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expr
 	return ret, nil
 }
 
-func (e *QuplaConstExpr) Size() int64 {
-	return 0
-}
-
-func (e *QuplaConstTerm) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
+func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module *QuplaModule, scope *QuplaFuncDef) (*ConstValue, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
-	if !strings.Contains("*/%", e.Operator) {
-		return nil, fmt.Errorf("wrong operator symbol %v", e.Operator)
+	if !strings.Contains("+-", exprYAML.Operator) {
+		return nil, fmt.Errorf("wrong operator symbol %v", exprYAML.Operator)
 	}
-	if lei, err = e.LhsWrap.Analyze(module, scope); err != nil {
+	if lei, err = module.AnalyzeExpression(exprYAML.Lhs, scope); err != nil {
 		return nil, err
 	}
-	if rei, err = e.RhsWrap.Analyze(module, scope); err != nil {
+	if rei, err = module.AnalyzeExpression(exprYAML.Rhs, scope); err != nil {
 		return nil, err
 	}
 	if !IsConstExpression(lei) || !IsConstExpression(rei) {
@@ -134,7 +98,7 @@ func (e *QuplaConstTerm) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expr
 		return nil, fmt.Errorf("inconsistency II")
 	}
 	var ret *ConstValue
-	switch e.Operator {
+	switch exprYAML.Operator {
 	case "*":
 		ret = NewConstValue(lv.Value * rv.Value)
 	case "/":
@@ -153,41 +117,21 @@ func (e *QuplaConstTerm) Analyze(module *QuplaModule, scope *QuplaFuncDef) (Expr
 	return ret, nil
 }
 
-func (e *QuplaConstTerm) Size() int64 {
-	return 0
-}
-
-func (e *QuplaConstTypeName) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
+func AnalyzeConstTypeName(exprYAML *QuplaConstTypeNameYAML, _ *QuplaModule, _ *QuplaFuncDef) (*ConstValue, error) {
 	var err error
 	var ret int
-	if ret, err = strconv.Atoi(e.SizeString); err != nil {
+	if ret, err = strconv.Atoi(exprYAML.SizeString); err != nil {
 		return nil, err
 	}
 	return NewConstValue(int64(ret)), nil
 }
 
-func (e *QuplaConstTypeName) Size() int64 {
-	return 0
-}
-
-func (e *QuplaConstNumber) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
-	ret, err := strconv.Atoi(e.Value)
+func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ *QuplaModule, _ *QuplaFuncDef) (*ConstValue, error) {
+	ret, err := strconv.Atoi(exprYAML.Value)
 	if err != nil {
 		return nil, err
 	}
 	return NewConstValue(int64(ret)), nil
-}
-
-func (e *QuplaConstNumber) Size() int64 {
-	return 0
-}
-
-func (e *ConstValue) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
-	return e, nil
-}
-
-func (e *ConstValue) Size() int64 {
-	return 0
 }
 
 func NewConstValue(value int64) *ConstValue {

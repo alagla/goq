@@ -1,32 +1,31 @@
-package program
+package qupla
 
 import (
 	"fmt"
 	"github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/quplayaml"
 )
 
 type QuplaConcatExpr struct {
-	LhsWrap *QuplaExpressionWrapper `yaml:"lhs"`
-	RhsWrap *QuplaExpressionWrapper `yaml:"rhs"`
-	//---
 	lhsExpr ExpressionInterface
 	rhsExpr ExpressionInterface
 }
 
-func (e *QuplaConcatExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
+func AnalyzeConcatExpr(exprYAML *quplayaml.QuplaConcatExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaConcatExpr, error) {
 	var err error
 	module.IncStat("numConcat")
 
-	if e.lhsExpr, err = e.LhsWrap.Analyze(module, scope); err != nil {
+	ret := &QuplaConcatExpr{}
+	if ret.lhsExpr, err = module.AnalyzeExpression(exprYAML.Lhs, scope); err != nil {
 		return nil, err
 	}
-	if e.rhsExpr, err = e.RhsWrap.Analyze(module, scope); err != nil {
+	if ret.rhsExpr, err = module.AnalyzeExpression(exprYAML.Rhs, scope); err != nil {
 		return nil, err
 	}
-	if e.rhsExpr.Size() == 0 || e.lhsExpr.Size() == 0 {
+	if ret.rhsExpr.Size() == 0 || ret.lhsExpr.Size() == 0 {
 		return nil, fmt.Errorf("size of concat opeation can't be 0: scope '%v'", scope.GetName())
 	}
-	return e, nil
+	return ret, nil
 }
 
 func (e *QuplaConcatExpr) Size() int64 {

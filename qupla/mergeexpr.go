@@ -1,40 +1,39 @@
-package program
+package qupla
 
 import (
 	"fmt"
-	"github.com/iotaledger/iota.go/trinary"
+	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/quplayaml"
 )
 
 type QuplaMergeExpr struct {
-	LhsWrap *QuplaExpressionWrapper `yaml:"lhs"`
-	RhsWrap *QuplaExpressionWrapper `yaml:"rhs"`
-	//----
 	lhsExpr ExpressionInterface
 	rhsExpr ExpressionInterface
 }
 
-func (e *QuplaMergeExpr) Analyze(module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
+func AnalyzeMergeExpr(exprYAML *QuplaMergeExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaMergeExpr, error) {
 	var err error
 	module.IncStat("numMergeExpr")
 
-	e.lhsExpr, err = e.LhsWrap.Analyze(module, scope)
+	ret := &QuplaMergeExpr{}
+	ret.lhsExpr, err = module.AnalyzeExpression(exprYAML.Lhs, scope)
 	if err != nil {
 		return nil, err
 	}
-	if IsNullExpr(e.lhsExpr) {
+	if IsNullExpr(ret.lhsExpr) {
 		return nil, fmt.Errorf("constant null in merge expression, scope %v", scope.GetName())
 	}
-	e.rhsExpr, err = e.RhsWrap.Analyze(module, scope)
+	ret.rhsExpr, err = module.AnalyzeExpression(exprYAML.Rhs, scope)
 	if err != nil {
 		return nil, err
 	}
-	if IsNullExpr(e.rhsExpr) {
+	if IsNullExpr(ret.rhsExpr) {
 		return nil, fmt.Errorf("constant null in merge expression, scope %v", scope.GetName())
 	}
-	if e.lhsExpr.Size() != e.rhsExpr.Size() {
+	if ret.lhsExpr.Size() != ret.rhsExpr.Size() {
 		return nil, fmt.Errorf("operand sizes must be equal in merge expression, scope %v", scope.GetName())
 	}
-	return e, nil
+	return ret, nil
 }
 
 func (e *QuplaMergeExpr) Size() int64 {
@@ -44,7 +43,7 @@ func (e *QuplaMergeExpr) Size() int64 {
 	return e.lhsExpr.Size()
 }
 
-func (e *QuplaMergeExpr) Eval(callFrame *CallFrame, result trinary.Trits) bool {
+func (e *QuplaMergeExpr) Eval(callFrame *CallFrame, result Trits) bool {
 	null := e.lhsExpr.Eval(callFrame, result)
 	if null {
 		return e.rhsExpr.Eval(callFrame, result)

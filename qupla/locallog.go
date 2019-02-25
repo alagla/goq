@@ -1,4 +1,4 @@
-package program
+package qupla
 
 import (
 	"fmt"

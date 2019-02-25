@@ -1,16 +1,14 @@
-package program
+package qupla
 
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/quplayaml"
 	"strings"
 )
 
 type QuplaLutDef struct {
-	LutTable []string `yaml:"lutTable"`
-	//----
 	name           string
-	analyzed       bool
 	inputSize      int
 	outputSize     int
 	lutLookupTable []Trits
@@ -22,24 +20,23 @@ func (lutDef *QuplaLutDef) SetName(name string) {
 	lutDef.name = name
 }
 
-func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) (*QuplaLutDef, error) {
-	if lutDef.analyzed {
-		return lutDef, nil
+func AnalyzeLutDef(name string, defYAML *QuplaLutDefYAML, module *QuplaModule) (*QuplaLutDef, error) {
+	ret := &QuplaLutDef{
+		name: name,
 	}
-	lutDef.analyzed = true
 	module.IncStat("numLUTDef")
 
-	if len(lutDef.LutTable) == 0 {
+	if len(defYAML.LutTable) == 0 {
 		return nil, fmt.Errorf("No LUT entries found")
 	}
-	if len(lutDef.LutTable) > 27 {
+	if len(defYAML.LutTable) > 27 {
 		return nil, fmt.Errorf("lut table can't have more than 27 entries")
 	}
-	inputs := make([]Trits, 0, len(lutDef.LutTable))
-	outputs := make([]Trits, 0, len(lutDef.LutTable))
-	lutDef.inputSize = 0
-	lutDef.outputSize = 0
-	for _, entry := range lutDef.LutTable {
+	inputs := make([]Trits, 0, len(defYAML.LutTable))
+	outputs := make([]Trits, 0, len(defYAML.LutTable))
+	ret.inputSize = 0
+	ret.outputSize = 0
+	for _, entry := range defYAML.LutTable {
 		sides := strings.Split(entry, "=")
 		if len(sides) != 2 {
 			return nil, fmt.Errorf("wrong LUT entry: %v", entry)
@@ -47,18 +44,18 @@ func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) (*QuplaLutDef, error) {
 		sides[0] = strings.TrimSpace(sides[0])
 		sides[1] = strings.TrimSpace(sides[1])
 
-		if lutDef.inputSize == 0 {
-			lutDef.inputSize = len(sides[0])
-			lutDef.outputSize = len(sides[1])
-			if lutDef.inputSize < 1 || lutDef.inputSize > 3 || lutDef.outputSize < 1 {
+		if ret.inputSize == 0 {
+			ret.inputSize = len(sides[0])
+			ret.outputSize = len(sides[1])
+			if ret.inputSize < 1 || ret.inputSize > 3 || ret.outputSize < 1 {
 				return nil, fmt.Errorf("wrong input or output size")
 			}
 		}
-		if len(sides[0]) != lutDef.inputSize {
-			return nil, fmt.Errorf("input len expected to be %v", lutDef.inputSize)
+		if len(sides[0]) != ret.inputSize {
+			return nil, fmt.Errorf("input len expected to be %v", ret.inputSize)
 		}
-		if len(sides[1]) != lutDef.outputSize {
-			return nil, fmt.Errorf("ouput len expected to be %v", lutDef.outputSize)
+		if len(sides[1]) != ret.outputSize {
+			return nil, fmt.Errorf("ouput len expected to be %v", ret.outputSize)
 		}
 		inTrits, err := quplaTritStringToTrits(sides[0])
 		if err != nil {
@@ -72,15 +69,15 @@ func (lutDef *QuplaLutDef) Analyze(module *QuplaModule) (*QuplaLutDef, error) {
 		outputs = append(outputs, outTrits)
 	}
 	// index it to the final table
-	lutDef.lutLookupTable = make([]Trits, pow3[lutDef.inputSize])
+	ret.lutLookupTable = make([]Trits, pow3[ret.inputSize])
 	for i, inp := range inputs {
 		idx := tritsToIdx(inp)
-		if lutDef.lutLookupTable[idx] != nil {
+		if ret.lutLookupTable[idx] != nil {
 			return nil, fmt.Errorf("duplicated input in LUT table")
 		}
-		lutDef.lutLookupTable[idx] = outputs[i]
+		ret.lutLookupTable[idx] = outputs[i]
 	}
-	return lutDef, nil
+	return ret, nil
 }
 
 func (lutDef *QuplaLutDef) Size() int64 {
