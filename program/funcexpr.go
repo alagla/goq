@@ -1,6 +1,9 @@
 package program
 
-import . "github.com/iotaledger/iota.go/trinary"
+import (
+	"fmt"
+	. "github.com/iotaledger/iota.go/trinary"
+)
 
 type QuplaFuncExpr struct {
 	Name     string                    `yaml:"name"`
@@ -57,11 +60,17 @@ func (e *QuplaFuncExpr) NewCallFrame(parent *CallFrame) *CallFrame {
 }
 
 func (e *QuplaFuncExpr) Eval(parentFrame *CallFrame, result Trits) bool {
+	tracef("eval funcExpr '%v'", e.Name)
+
 	frame := e.NewCallFrame(parentFrame)
 	return e.funcDef.retExpr.Eval(frame, result)
 }
 
 func (frame *CallFrame) EvalVar(idx int) (Trits, bool) {
+	tracef("eval var funcExpr '%v', idx = %v", frame.context.Name, idx)
+	if frame.context.Name == "equal_1" {
+		fmt.Printf("------------------ debug trap\n")
+	}
 	null := false
 	resOffset := frame.context.funcDef.localVars[idx].offset
 	resSize := frame.context.funcDef.localVars[idx].size
@@ -71,15 +80,13 @@ func (frame *CallFrame) EvalVar(idx int) (Trits, bool) {
 			null = true
 		}
 	} else {
-		var f *CallFrame
 		if idx < frame.context.funcDef.numParams {
 			// variable is parameter
-			f = frame.parent
+			null = frame.context.args[idx].Eval(frame.parent, resultSlice)
 		} else {
 			// variable is assigned
-			f = frame
+			null = frame.context.funcDef.localVars[idx].expr.Eval(frame, resultSlice)
 		}
-		null = frame.context.funcDef.localVars[idx].expr.Eval(f, resultSlice)
 		if null {
 			resultSlice = nil
 		}

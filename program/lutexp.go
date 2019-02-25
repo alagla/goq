@@ -47,6 +47,8 @@ func (e *QuplaLutExpr) Size() int64 {
 }
 
 func (e *QuplaLutExpr) Eval(callFrame *CallFrame, result Trits) bool {
+	tracef("eval var lutExpr '%v', frame = %v", e.lutDef.name, callFrame.context.Name)
+
 	var null bool
 	var buf [3]int8 // no more than 3 inputs
 	for i, a := range e.argExpr {

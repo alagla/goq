@@ -11,6 +11,8 @@ const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/re
 const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
 
 func main() {
+	program.SetLog(nil, true)
+
 	quplaModule := program.NewQuplaModule()
 	must(readYAML(fname, &quplaModule))
 	if !quplaModule.Analyze() {
