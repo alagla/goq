@@ -15,7 +15,7 @@ type ExpressionInterface interface {
 }
 
 type QuplaTypeDef struct {
-	Size   string                            `yaml:"end"`
+	Size   string                            `yaml:"size"`
 	Fields map[string]*struct{ Size string } `yaml:"fields,omitempty"`
 }
 
