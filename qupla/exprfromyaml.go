@@ -41,6 +41,9 @@ func (ef *ExpressionFactoryFromYAML) AnalyzeExpression(
 		if err != nil {
 			return nil, err
 		}
+		if r == nil {
+			return &QuplaNullExpr{}, nil
+		}
 		return ef.AnalyzeExpression(r, module, scope)
 	}
 	return nil, fmt.Errorf("wrong QuplaYAML object type")

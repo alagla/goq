@@ -15,13 +15,6 @@ type QuplaModule struct {
 	stats      map[string]int
 }
 
-func (module *QuplaModule) IncStat(key string) {
-	if _, ok := module.stats[key]; !ok {
-		module.stats[key] = 0
-	}
-	module.stats[key]++
-}
-
 func AnalyzeQuplaModule(moduleYAML *quplayaml.QuplaModuleYAML, factory ExpressionFactory) (*QuplaModule, bool) {
 	ret := &QuplaModule{
 		yamlSource: moduleYAML,
@@ -54,16 +47,12 @@ func (module *QuplaModule) AddExec(exec *QuplaExecStmt) {
 	module.execs = append(module.execs, exec)
 }
 
-func (module *QuplaModule) PrintStats() {
-	fmt.Printf("Stats: \n")
-	for k, v := range module.stats {
-		fmt.Printf("  %v : %v\n", k, v)
-	}
+func (module *QuplaModule) AddFuncDef(name string, funcDef *QuplaFuncDef) {
+	module.functions[name] = funcDef
 }
 
 func (module *QuplaModule) FindFuncDef(name string) (*QuplaFuncDef, error) {
 	var err error
-	var fd *QuplaFuncDef
 	ret, ok := module.functions[name]
 	if ok {
 		return ret, nil
@@ -72,12 +61,11 @@ func (module *QuplaModule) FindFuncDef(name string) (*QuplaFuncDef, error) {
 	if !ok {
 		return nil, fmt.Errorf("can't find function definition '%v'", name)
 	}
-	fd, err = AnalyzeFuncDef(name, src, module)
+	err = AnalyzeFuncDef(name, src, module)
 	if err != nil {
 		return nil, fmt.Errorf("error while anlyzing function definioton '%v': %v", name, err)
 	}
-	module.functions[name] = fd
-	return fd, nil
+	return module.functions[name], nil
 }
 
 func (module *QuplaModule) FindLUTDef(name string) (*QuplaLutDef, error) {
@@ -103,4 +91,26 @@ func (module *QuplaModule) FindTypeDef(name string) *QuplaTypeDef {
 		return ret
 	}
 	return nil
+}
+
+func (module *QuplaModule) Execute() {
+	for _, exec := range module.execs {
+		if err := exec.Execute(); err != nil {
+			errorf("execute error: %v", err)
+		}
+	}
+}
+
+func (module *QuplaModule) IncStat(key string) {
+	if _, ok := module.stats[key]; !ok {
+		module.stats[key] = 0
+	}
+	module.stats[key]++
+}
+
+func (module *QuplaModule) PrintStats() {
+	fmt.Printf("Analyzed: \n")
+	for k, v := range module.stats {
+		fmt.Printf("  %v : %v\n", k, v)
+	}
 }

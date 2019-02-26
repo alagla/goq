@@ -221,8 +221,11 @@ func (e *QuplaExpressionYAML) Unwrap() (interface{}, error) {
 		ret = e.TypeExpr
 		numCases++
 	}
+	if numCases == 0 {
+		return nil, nil // null
+	}
 	if numCases != 1 {
-		return nil, fmt.Errorf("internal error: must be exactly one expression case")
+		return nil, fmt.Errorf("internal error: must be no more than one expression case")
 	}
 	return ret, nil
 }

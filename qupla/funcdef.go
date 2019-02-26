@@ -15,7 +15,7 @@ type QuplaFuncDef struct {
 	bufLen     int64 // total length of the local var buffer
 }
 
-// represents local variablein func def
+// represents local variable in func def
 type LocalVariable struct {
 	name     string
 	isState  bool
@@ -36,52 +36,53 @@ func (def *QuplaFuncDef) GetName() string {
 	return def.name
 }
 
-func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) (*QuplaFuncDef, error) {
+func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) error {
 	var err error
+	defer func(perr *error) {
+		if *perr != nil {
+			errorf("Error while analyzing func def '%v': %v", name, *perr)
+		}
+	}(&err)
+
 	module.IncStat("numFuncDef")
 
 	def := &QuplaFuncDef{
 		yamlSource: defYAML,
 		name:       name,
 	}
-	//debugf("Analyzing func def '%v'", def.Name)
-	defer func(perr *error) {
-		if *perr != nil {
-			errorf("Error while analyzing func def '%v': %v", def.name, *perr)
-		}
-	}(&err)
-
 	// return size. Must be const expression
 	// this must be first because in recursive calls return size must be known
 	// scope must be nil because const value do not scope
 	ce, err := module.AnalyzeExpression(defYAML.ReturnType, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	var sz int64
 	if sz, err = GetConstValue(ce); err != nil {
-		return nil, err
+		return err
 	}
+	// function def in the module is always with valid retSize (other parts not analyzed yet)
 	def.retSize = sz
+	module.AddFuncDef(name, def)
 
 	// build var scope
 	if err = def.createVarScope(); err != nil {
-		return nil, err
+		return err
 	}
 	if err = def.analyzeAssigns(defYAML, module); err != nil {
-		return nil, err
+		return err
 	}
 	if err = def.finalizeLocalVars(); err != nil {
-		return nil, err
+		return err
 	}
 	// return expression
 	if def.retExpr, err = module.AnalyzeExpression(defYAML.ReturnExpr, def); err != nil {
-		return nil, err
+		return err
 	}
 	if def.retExpr == nil {
-		return nil, fmt.Errorf("in funcdef '%v': return expression can't be nil", def.name)
+		return fmt.Errorf("in funcdef '%v': return expression can't be nil", def.name)
 	}
-	return def, nil
+	return nil
 }
 
 func (def *QuplaFuncDef) Size() int64 {
@@ -118,16 +119,13 @@ func (def *QuplaFuncDef) FindVarIdx(name string, module *QuplaModule) (int, erro
 	if ret.analyzed {
 		return idx, nil
 	}
-	if ret.expr == nil {
-		ret.analyzed = true
-		ret.size = 0
-		return idx, nil // ???
-	}
 	var err error
 
+	ret.analyzed = true
+
 	if idx >= def.numParams {
+		// local var
 		v := def.localVars[idx]
-		ret.analyzed = true
 		e, ok := def.yamlSource.Assigns[name]
 		if !ok {
 			return -1, fmt.Errorf("inconsistency with vars")
@@ -142,8 +140,11 @@ func (def *QuplaFuncDef) FindVarIdx(name string, module *QuplaModule) (int, erro
 		} else {
 			ret.size = ret.expr.Size()
 		}
+	} else {
+		// param
+		def.localVars[idx].expr = nil
 	}
-	return idx, nil // ???
+	return idx, nil
 }
 
 func (def *QuplaFuncDef) createVarScope() error {
