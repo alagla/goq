@@ -1,4 +1,4 @@
-package qupla
+package quplayaml
 
 import (
 	"fmt"

@@ -1,8 +1,7 @@
-package qupla
+package quplayaml
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/quplayaml"
 )
 
 type QuplaFieldExpr struct {

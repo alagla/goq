@@ -1,9 +1,8 @@
-package qupla
+package quplayaml
 
 import (
 	"fmt"
-	"github.com/iotaledger/iota.go/trinary"
-	"github.com/lunfardo314/goq/quplayaml"
+	. "github.com/iotaledger/iota.go/trinary"
 )
 
 type QuplaConcatExpr struct {
@@ -11,7 +10,7 @@ type QuplaConcatExpr struct {
 	rhsExpr ExpressionInterface
 }
 
-func AnalyzeConcatExpr(exprYAML *quplayaml.QuplaConcatExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaConcatExpr, error) {
+func AnalyzeConcatExpr(exprYAML *QuplaConcatExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaConcatExpr, error) {
 	var err error
 	module.IncStat("numConcat")
 
@@ -35,7 +34,7 @@ func (e *QuplaConcatExpr) Size() int64 {
 	return e.lhsExpr.Size() + e.rhsExpr.Size()
 }
 
-func (e *QuplaConcatExpr) Eval(callFrame *CallFrame, result trinary.Trits) bool {
+func (e *QuplaConcatExpr) Eval(callFrame *CallFrame, result Trits) bool {
 	null := e.lhsExpr.Eval(callFrame, result)
 	if null {
 		return true

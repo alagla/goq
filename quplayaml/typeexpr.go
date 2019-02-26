@@ -1,9 +1,8 @@
-package qupla
+package quplayaml
 
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/quplayaml"
 )
 
 // ----- ?????? do we need it?

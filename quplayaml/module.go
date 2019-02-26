@@ -1,12 +1,11 @@
-package qupla
+package quplayaml
 
 import (
 	"fmt"
-	"github.com/lunfardo314/goq/quplayaml"
 )
 
 type QuplaModule struct {
-	yamlSource *quplayaml.QuplaModuleYAML
+	yamlSource *QuplaModuleYAML
 	factory    ExpressionFactory
 	luts       map[string]*QuplaLutDef
 	functions  map[string]*QuplaFuncDef
@@ -14,7 +13,7 @@ type QuplaModule struct {
 	stats      map[string]int
 }
 
-func AnalyzeQuplaModule(moduleYAML *quplayaml.QuplaModuleYAML, factory ExpressionFactory) (*QuplaModule, bool) {
+func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) (*QuplaModule, bool) {
 	ret := &QuplaModule{
 		yamlSource: moduleYAML,
 		factory:    factory,

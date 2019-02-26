@@ -1,4 +1,4 @@
-package qupla
+package quplayaml
 
 import (
 	"fmt"
@@ -41,7 +41,11 @@ type ExpressionInterface interface {
 	Eval(*CallFrame, Trits) bool
 }
 
+// TODO
 type ProcessorInterface interface {
+	Push(ExpressionInterface)
+	Pull(ExpressionInterface)
+	Eval(ExpressionInterface, Trits)
 }
 
 func MatchSizes(e1, e2 ExpressionInterface) error {
