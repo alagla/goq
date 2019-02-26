@@ -19,9 +19,11 @@ type ModuleInterface interface {
 }
 
 type VarInfo struct {
-	idx    int64
-	offset int64
-	size   int64
+	idx     int64
+	offset  int64
+	size    int64
+	isState bool
+	isParam bool
 }
 type FuncDefInterface interface {
 	GetName() string
@@ -37,6 +39,9 @@ type LUTInterface interface {
 type ExpressionInterface interface {
 	Size() int64
 	Eval(*CallFrame, Trits) bool
+}
+
+type ProcessorInterface interface {
 }
 
 func MatchSizes(e1, e2 ExpressionInterface) error {

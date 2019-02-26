@@ -118,7 +118,7 @@ func (def *QuplaFuncDef) GetVarInfo(name string, module ModuleInterface) (*VarIn
 	}
 	ret := def.localVars[idx]
 	if ret.analyzed {
-		return &VarInfo{idx, ret.offset, ret.size}, nil
+		return &VarInfo{idx, ret.offset, ret.size, ret.isState, ret.idx < def.numParams}, nil
 	}
 	var err error
 
@@ -132,7 +132,7 @@ func (def *QuplaFuncDef) GetVarInfo(name string, module ModuleInterface) (*VarIn
 			return nil, fmt.Errorf("inconsistency with vars")
 		}
 		if ret.expr, err = module.AnalyzeExpression(e, def); err != nil {
-			return &VarInfo{idx, ret.offset, ret.size}, err
+			return &VarInfo{idx, ret.offset, ret.size, ret.isState, ret.idx < def.numParams}, err
 		}
 		if v.isState {
 			if ret.size != ret.expr.Size() {
@@ -145,7 +145,7 @@ func (def *QuplaFuncDef) GetVarInfo(name string, module ModuleInterface) (*VarIn
 		// param
 		def.localVars[idx].expr = nil
 	}
-	return &VarInfo{idx, ret.offset, ret.size}, nil
+	return &VarInfo{idx, ret.offset, ret.size, ret.isState, ret.idx < def.numParams}, nil
 }
 
 func (def *QuplaFuncDef) createVarScope() error {
