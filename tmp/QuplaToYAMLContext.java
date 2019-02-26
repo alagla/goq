@@ -205,20 +205,20 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
             undent();
         }
 
-        if (slice.startOffset != null)
+        if (slice.sliceStart != null)
         {
             append("start:");
             newline();
             indent();
-            evalExpression(slice.startOffset);
+            evalExpression(slice.sliceStart);
             undent();
 
-            if (slice.endOffset != null)
+            if (slice.sliceSize != null)
             {
                 append("end:");
                 newline();
                 indent();
-                evalExpression(slice.endOffset);
+                evalExpression(slice.sliceSize);
                 undent();
             }
         }
