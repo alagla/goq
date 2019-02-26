@@ -11,7 +11,7 @@ type QuplaConcatExpr struct {
 	rhsExpr ExpressionInterface
 }
 
-func AnalyzeConcatExpr(exprYAML *quplayaml.QuplaConcatExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaConcatExpr, error) {
+func AnalyzeConcatExpr(exprYAML *quplayaml.QuplaConcatExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaConcatExpr, error) {
 	var err error
 	module.IncStat("numConcat")
 

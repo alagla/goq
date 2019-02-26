@@ -13,7 +13,7 @@ type QuplaTypeExpr struct {
 	fields map[string]ExpressionInterface
 }
 
-func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaTypeExpr, error) {
+func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaTypeExpr, error) {
 	ret := &QuplaTypeExpr{
 		fields: make(map[string]ExpressionInterface),
 	}

@@ -11,13 +11,19 @@ type QuplaLutExpr struct {
 	lutDef  *QuplaLutDef
 }
 
-func AnalyzeLutExpr(exprYAML *QuplaLutExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaLutExpr, error) {
+func AnalyzeLutExpr(exprYAML *QuplaLutExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaLutExpr, error) {
 	var err error
 	var ae ExpressionInterface
+	var li LUTInterface
+	var ok bool
 	ret := &QuplaLutExpr{}
-	ret.lutDef, err = module.FindLUTDef(exprYAML.Name)
+	li, err = module.FindLUTDef(exprYAML.Name)
 	if err != nil {
 		return nil, err
+	}
+	ret.lutDef, ok = li.(*QuplaLutDef)
+	if !ok {
+		return nil, fmt.Errorf("inconsistency with types")
 	}
 	module.IncStat("numLUTExpr")
 

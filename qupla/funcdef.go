@@ -11,13 +11,14 @@ type QuplaFuncDef struct {
 	retSize    int64
 	retExpr    ExpressionInterface
 	localVars  []*LocalVariable
-	numParams  int   // idx < numParams represents parameter, idx >= represents local var (assign)
+	numParams  int64 // idx < numParams represents parameter, idx >= represents local var (assign)
 	bufLen     int64 // total length of the local var buffer
 }
 
 // represents local variable in func def
 type LocalVariable struct {
 	name     string
+	idx      int64
 	isState  bool
 	offset   int64               // offset in call context buffer
 	size     int64               // size of the variable
@@ -89,10 +90,10 @@ func (def *QuplaFuncDef) Size() int64 {
 	return def.retSize
 }
 
-func (def *QuplaFuncDef) GetVarIdx(name string) int {
+func (def *QuplaFuncDef) GetVarIdx(name string) int64 {
 	for i, lv := range def.localVars {
 		if lv.name == name {
-			return i
+			return int64(i)
 		}
 	}
 	return -1
@@ -109,15 +110,15 @@ func (def *QuplaFuncDef) VarByIdx(idx int) *LocalVariable {
 	return def.localVars[idx]
 }
 
-// it tries to find var idx. Analyzes var if not analyzed yet
-func (def *QuplaFuncDef) FindVarIdx(name string, module *QuplaModule) (int, error) {
+// it tries to find var idx, offset, size. Analyzes var if not analyzed yet
+func (def *QuplaFuncDef) GetVarInfo(name string, module ModuleInterface) (*VarInfo, error) {
 	idx := def.GetVarIdx(name)
 	if idx < 0 {
-		return -1, nil
+		return nil, nil
 	}
 	ret := def.localVars[idx]
 	if ret.analyzed {
-		return idx, nil
+		return &VarInfo{idx, ret.offset, ret.size}, nil
 	}
 	var err error
 
@@ -128,14 +129,14 @@ func (def *QuplaFuncDef) FindVarIdx(name string, module *QuplaModule) (int, erro
 		v := def.localVars[idx]
 		e, ok := def.yamlSource.Assigns[name]
 		if !ok {
-			return -1, fmt.Errorf("inconsistency with vars")
+			return nil, fmt.Errorf("inconsistency with vars")
 		}
 		if ret.expr, err = module.AnalyzeExpression(e, def); err != nil {
-			return idx, err
+			return &VarInfo{idx, ret.offset, ret.size}, err
 		}
 		if v.isState {
 			if ret.size != ret.expr.Size() {
-				return -1, fmt.Errorf("expression and state variable has different sizes in the assign")
+				return nil, fmt.Errorf("expression and state variable has different sizes in the assign")
 			}
 		} else {
 			ret.size = ret.expr.Size()
@@ -144,14 +145,14 @@ func (def *QuplaFuncDef) FindVarIdx(name string, module *QuplaModule) (int, erro
 		// param
 		def.localVars[idx].expr = nil
 	}
-	return idx, nil
+	return &VarInfo{idx, ret.offset, ret.size}, nil
 }
 
 func (def *QuplaFuncDef) createVarScope() error {
 	src := def.yamlSource
 	def.localVars = make([]*LocalVariable, 0, len(src.Params)+len(src.Assigns))
 	// first numParams indices belong to parameters
-	def.numParams = len(src.Params)
+	def.numParams = int64(len(src.Params))
 	for _, arg := range src.Params {
 		if def.InScope(arg.ArgName) {
 			return fmt.Errorf("duplicate arg name '%v'", arg.ArgName)
@@ -163,7 +164,7 @@ func (def *QuplaFuncDef) createVarScope() error {
 		})
 	}
 	// the rest indices belong to local vars (incl state)
-	var idx int
+	var idx int64
 	for name, s := range src.State {
 		idx = def.GetVarIdx(name)
 		if idx >= 0 {
@@ -198,16 +199,16 @@ func (def *QuplaFuncDef) createVarScope() error {
 
 func (def *QuplaFuncDef) analyzeAssigns(defYAML *QuplaFuncDefYAML, module *QuplaModule) error {
 	var err error
-	var idx int
+	var vi *VarInfo
 	for name := range defYAML.Assigns {
-		if idx, err = def.FindVarIdx(name, module); err != nil {
+		if vi, err = def.GetVarInfo(name, module); err != nil {
 			return err
 		}
-		s := def.localVars[idx].expr.Size()
-		if def.localVars[idx].isState && s != def.localVars[idx].size {
+		s := def.localVars[vi.idx].expr.Size()
+		if def.localVars[vi.idx].isState && s != vi.size {
 			return fmt.Errorf("sizes doesn't match for var '%v' in '%v'", name, def.GetName())
 		}
-		def.localVars[idx].size = s
+		def.localVars[vi.idx].size = s
 	}
 	return nil
 }
@@ -227,7 +228,7 @@ func (def *QuplaFuncDef) finalizeLocalVars() error {
 
 func (def *QuplaFuncDef) checkArgSizes(args []ExpressionInterface) error {
 	for i := range args {
-		if i >= def.numParams || args[i].Size() != def.localVars[i].size {
+		if int64(i) >= def.numParams || args[i].Size() != def.localVars[i].size {
 			return fmt.Errorf("param and arg # %v mismach in %v", i, def.GetName())
 		}
 	}

@@ -20,17 +20,17 @@ func (lutDef *QuplaLutDef) SetName(name string) {
 	lutDef.name = name
 }
 
-func AnalyzeLutDef(name string, defYAML *QuplaLutDefYAML, module *QuplaModule) (*QuplaLutDef, error) {
+func AnalyzeLutDef(name string, defYAML *QuplaLutDefYAML, module ModuleInterface) error {
 	ret := &QuplaLutDef{
 		name: name,
 	}
 	module.IncStat("numLUTDef")
 
 	if len(defYAML.LutTable) == 0 {
-		return nil, fmt.Errorf("No LUT entries found")
+		return fmt.Errorf("no LUT entries found")
 	}
 	if len(defYAML.LutTable) > 27 {
-		return nil, fmt.Errorf("lut table can't have more than 27 entries")
+		return fmt.Errorf("lut table can't have more than 27 entries")
 	}
 	inputs := make([]Trits, 0, len(defYAML.LutTable))
 	outputs := make([]Trits, 0, len(defYAML.LutTable))
@@ -39,7 +39,7 @@ func AnalyzeLutDef(name string, defYAML *QuplaLutDefYAML, module *QuplaModule) (
 	for _, entry := range defYAML.LutTable {
 		sides := strings.Split(entry, "=")
 		if len(sides) != 2 {
-			return nil, fmt.Errorf("wrong LUT entry: %v", entry)
+			return fmt.Errorf("wrong LUT entry: %v", entry)
 		}
 		sides[0] = strings.TrimSpace(sides[0])
 		sides[1] = strings.TrimSpace(sides[1])
@@ -48,23 +48,23 @@ func AnalyzeLutDef(name string, defYAML *QuplaLutDefYAML, module *QuplaModule) (
 			ret.inputSize = len(sides[0])
 			ret.outputSize = len(sides[1])
 			if ret.inputSize < 1 || ret.inputSize > 3 || ret.outputSize < 1 {
-				return nil, fmt.Errorf("wrong input or output size")
+				return fmt.Errorf("wrong input or output size")
 			}
 		}
 		if len(sides[0]) != ret.inputSize {
-			return nil, fmt.Errorf("input len expected to be %v", ret.inputSize)
+			return fmt.Errorf("input len expected to be %v", ret.inputSize)
 		}
 		if len(sides[1]) != ret.outputSize {
-			return nil, fmt.Errorf("ouput len expected to be %v", ret.outputSize)
+			return fmt.Errorf("ouput len expected to be %v", ret.outputSize)
 		}
 		inTrits, err := quplaTritStringToTrits(sides[0])
 		if err != nil {
-			return nil, err
+			return err
 		}
 		inputs = append(inputs, inTrits)
 		outTrits, err := quplaTritStringToTrits(sides[1])
 		if err != nil {
-			return nil, err
+			return err
 		}
 		outputs = append(outputs, outTrits)
 	}
@@ -73,11 +73,12 @@ func AnalyzeLutDef(name string, defYAML *QuplaLutDefYAML, module *QuplaModule) (
 	for i, inp := range inputs {
 		idx := tritsToIdx(inp)
 		if ret.lutLookupTable[idx] != nil {
-			return nil, fmt.Errorf("duplicated input in LUT table")
+			return fmt.Errorf("duplicated input in LUT table")
 		}
 		ret.lutLookupTable[idx] = outputs[i]
 	}
-	return ret, nil
+	module.AddLutDef(name, ret)
+	return nil
 }
 
 func (lutDef *QuplaLutDef) Size() int64 {

@@ -41,7 +41,7 @@ func IsConstExpression(e interface{}) bool {
 	return false
 }
 
-func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*ConstValue, error) {
+func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module ModuleInterface, scope FuncDefInterface) (*ConstValue, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
@@ -74,7 +74,7 @@ func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module *QuplaModule, scope *
 	return ret, nil
 }
 
-func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module *QuplaModule, scope *QuplaFuncDef) (*ConstValue, error) {
+func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module ModuleInterface, scope FuncDefInterface) (*ConstValue, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
@@ -117,7 +117,7 @@ func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module *QuplaModule, scope *
 	return ret, nil
 }
 
-func AnalyzeConstTypeName(exprYAML *QuplaConstTypeNameYAML, _ *QuplaModule, _ *QuplaFuncDef) (*ConstValue, error) {
+func AnalyzeConstTypeName(exprYAML *QuplaConstTypeNameYAML, _ ModuleInterface, _ FuncDefInterface) (*ConstValue, error) {
 	var err error
 	var ret int
 	if ret, err = strconv.Atoi(exprYAML.SizeString); err != nil {
@@ -126,7 +126,7 @@ func AnalyzeConstTypeName(exprYAML *QuplaConstTypeNameYAML, _ *QuplaModule, _ *Q
 	return NewConstValue(int64(ret)), nil
 }
 
-func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ *QuplaModule, _ *QuplaFuncDef) (*ConstValue, error) {
+func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ ModuleInterface, _ FuncDefInterface) (*ConstValue, error) {
 	ret, err := strconv.Atoi(exprYAML.Value)
 	if err != nil {
 		return nil, err

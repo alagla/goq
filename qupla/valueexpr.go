@@ -10,7 +10,7 @@ type QuplaValueExpr struct {
 	TritValue Trits
 }
 
-func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaValueExpr, error) {
+func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module ModuleInterface, _ FuncDefInterface) (*QuplaValueExpr, error) {
 	module.IncStat("numValueExpr")
 
 	if exprYAML.Trits == "" {

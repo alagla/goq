@@ -9,7 +9,7 @@ type QuplaFieldExpr struct {
 	condExpr ExpressionInterface
 }
 
-func AnalyzeFieldExpr(exprYAML *QuplaFieldExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaFieldExpr, error) {
+func AnalyzeFieldExpr(exprYAML *QuplaFieldExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaFieldExpr, error) {
 	var err error
 	module.IncStat("numFieldExpr")
 	ret := &QuplaFieldExpr{}

@@ -7,27 +7,29 @@ import (
 )
 
 type QuplaSliceExpr struct {
-	localVarIdx int
+	localVarIdx int64
 	varScope    *QuplaFuncDef
 	offset      int64
 	size        int64
 }
 
-func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaSliceExpr, error) {
+func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaSliceExpr, error) {
 	var err error
 	ret := &QuplaSliceExpr{
 		offset: exprYAML.Offset,
 		size:   exprYAML.SliceSize,
 	}
-	if ret.localVarIdx, err = scope.FindVarIdx(exprYAML.Var, module); err != nil {
+	module.IncStat("numSliceExpr")
+	var vi *VarInfo
+	if vi, err = scope.GetVarInfo(exprYAML.Var, module); err != nil {
 		return nil, err
 	}
-	module.IncStat("numSliceExpr")
+	ret.localVarIdx = vi.idx
 	if ret.localVarIdx < 0 {
 		return nil, fmt.Errorf("can't find local variable '%v' in scope '%v'", exprYAML.Var, scope.GetName())
 	}
-	ret.varScope = scope
-	if ret.offset+ret.size > scope.VarByIdx(ret.localVarIdx).size {
+	ret.varScope = scope.(*QuplaFuncDef)
+	if ret.offset+ret.size > vi.size {
 		return nil, fmt.Errorf("wrong offset/size for the slice of '%v'", exprYAML.Var)
 	}
 	return ret, nil

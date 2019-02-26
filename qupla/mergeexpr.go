@@ -11,7 +11,7 @@ type QuplaMergeExpr struct {
 	rhsExpr ExpressionInterface
 }
 
-func AnalyzeMergeExpr(exprYAML *QuplaMergeExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaMergeExpr, error) {
+func AnalyzeMergeExpr(exprYAML *QuplaMergeExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaMergeExpr, error) {
 	var err error
 	module.IncStat("numMergeExpr")
 

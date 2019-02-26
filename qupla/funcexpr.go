@@ -1,6 +1,7 @@
 package qupla
 
 import (
+	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/quplayaml"
 )
@@ -19,15 +20,21 @@ type CallFrame struct {
 	isNull    []bool         // flag if value was evaluated to null
 }
 
-func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaFuncExpr, error) {
+func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaFuncExpr, error) {
 	var err error
 	ret := &QuplaFuncExpr{
 		name: exprYAML.Name,
 	}
-	ret.funcDef, err = module.FindFuncDef(exprYAML.Name)
+	var fdi FuncDefInterface
+	fdi, err = module.FindFuncDef(exprYAML.Name)
 	if err != nil {
 		return nil, err
 	}
+	var ok bool
+	if ret.funcDef, ok = fdi.(*QuplaFuncDef); !ok {
+		return nil, fmt.Errorf("inconsistency with types in %v", exprYAML.Name)
+	}
+
 	var fe ExpressionInterface
 	module.IncStat("numFuncExpr")
 
@@ -67,7 +74,7 @@ func (e *QuplaFuncExpr) Eval(parentFrame *CallFrame, result Trits) bool {
 	return e.funcDef.retExpr.Eval(frame, result)
 }
 
-func (frame *CallFrame) EvalVar(idx int) (Trits, bool) {
+func (frame *CallFrame) EvalVar(idx int64) (Trits, bool) {
 	tracef("eval var funcExpr '%v', idx = %v", frame.context.name, idx)
 	null := false
 	resOffset := frame.context.funcDef.localVars[idx].offset

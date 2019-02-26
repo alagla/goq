@@ -8,7 +8,6 @@ import (
 type QuplaModule struct {
 	yamlSource *quplayaml.QuplaModuleYAML
 	factory    ExpressionFactory
-	types      map[string]*QuplaTypeDef
 	luts       map[string]*QuplaLutDef
 	functions  map[string]*QuplaFuncDef
 	execs      []*QuplaExecStmt
@@ -19,7 +18,6 @@ func AnalyzeQuplaModule(moduleYAML *quplayaml.QuplaModuleYAML, factory Expressio
 	ret := &QuplaModule{
 		yamlSource: moduleYAML,
 		factory:    factory,
-		types:      make(map[string]*QuplaTypeDef),
 		luts:       make(map[string]*QuplaLutDef),
 		functions:  make(map[string]*QuplaFuncDef),
 		execs:      make([]*QuplaExecStmt, 0, len(moduleYAML.Execs)),
@@ -39,7 +37,7 @@ func AnalyzeQuplaModule(moduleYAML *quplayaml.QuplaModuleYAML, factory Expressio
 	return ret, retSucc
 }
 
-func (module *QuplaModule) AnalyzeExpression(data interface{}, scope *QuplaFuncDef) (ExpressionInterface, error) {
+func (module *QuplaModule) AnalyzeExpression(data interface{}, scope FuncDefInterface) (ExpressionInterface, error) {
 	return module.factory.AnalyzeExpression(data, module, scope)
 }
 
@@ -47,11 +45,15 @@ func (module *QuplaModule) AddExec(exec *QuplaExecStmt) {
 	module.execs = append(module.execs, exec)
 }
 
-func (module *QuplaModule) AddFuncDef(name string, funcDef *QuplaFuncDef) {
-	module.functions[name] = funcDef
+func (module *QuplaModule) AddFuncDef(name string, funcDef FuncDefInterface) {
+	module.functions[name] = funcDef.(*QuplaFuncDef)
 }
 
-func (module *QuplaModule) FindFuncDef(name string) (*QuplaFuncDef, error) {
+func (module *QuplaModule) AddLutDef(name string, lutDef LUTInterface) {
+	module.luts[name] = lutDef.(*QuplaLutDef)
+}
+
+func (module *QuplaModule) FindFuncDef(name string) (FuncDefInterface, error) {
 	var err error
 	ret, ok := module.functions[name]
 	if ok {
@@ -63,12 +65,12 @@ func (module *QuplaModule) FindFuncDef(name string) (*QuplaFuncDef, error) {
 	}
 	err = AnalyzeFuncDef(name, src, module)
 	if err != nil {
-		return nil, fmt.Errorf("error while anlyzing function definioton '%v': %v", name, err)
+		return nil, fmt.Errorf("error while anlyzing fun def '%v': %v", name, err)
 	}
 	return module.functions[name], nil
 }
 
-func (module *QuplaModule) FindLUTDef(name string) (*QuplaLutDef, error) {
+func (module *QuplaModule) FindLUTDef(name string) (LUTInterface, error) {
 	var err error
 	ret, ok := module.luts[name]
 	if ok {
@@ -78,19 +80,15 @@ func (module *QuplaModule) FindLUTDef(name string) (*QuplaLutDef, error) {
 	if !ok {
 		return nil, fmt.Errorf("can't find LUT dfinition '%v'", name)
 	}
-	ret, err = AnalyzeLutDef(name, src, module)
+	err = AnalyzeLutDef(name, src, module)
 	if err != nil {
 		return nil, err
 	}
-	return ret, nil
-}
 
-func (module *QuplaModule) FindTypeDef(name string) *QuplaTypeDef {
-	ret, ok := module.types[name]
-	if ok {
-		return ret
+	if ret, ok = module.luts[name]; !ok {
+		return nil, fmt.Errorf("inconsistency while analyzing LUT '%v'", name)
 	}
-	return nil
+	return ret, nil
 }
 
 func (module *QuplaModule) Execute() {

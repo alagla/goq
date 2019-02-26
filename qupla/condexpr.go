@@ -12,7 +12,7 @@ type QuplaCondExpr struct {
 	elseExpr ExpressionInterface
 }
 
-func AnalyzeCondExpr(exprYAML *QuplaCondExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaCondExpr, error) {
+func AnalyzeCondExpr(exprYAML *QuplaCondExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaCondExpr, error) {
 	var err error
 	module.IncStat("numCond")
 

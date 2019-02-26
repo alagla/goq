@@ -8,7 +8,7 @@ import (
 type ExpressionFactoryFromYAML struct{}
 
 func (ef *ExpressionFactoryFromYAML) AnalyzeExpression(
-	dataYAML interface{}, module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
+	dataYAML interface{}, module ModuleInterface, scope FuncDefInterface) (ExpressionInterface, error) {
 	switch data := dataYAML.(type) {
 	case *QuplaConstNumberYAML:
 		return AnalyzeConstNumber(data, module, scope)
