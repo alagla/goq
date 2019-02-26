@@ -3,6 +3,7 @@ package quplayaml
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/abstract"
 	"strconv"
 	"strings"
 )
@@ -20,7 +21,7 @@ func (e *ConstValue) Size() int64 {
 	return 0 //todo
 }
 
-func (_ *ConstValue) Eval(_ *CallFrame, _ Trits) bool {
+func (_ *ConstValue) Eval(_ ProcessorInterface, _ Trits) bool {
 	return true // todo
 }
 

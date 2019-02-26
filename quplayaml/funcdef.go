@@ -2,6 +2,7 @@ package quplayaml
 
 import (
 	"fmt"
+	. "github.com/lunfardo314/goq/abstract"
 )
 
 type QuplaFuncDef struct {
@@ -9,20 +10,9 @@ type QuplaFuncDef struct {
 	name       string
 	retSize    int64
 	retExpr    ExpressionInterface
-	localVars  []*LocalVariable
+	localVars  []*VarInfo
 	numParams  int64 // idx < numParams represents parameter, idx >= represents local var (assign)
 	bufLen     int64 // total length of the local var buffer
-}
-
-// represents local variable in func def
-type LocalVariable struct {
-	name     string
-	idx      int64
-	isState  bool
-	offset   int64               // offset in call context buffer
-	size     int64               // size of the variable
-	expr     ExpressionInterface // for assigns only
-	analyzed bool
 }
 
 func (def *QuplaFuncDef) SetName(name string) {
@@ -91,18 +81,14 @@ func (def *QuplaFuncDef) Size() int64 {
 
 func (def *QuplaFuncDef) GetVarIdx(name string) int64 {
 	for i, lv := range def.localVars {
-		if lv.name == name {
+		if lv.Name == name {
 			return int64(i)
 		}
 	}
 	return -1
 }
 
-func (def *QuplaFuncDef) InScope(name string) bool {
-	return def.GetVarIdx(name) >= 0
-}
-
-func (def *QuplaFuncDef) VarByIdx(idx int) *LocalVariable {
+func (def *QuplaFuncDef) VarByIdx(idx int) *VarInfo {
 	if idx < 0 {
 		return nil
 	}
@@ -116,63 +102,65 @@ func (def *QuplaFuncDef) GetVarInfo(name string, module ModuleInterface) (*VarIn
 		return nil, nil
 	}
 	ret := def.localVars[idx]
-	if ret.analyzed {
-		return &VarInfo{idx, ret.offset, ret.size, ret.isState, ret.idx < def.numParams}, nil
+	if ret.Analyzed {
+		return ret, nil
 	}
 	var err error
+	ret.Analyzed = true
 
-	ret.analyzed = true
-
-	if idx >= def.numParams {
+	if ret.IsParam {
+		// param
+		ret.Expr = nil
+	} else {
 		// local var
-		v := def.localVars[idx]
 		e, ok := def.yamlSource.Assigns[name]
 		if !ok {
 			return nil, fmt.Errorf("inconsistency with vars")
 		}
-		if ret.expr, err = module.AnalyzeExpression(e, def); err != nil {
-			return &VarInfo{idx, ret.offset, ret.size, ret.isState, ret.idx < def.numParams}, err
+		if ret.Expr, err = module.AnalyzeExpression(e, def); err != nil {
+			return ret, err
 		}
-		if v.isState {
-			if ret.size != ret.expr.Size() {
+		if ret.IsState {
+			if ret.Size != ret.Expr.Size() {
 				return nil, fmt.Errorf("expression and state variable has different sizes in the assign")
 			}
 		} else {
-			ret.size = ret.expr.Size()
+			ret.Size = ret.Expr.Size()
 		}
-	} else {
-		// param
-		def.localVars[idx].expr = nil
 	}
-	return &VarInfo{idx, ret.offset, ret.size, ret.isState, ret.idx < def.numParams}, nil
+	return ret, nil
 }
 
 func (def *QuplaFuncDef) createVarScope() error {
 	src := def.yamlSource
-	def.localVars = make([]*LocalVariable, 0, len(src.Params)+len(src.Assigns))
+	def.localVars = make([]*VarInfo, 0, len(src.Params)+len(src.Assigns))
 	// first numParams indices belong to parameters
 	def.numParams = int64(len(src.Params))
-	for _, arg := range src.Params {
-		if def.InScope(arg.ArgName) {
+	for idx, arg := range src.Params {
+		if def.GetVarIdx(arg.ArgName) >= 0 {
 			return fmt.Errorf("duplicate arg name '%v'", arg.ArgName)
 		}
-		def.localVars = append(def.localVars, &LocalVariable{
-			name:     arg.ArgName,
-			size:     arg.Size,
-			analyzed: true,
+		def.localVars = append(def.localVars, &VarInfo{
+			Idx:      int64(idx),
+			Name:     arg.ArgName,
+			Size:     arg.Size,
+			Analyzed: true,
+			IsParam:  true,
 		})
 	}
-	// the rest indices belong to local vars (incl state)
+	// the rest of indices belong to local vars (incl state)
 	var idx int64
 	for name, s := range src.State {
 		idx = def.GetVarIdx(name)
 		if idx >= 0 {
 			return fmt.Errorf("wrong declared state variable: '%v' in '%v'", name, def.name)
 		} else {
-			def.localVars = append(def.localVars, &LocalVariable{
-				name:    name,
-				size:    s.Size,
-				isState: true,
+			def.localVars = append(def.localVars, &VarInfo{
+				Idx:     int64(len(def.localVars)),
+				Name:    name,
+				Size:    s.Size,
+				IsState: true,
+				IsParam: false,
 			})
 		}
 	}
@@ -183,13 +171,14 @@ func (def *QuplaFuncDef) createVarScope() error {
 				return fmt.Errorf("cannot assign to function parameter: '%v' in '%v'", name, def.name)
 			} else {
 				v := def.localVars[idx]
-				if !v.isState {
+				if !v.IsState {
 					return fmt.Errorf("several assignment to the same var '%v' in '%v' is not allowed", name, def.name)
 				}
 			}
 		} else {
-			def.localVars = append(def.localVars, &LocalVariable{
-				name: name,
+			def.localVars = append(def.localVars, &VarInfo{
+				Idx:  int64(len(def.localVars)),
+				Name: name,
 			})
 		}
 	}
@@ -203,11 +192,11 @@ func (def *QuplaFuncDef) analyzeAssigns(defYAML *QuplaFuncDefYAML, module *Qupla
 		if vi, err = def.GetVarInfo(name, module); err != nil {
 			return err
 		}
-		s := def.localVars[vi.idx].expr.Size()
-		if def.localVars[vi.idx].isState && s != vi.size {
+		s := vi.Expr.Size()
+		if vi.IsState && s != vi.Size {
 			return fmt.Errorf("sizes doesn't match for var '%v' in '%v'", name, def.GetName())
 		}
-		def.localVars[vi.idx].size = s
+		vi.Size = s
 	}
 	return nil
 }
@@ -215,11 +204,11 @@ func (def *QuplaFuncDef) analyzeAssigns(defYAML *QuplaFuncDefYAML, module *Qupla
 func (def *QuplaFuncDef) finalizeLocalVars() error {
 	var curOffset int64
 	for _, v := range def.localVars {
-		if v.size == 0 {
-			return fmt.Errorf("can't determine var size '%v': '%v'", v.name, def.GetName())
+		if v.Size == 0 {
+			return fmt.Errorf("can't determine var size '%v': '%v'", v.Name, def.GetName())
 		}
-		v.offset = curOffset
-		curOffset += v.size
+		v.Offset = curOffset
+		curOffset += v.Size
 	}
 	def.bufLen = int64(curOffset)
 	return nil
@@ -227,7 +216,7 @@ func (def *QuplaFuncDef) finalizeLocalVars() error {
 
 func (def *QuplaFuncDef) checkArgSizes(args []ExpressionInterface) error {
 	for i := range args {
-		if int64(i) >= def.numParams || args[i].Size() != def.localVars[i].size {
+		if int64(i) >= def.numParams || args[i].Size() != def.localVars[i].Size {
 			return fmt.Errorf("param and arg # %v mismach in %v", i, def.GetName())
 		}
 	}

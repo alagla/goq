@@ -3,6 +3,7 @@ package quplayaml
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/abstract"
 )
 
 // ----- ?????? do we need it?
@@ -59,6 +60,6 @@ func (e *QuplaTypeExpr) CheckSize() error {
 	return nil
 }
 
-func (e *QuplaTypeExpr) Eval(_ *CallFrame, _ Trits) bool {
+func (e *QuplaTypeExpr) Eval(_ ProcessorInterface, _ Trits) bool {
 	return true
 }

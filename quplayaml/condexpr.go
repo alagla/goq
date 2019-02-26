@@ -3,6 +3,7 @@ package quplayaml
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/abstract"
 )
 
 type QuplaCondExpr struct {
@@ -46,17 +47,18 @@ func (e *QuplaCondExpr) Size() int64 {
 	return e.thenExpr.Size()
 }
 
-func (e *QuplaCondExpr) Eval(callFrame *CallFrame, result Trits) bool {
+func (e *QuplaCondExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	var buf [1]int8
-	null := e.ifExpr.Eval(callFrame, buf[:])
+	null := e.ifExpr.Eval(proc, buf[:])
 	if null {
 		return true
 	}
+	// bool is 0/1
 	switch buf[0] {
 	case 1:
-		return e.thenExpr.Eval(callFrame, result)
-	case -1:
-		return e.elseExpr.Eval(callFrame, result)
+		return e.thenExpr.Eval(proc, result)
+	case 0:
+		return e.elseExpr.Eval(proc, result)
 	}
-	panic("trit value")
+	panic("trit value in cond expr")
 }

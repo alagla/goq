@@ -2,6 +2,7 @@ package quplayaml
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/abstract"
 )
 
 type QuplaFieldExpr struct {
@@ -26,6 +27,6 @@ func (e *QuplaFieldExpr) Size() int64 {
 	return e.condExpr.Size()
 }
 
-func (e *QuplaFieldExpr) Eval(_ *CallFrame, _ Trits) bool {
+func (e *QuplaFieldExpr) Eval(_ ProcessorInterface, _ Trits) bool {
 	return true
 }

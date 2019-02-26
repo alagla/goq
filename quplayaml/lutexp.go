@@ -3,6 +3,7 @@ package quplayaml
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/abstract"
 )
 
 type QuplaLutExpr struct {
@@ -50,13 +51,13 @@ func (e *QuplaLutExpr) Size() int64 {
 	return e.lutDef.Size()
 }
 
-func (e *QuplaLutExpr) Eval(callFrame *CallFrame, result Trits) bool {
-	tracef("eval var lutExpr '%v', frame = %v", e.lutDef.name, callFrame.context.name)
+func (e *QuplaLutExpr) Eval(proc ProcessorInterface, result Trits) bool {
+	//tracef("eval var lutExpr '%v', frame = %v", e.lutDef.name, callFrame.context.name)
 
 	var null bool
 	var buf [3]int8 // no more than 3 inputs
 	for i, a := range e.argExpr {
-		null = a.Eval(callFrame, buf[i:i+1])
+		null = a.Eval(proc, buf[i:i+1])
 		if null {
 			return true
 		}

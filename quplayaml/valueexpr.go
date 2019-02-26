@@ -3,6 +3,7 @@ package quplayaml
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/abstract"
 )
 
 type QuplaValueExpr struct {
@@ -43,6 +44,6 @@ func (e *QuplaValueExpr) Size() int64 {
 	return int64(len(e.TritValue))
 }
 
-func (e *QuplaValueExpr) Eval(_ *CallFrame, _ Trits) bool {
+func (e *QuplaValueExpr) Eval(_ ProcessorInterface, _ Trits) bool {
 	return true // todo
 }

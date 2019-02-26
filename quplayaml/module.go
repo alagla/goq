@@ -2,6 +2,7 @@ package quplayaml
 
 import (
 	"fmt"
+	. "github.com/lunfardo314/goq/abstract"
 )
 
 type QuplaModule struct {

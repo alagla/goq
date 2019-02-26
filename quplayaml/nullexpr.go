@@ -2,6 +2,7 @@ package quplayaml
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/abstract"
 )
 
 type QuplaNullExpr struct {
@@ -21,7 +22,7 @@ func (e *QuplaNullExpr) Size() int64 {
 	return e.size
 }
 
-func (e *QuplaNullExpr) Eval(_ *CallFrame, _ Trits) bool {
+func (e *QuplaNullExpr) Eval(_ ProcessorInterface, _ Trits) bool {
 	return true
 }
 

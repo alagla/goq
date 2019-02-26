@@ -3,6 +3,7 @@ package quplayaml
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/abstract"
 )
 
 type QuplaSliceExpr struct {
@@ -23,12 +24,12 @@ func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module ModuleInterface, scop
 	if vi, err = scope.GetVarInfo(exprYAML.Var, module); err != nil {
 		return nil, err
 	}
-	ret.localVarIdx = vi.idx
+	ret.localVarIdx = vi.Idx
 	if ret.localVarIdx < 0 {
 		return nil, fmt.Errorf("can't find local variable '%v' in scope '%v'", exprYAML.Var, scope.GetName())
 	}
 	ret.varScope = scope.(*QuplaFuncDef)
-	if ret.offset+ret.size > vi.size {
+	if ret.offset+ret.size > vi.Size {
 		return nil, fmt.Errorf("wrong offset/size for the slice of '%v'", exprYAML.Var)
 	}
 	return ret, nil
@@ -41,11 +42,11 @@ func (e *QuplaSliceExpr) Size() int64 {
 	return e.size
 }
 
-func (e *QuplaSliceExpr) Eval(callFrame *CallFrame, result Trits) bool {
-	res, null := callFrame.EvalVar(e.localVarIdx) // must be big enough to fit whole result
+func (e *QuplaSliceExpr) Eval(proc ProcessorInterface, result Trits) bool {
+	null := proc.EvalVar(e.localVarIdx)
 	if null {
 		return true
 	}
-	copy(result, res[e.offset:e.offset+e.size])
+	copy(result, proc.Slice(e.offset, e.size))
 	return false
 }

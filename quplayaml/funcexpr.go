@@ -3,20 +3,13 @@ package quplayaml
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/abstract"
 )
 
 type QuplaFuncExpr struct {
 	name    string
 	funcDef *QuplaFuncDef
 	args    []ExpressionInterface
-}
-
-type CallFrame struct {
-	context   *QuplaFuncExpr // which function called
-	parent    *CallFrame     // context where it was called
-	buffer    Trits          // buffer to place all params and variables
-	evaluated []bool         // flag if respective variable was evaluated
-	isNull    []bool         // flag if value was evaluated to null
 }
 
 func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaFuncExpr, error) {
@@ -66,34 +59,10 @@ func (e *QuplaFuncExpr) NewCallFrame(parent *CallFrame) *CallFrame {
 	}
 }
 
-func (e *QuplaFuncExpr) Eval(parentFrame *CallFrame, result Trits) bool {
+func (e *QuplaFuncExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	tracef("eval funcExpr '%v'", e.name)
-
-	frame := e.NewCallFrame(parentFrame)
-	return e.funcDef.retExpr.Eval(frame, result)
-}
-
-func (frame *CallFrame) EvalVar(idx int64) (Trits, bool) {
-	tracef("eval var funcExpr '%v', idx = %v", frame.context.name, idx)
-	null := false
-	resOffset := frame.context.funcDef.localVars[idx].offset
-	resSize := frame.context.funcDef.localVars[idx].size
-	resultSlice := frame.buffer[resOffset : resOffset+resSize]
-	if frame.evaluated[idx] {
-		if frame.isNull[idx] {
-			null = true
-		}
-	} else {
-		if idx < frame.context.funcDef.numParams {
-			// variable is parameter
-			null = frame.context.args[idx].Eval(frame.parent, resultSlice)
-		} else {
-			// variable is assigned
-			null = frame.context.funcDef.localVars[idx].expr.Eval(frame, resultSlice)
-		}
-		if null {
-			resultSlice = nil
-		}
-	}
-	return resultSlice, null
+	proc.Push(e)
+	ret := e.funcDef.retExpr.Eval(proc, result)
+	proc.Pull()
+	return ret
 }

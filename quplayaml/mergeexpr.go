@@ -3,6 +3,7 @@ package quplayaml
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/abstract"
 )
 
 type QuplaMergeExpr struct {
@@ -42,10 +43,10 @@ func (e *QuplaMergeExpr) Size() int64 {
 	return e.lhsExpr.Size()
 }
 
-func (e *QuplaMergeExpr) Eval(callFrame *CallFrame, result Trits) bool {
-	null := e.lhsExpr.Eval(callFrame, result)
+func (e *QuplaMergeExpr) Eval(proc ProcessorInterface, result Trits) bool {
+	null := e.lhsExpr.Eval(proc, result)
 	if null {
-		return e.rhsExpr.Eval(callFrame, result)
+		return e.rhsExpr.Eval(proc, result)
 	}
 	return false
 }

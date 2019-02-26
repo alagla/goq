@@ -1,4 +1,4 @@
-package quplayaml
+package abstract
 
 import (
 	"fmt"
@@ -19,11 +19,14 @@ type ModuleInterface interface {
 }
 
 type VarInfo struct {
-	idx     int64
-	offset  int64
-	size    int64
-	isState bool
-	isParam bool
+	Name     string
+	Analyzed bool
+	Idx      int64
+	Offset   int64
+	Size     int64
+	IsState  bool
+	IsParam  bool
+	Expr     ExpressionInterface
 }
 type FuncDefInterface interface {
 	GetName() string
@@ -38,14 +41,15 @@ type LUTInterface interface {
 
 type ExpressionInterface interface {
 	Size() int64
-	Eval(*CallFrame, Trits) bool
+	Eval(ProcessorInterface, Trits) bool
 }
 
-// TODO
 type ProcessorInterface interface {
 	Push(ExpressionInterface)
-	Pull(ExpressionInterface)
-	Eval(ExpressionInterface, Trits)
+	Pull()
+	Eval(ExpressionInterface, Trits) bool
+	EvalVar(int64) bool
+	Slice(int64, int64) Trits
 }
 
 func MatchSizes(e1, e2 ExpressionInterface) error {
