@@ -16,20 +16,43 @@ type StackProcessor struct {
 	curFrame *CallFrame
 }
 
-func (proc *StackProcessor) Push(funExpr ExpressionInterface) {
-
-}
-
-func (proc *StackProcessor) Pull() {
-
+func NewStackProcessor() *StackProcessor {
+	return &StackProcessor{}
 }
 
 func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
-	return true
+	funExpr, isFunction := expr.(*QuplaFuncExpr)
+	if isFunction {
+		proc.curFrame = funExpr.NewCallFrame(proc.curFrame)
+	}
+	null := expr.Eval(proc, result)
+	if isFunction {
+		proc.curFrame = proc.curFrame.parent
+	}
+	return null
 }
 
 func (proc *StackProcessor) EvalVar(idx int64) bool {
-	return true
+	var null bool
+	if proc.curFrame == nil {
+		panic("variable can't be evaluated in nil context")
+	}
+	vi := proc.curFrame.context.funcDef.VarByIdx(idx)
+	if vi == nil {
+		panic("wrong var idx")
+	}
+
+	res := proc.curFrame.buffer[vi.Offset : vi.Offset+vi.Size]
+	if vi.IsParam {
+		saveCurFrame := proc.curFrame
+		proc.curFrame = proc.curFrame.parent
+		null = proc.Eval(proc.curFrame.context.args[vi.Idx], res)
+		proc.curFrame = saveCurFrame
+	} else {
+		null = proc.Eval(vi.Expr, res)
+	}
+
+	return null
 }
 
 func (proc *StackProcessor) Slice(offset, size int64) Trits {

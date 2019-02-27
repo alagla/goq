@@ -12,6 +12,7 @@ type QuplaModule struct {
 	functions  map[string]*QuplaFuncDef
 	execs      []*QuplaExecStmt
 	stats      map[string]int
+	processor  ProcessorInterface
 }
 
 func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) (*QuplaModule, bool) {
@@ -22,6 +23,7 @@ func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) 
 		functions:  make(map[string]*QuplaFuncDef),
 		execs:      make([]*QuplaExecStmt, 0, len(moduleYAML.Execs)),
 		stats:      make(map[string]int),
+		processor:  NewStackProcessor(),
 	}
 	infof("Analyzing...")
 	retSucc := true

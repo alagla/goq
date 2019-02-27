@@ -88,8 +88,8 @@ func (def *QuplaFuncDef) GetVarIdx(name string) int64 {
 	return -1
 }
 
-func (def *QuplaFuncDef) VarByIdx(idx int) *VarInfo {
-	if idx < 0 {
+func (def *QuplaFuncDef) VarByIdx(idx int64) *VarInfo {
+	if idx < 0 || idx >= int64(len(def.localVars)) {
 		return nil
 	}
 	return def.localVars[idx]

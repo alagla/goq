@@ -1,7 +1,6 @@
 package quplayaml
 
 import (
-	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 )
@@ -10,10 +9,13 @@ type QuplaExecStmt struct {
 	isTest       bool
 	expr         ExpressionInterface
 	exprExpected ExpressionInterface
+	module       *QuplaModule
 }
 
 func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error {
-	res := &QuplaExecStmt{}
+	res := &QuplaExecStmt{
+		module: module,
+	}
 	var err error
 	res.expr, err = module.factory.AnalyzeExpression(execStmtYAML.Expr, module, nil)
 	if err != nil {
@@ -39,12 +41,8 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 }
 
 func (ex *QuplaExecStmt) Execute() error {
-	funcExpr, ok := ex.expr.(*QuplaFuncExpr)
-	if !ok {
-		return fmt.Errorf("must be call to function")
-	}
-	res := make(Trits, funcExpr.Size(), funcExpr.Size())
-	null := funcExpr.Eval(nil, res)
+	res := make(Trits, ex.expr.Size(), ex.expr.Size())
+	null := ex.module.processor.Eval(ex.expr, res)
 	if null {
 		debugf("result is null")
 	} else {

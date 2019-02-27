@@ -52,15 +52,14 @@ func (e *QuplaLutExpr) Size() int64 {
 }
 
 func (e *QuplaLutExpr) Eval(proc ProcessorInterface, result Trits) bool {
-	//tracef("eval var lutExpr '%v', frame = %v", e.lutDef.name, callFrame.context.name)
-
-	var null bool
+	tracef("eval var lutExpr '%v'", e.lutDef.name)
 	var buf [3]int8 // no more than 3 inputs
 	for i, a := range e.argExpr {
-		null = a.Eval(proc, buf[i:i+1])
-		if null {
+		if a.Eval(proc, buf[i:i+1]) {
 			return true
 		}
 	}
-	return e.lutDef.Lookup(result, buf[:e.lutDef.inputSize])
+	null := e.lutDef.Lookup(result, buf[:e.lutDef.inputSize])
+	tracef("lutExpr '%v' res = '%v' null = %v", e.lutDef.name, TritsToString(result), null)
+	return null
 }
