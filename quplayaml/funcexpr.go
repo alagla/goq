@@ -60,8 +60,8 @@ func (e *QuplaFuncExpr) NewCallFrame(parent *CallFrame) *CallFrame {
 }
 
 func (e *QuplaFuncExpr) Eval(proc ProcessorInterface, result Trits) bool {
-	tracef("eval funcExpr '%v'", e.name)
+	tracef("%vfuncExpr '%v'", proc.LevelPrefix(), e.name)
 	null := proc.Eval(e.funcDef.retExpr, result)
-	tracef("funcExpr '%v' res = '%v' null = %v", e.name, TritsToString(result), null)
+	tracef("%vfuncExpr '%v' res = '%v' null = %v", proc.LevelPrefix(), e.name, TritsToString(result), null)
 	return null
 }

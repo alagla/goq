@@ -43,10 +43,15 @@ func (e *QuplaSliceExpr) Size() int64 {
 }
 
 func (e *QuplaSliceExpr) Eval(proc ProcessorInterface, result Trits) bool {
+	tracef("%v sliceExpr '%v' offset = %v size = %v", proc.LevelPrefix(), e.localVarIdx, e.offset, e.size)
 	null := proc.EvalVar(e.localVarIdx)
 	if null {
+		tracef("%v sliceExpr '%v' offset = %v size = %v resu = null",
+			proc.LevelPrefix(), e.localVarIdx, e.offset, e.size)
 		return true
 	}
 	copy(result, proc.Slice(e.offset, e.size))
+	tracef("%v sliceExpr '%v' offset = %v size = %v result = '%v'",
+		proc.LevelPrefix(), e.localVarIdx, e.offset, e.size, TritsToString(result))
 	return false
 }

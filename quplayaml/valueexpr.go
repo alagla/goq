@@ -44,6 +44,10 @@ func (e *QuplaValueExpr) Size() int64 {
 	return int64(len(e.TritValue))
 }
 
-func (e *QuplaValueExpr) Eval(_ ProcessorInterface, _ Trits) bool {
-	return true // todo
+func (e *QuplaValueExpr) Eval(_ ProcessorInterface, result Trits) bool {
+	if e.TritValue == nil {
+		return true
+	}
+	copy(result, e.TritValue)
+	return false
 }

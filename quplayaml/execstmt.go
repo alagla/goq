@@ -46,7 +46,7 @@ func (ex *QuplaExecStmt) Execute() error {
 	if null {
 		debugf("result is null")
 	} else {
-		debugf("result is not null")
+		debugf("result = %v", TritsToString(res))
 	}
 	return nil
 }

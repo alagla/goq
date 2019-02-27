@@ -1,6 +1,9 @@
 package quplayaml
 
-import . "github.com/iotaledger/iota.go/trinary"
+import (
+	. "github.com/iotaledger/iota.go/trinary"
+	"strings"
+)
 import . "github.com/lunfardo314/goq/abstract"
 
 type CallFrame struct {
@@ -13,21 +16,33 @@ type CallFrame struct {
 }
 
 type StackProcessor struct {
-	curFrame *CallFrame
+	levelFunc int
+	level     int
+	curFrame  *CallFrame
 }
 
 func NewStackProcessor() *StackProcessor {
 	return &StackProcessor{}
 }
 
+func (proc *StackProcessor) LevelPrefix() string {
+	return strings.Repeat(".", proc.levelFunc) + strings.Repeat(" ", proc.level)
+}
+
 func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 	funExpr, isFunction := expr.(*QuplaFuncExpr)
 	if isFunction {
+		proc.levelFunc++
 		proc.curFrame = funExpr.NewCallFrame(proc.curFrame)
+	} else {
+		proc.level++
 	}
 	null := expr.Eval(proc, result)
 	if isFunction {
+		proc.levelFunc--
 		proc.curFrame = proc.curFrame.parent
+	} else {
+		proc.level--
 	}
 	return null
 }
@@ -42,6 +57,8 @@ func (proc *StackProcessor) EvalVar(idx int64) bool {
 		panic("wrong var idx")
 	}
 
+	tracef("%vEvalVar %v(%v) in '%v'", proc.LevelPrefix(), vi.Name, idx, proc.curFrame.context.funcDef.name)
+
 	res := proc.curFrame.buffer[vi.Offset : vi.Offset+vi.Size]
 	if vi.IsParam {
 		saveCurFrame := proc.curFrame
@@ -51,6 +68,8 @@ func (proc *StackProcessor) EvalVar(idx int64) bool {
 	} else {
 		null = proc.Eval(vi.Expr, res)
 	}
+	tracef("%vReturn EvalVar %v(%v) in '%v': res = '%v' null = %v",
+		proc.LevelPrefix(), vi.Name, idx, proc.curFrame.context.funcDef.name, TritsToString(res), null)
 
 	return null
 }
