@@ -37,9 +37,9 @@ func (e *QuplaConcatExpr) Size() int64 {
 }
 
 func (e *QuplaConcatExpr) Eval(proc ProcessorInterface, result Trits) bool {
-	null := e.lhsExpr.Eval(proc, result)
+	null := proc.Eval(e.lhsExpr, result)
 	if null {
 		return true
 	}
-	return e.rhsExpr.Eval(proc, result[e.lhsExpr.Size():])
+	return proc.Eval(e.rhsExpr, result[e.lhsExpr.Size():])
 }

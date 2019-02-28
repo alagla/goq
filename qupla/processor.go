@@ -3,6 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/utils"
 	"strings"
 )
 import . "github.com/lunfardo314/goq/abstract"
@@ -38,12 +39,14 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 	if isFunction {
 		proc.numfuncall++
 		proc.levelFunc++
+		tracef("%vprocessor open funExpr '%v'", proc.LevelPrefix(), funExpr.name)
 		proc.curFrame = funExpr.NewCallFrame(proc.curFrame)
 	} else {
 		proc.level++
 	}
 	null := expr.Eval(proc, result)
 	if isFunction {
+		tracef("%vprocessor close funExpr '%v'", proc.LevelPrefix(), funExpr.name)
 		proc.levelFunc--
 		proc.curFrame = proc.curFrame.parent
 	} else {
@@ -79,7 +82,7 @@ func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 		null = proc.Eval(vi.Expr, ret)
 	}
 	tracef("%vReturn EvalVar %v(%v) in '%v': res = '%v' null = %v",
-		proc.LevelPrefix(), vi.Name, idx, proc.curFrame.context.funcDef.name, TritsToString(ret), null)
+		proc.LevelPrefix(), vi.Name, idx, proc.curFrame.context.funcDef.name, utils.TritsToString(ret), null)
 
 	if null {
 		return nil, true

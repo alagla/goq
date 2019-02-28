@@ -4,6 +4,7 @@ import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
+	"github.com/lunfardo314/goq/utils"
 )
 
 type QuplaExecStmt struct {
@@ -47,12 +48,17 @@ func (ex *QuplaExecStmt) Execute() error {
 	if null {
 		debugf("eval result is null")
 	} else {
-		debugf("eval result = '%v'", TritsToString(resExpr))
+		debugf("eval result trits = '%v'", utils.TritsToString(resExpr))
 	}
 	if ex.isTest {
 		resExpected := make(Trits, ex.expr.Size(), ex.exprExpected.Size())
 		null = ex.module.processor.Eval(ex.exprExpected, resExpected)
-		debugf("expected result is '%v'", TritsToString(resExpected))
+
+		exp, err := utils.TritsToBigInt(resExpected)
+		if err != nil {
+			return err
+		}
+		debugf("expected trits are '%v'", exp)
 		if eq, _ := TritsEqual(resExpected, resExpr); eq {
 			debugf("Test passed")
 		} else {

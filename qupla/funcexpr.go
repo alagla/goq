@@ -5,6 +5,7 @@ import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
+	"github.com/lunfardo314/goq/utils"
 )
 
 type QuplaFuncExpr struct {
@@ -63,6 +64,6 @@ func (e *QuplaFuncExpr) NewCallFrame(parent *CallFrame) *CallFrame {
 func (e *QuplaFuncExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	tracef("%vfuncExpr '%v'", proc.LevelPrefix(), e.name)
 	null := proc.Eval(e.funcDef.retExpr, result)
-	tracef("%vfuncExpr '%v' res = '%v' null = %v", proc.LevelPrefix(), e.name, TritsToString(result), null)
+	tracef("%vfuncExpr '%v' res = '%v' null = %v", proc.LevelPrefix(), e.name, utils.TritsToString(result), null)
 	return null
 }

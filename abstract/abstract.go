@@ -69,20 +69,3 @@ func RequireSize(e ExpressionInterface, size int64) error {
 	}
 	return nil
 }
-
-func TritsToString(trits Trits) string {
-	b := make([]byte, len(trits), len(trits))
-	for i := range trits {
-		switch trits[i] {
-		case -1:
-			b[i] = '-'
-		case 0:
-			b[i] = '0'
-		case 1:
-			b[i] = '1'
-		default:
-			b[i] = '?'
-		}
-	}
-	return string(b)
-}

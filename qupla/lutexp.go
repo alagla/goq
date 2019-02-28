@@ -5,6 +5,7 @@ import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
+	"github.com/lunfardo314/goq/utils"
 )
 
 type QuplaLutExpr struct {
@@ -62,8 +63,8 @@ func (e *QuplaLutExpr) Eval(proc ProcessorInterface, result Trits) bool {
 		}
 	}
 	lutArg := buf[:e.lutDef.inputSize]
-	tracef("%v LUT lookup '%v' args '%v'", proc.LevelPrefix(), e.lutDef.name, TritsToString(lutArg))
+	tracef("%v LUT lookup '%v' args '%v'", proc.LevelPrefix(), e.lutDef.name, utils.TritsToString(lutArg))
 	null := e.lutDef.Lookup(result, lutArg)
-	tracef("%v lutExpr '%v' res = '%v' null = %v", proc.LevelPrefix(), e.lutDef.name, TritsToString(result), null)
+	tracef("%v lutExpr '%v' res = '%v' null = %v", proc.LevelPrefix(), e.lutDef.name, utils.TritsToString(result), null)
 	return null
 }

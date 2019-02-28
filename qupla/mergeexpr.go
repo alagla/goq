@@ -45,9 +45,9 @@ func (e *QuplaMergeExpr) Size() int64 {
 }
 
 func (e *QuplaMergeExpr) Eval(proc ProcessorInterface, result Trits) bool {
-	null := e.lhsExpr.Eval(proc, result)
+	null := proc.Eval(e.lhsExpr, result)
 	if null {
-		return e.rhsExpr.Eval(proc, result)
+		return proc.Eval(e.rhsExpr, result)
 	}
 	return false
 }

@@ -53,16 +53,16 @@ func (e *QuplaCondExpr) Size() int64 {
 
 func (e *QuplaCondExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	var buf [1]int8
-	null := e.ifExpr.Eval(proc, buf[:])
+	null := proc.Eval(e.ifExpr, buf[:])
 	if null {
 		return true
 	}
 	// bool is 0/1
 	switch buf[0] {
 	case 1:
-		return e.thenExpr.Eval(proc, result)
+		return proc.Eval(e.thenExpr, result)
 	case 0:
-		return e.elseExpr.Eval(proc, result)
+		return proc.Eval(e.elseExpr, result)
 	}
 	panic("trit value in cond expr")
 }

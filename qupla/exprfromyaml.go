@@ -27,6 +27,8 @@ func (ef *ExpressionFactoryFromYAML) AnalyzeExpression(
 		return AnalyzeSliceExpr(data, module, scope)
 	case *QuplaValueExprYAML:
 		return AnalyzeValueExpr(data, module, scope)
+	case *QuplaSizeofExprYAML:
+		return AnalyzeSizeofExpr(data, module, scope)
 	case *QuplaFuncExprYAML:
 		return AnalyzeFuncExpr(data, module, scope)
 	case *QuplaFieldExprYAML:

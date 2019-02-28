@@ -97,6 +97,15 @@ func (def *QuplaFuncDef) VarByIdx(idx int64) *VarInfo {
 }
 
 // it tries to find var idx, offset, size. Analyzes var if not analyzed yet
+// TODO
+//  with cyclycal size definition (through state variables) as in
+//  func Transaction arcLeaf<Hash, Transaction>(Traversal param) {
+//	  state Arc arc
+//	  oldValue = arc
+//    cmd = param.cmd
+//	  arc = isZero[cmd] ? oldValue : isOne[cmd] ? arcLeafSet<Hash, Transaction>(oldValue, param.value) : isMin[cmd] ? arcLeafRemove<Hash, Transaction>(oldValue) : null
+//	  return oldValue.value
+//
 func (def *QuplaFuncDef) GetVarInfo(name string, module ModuleInterface) (*VarInfo, error) {
 	idx := def.GetVarIdx(name)
 	if idx < 0 {

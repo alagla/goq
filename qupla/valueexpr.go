@@ -5,11 +5,11 @@ import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
-	"strconv"
+	"math/big"
 )
 
 type QuplaValueExpr struct {
-	Value     int64
+	Value     *big.Float
 	TritValue Trits
 }
 
@@ -17,7 +17,7 @@ func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module ModuleInterface, _ Fu
 	module.IncStat("numValueExpr")
 
 	if exprYAML.Trits == "" {
-		return nil, fmt.Errorf("invalid trit string '%v'", exprYAML.Trits)
+		return nil, fmt.Errorf("invalid trit string n ValueExpr '%v'", exprYAML.Trits)
 	}
 	t := make([]int8, len(exprYAML.Trits))
 	for i := range exprYAML.Trits {
@@ -32,27 +32,30 @@ func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module ModuleInterface, _ Fu
 			return nil, fmt.Errorf("invalid trit string '%v'", exprYAML.Trits)
 		}
 	}
-	var orig int
+	orig := big.NewFloat(0)
 	var err error
+	var ok bool
 	if exprYAML.Value == "-" {
-		orig = -1
+		orig.SetInt64(-1)
 	} else {
-		orig, err = strconv.Atoi(exprYAML.Value)
-		if err != nil {
-			return nil, fmt.Errorf("wrong 'value' field in ValueExpr")
+		orig, ok = orig.SetString(exprYAML.Value)
+		if !ok {
+			return nil, fmt.Errorf("wrong 'value' field '%v' in ValueExpr", exprYAML.Value)
 		}
 	}
 
 	ret := &QuplaValueExpr{}
-	ret.Value = int64(orig)
+	ret.Value = orig
 	if ret.TritValue, err = NewTrits(t); err != nil {
 		return nil, err
 	}
 
-	if ret.Value != TritsToInt(ret.TritValue) {
-		return nil, fmt.Errorf("wrong 'value' ('%v') or 'trits' ('%v') field in value expr",
-			exprYAML.Value, exprYAML.Trits)
-	}
+	// Todo checking big values
+
+	//if ret.Value != TritsToInt(ret.TritValue) {
+	//	return nil, fmt.Errorf("wrong 'value' ('%v') or 'trits' ('%v') field in value expr",
+	//		exprYAML.Value, exprYAML.Trits)
+	//}
 	return ret, nil
 }
 

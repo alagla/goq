@@ -58,6 +58,7 @@ type QuplaExpressionYAML struct {
 	LutExpr       *QuplaLutExprYAML       `yaml:"LutExpr,omitempty"`
 	SliceExpr     *QuplaSliceExprYAML     `yaml:"SliceExpr,omitempty"`
 	ValueExpr     *QuplaValueExprYAML     `yaml:"ValueExpr,omitempty"`
+	SizeofExpr    *QuplaSizeofExprYAML    `yaml:"SizeofExpr,omitempty"`
 	FuncExpr      *QuplaFuncExprYAML      `yaml:"FuncExpr,omitempty"`
 	FieldExpr     *QuplaFieldExprYAML     `yaml:"FieldExpr,omitempty"`
 	ConstNumber   *QuplaConstNumberYAML   `yaml:"ConstNumber,omitempty"`
@@ -128,6 +129,12 @@ type QuplaValueExprYAML struct {
 	Trytes string `yaml:"trytes"`
 }
 
+type QuplaSizeofExprYAML struct {
+	Value  string `yaml:"value"`
+	Trits  string `yaml:"trits"`
+	Trytes string `yaml:"trytes"`
+}
+
 type QuplaFuncExprYAML struct {
 	Name string                 `yaml:"name"`
 	Args []*QuplaExpressionYAML `yaml:"args"`
@@ -187,6 +194,10 @@ func (e *QuplaExpressionYAML) Unwrap() (interface{}, error) {
 	}
 	if e.ValueExpr != nil {
 		ret = e.ValueExpr
+		numCases++
+	}
+	if e.SizeofExpr != nil {
+		ret = e.SizeofExpr
 		numCases++
 	}
 	if e.FuncExpr != nil {
