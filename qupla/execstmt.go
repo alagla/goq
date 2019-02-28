@@ -42,12 +42,22 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 }
 
 func (ex *QuplaExecStmt) Execute() error {
-	res := make(Trits, ex.expr.Size(), ex.expr.Size())
-	null := ex.module.processor.Eval(ex.expr, res)
+	resExpr := make(Trits, ex.expr.Size(), ex.expr.Size())
+	null := ex.module.processor.Eval(ex.expr, resExpr)
 	if null {
-		debugf("result is null")
+		debugf("eval result is null")
 	} else {
-		debugf("result = %v", TritsToString(res))
+		debugf("eval result = '%v'", TritsToString(resExpr))
+	}
+	if ex.isTest {
+		resExpected := make(Trits, ex.expr.Size(), ex.exprExpected.Size())
+		null = ex.module.processor.Eval(ex.exprExpected, resExpected)
+		debugf("expected result is '%v'", TritsToString(resExpected))
+		if eq, _ := TritsEqual(resExpected, resExpr); eq {
+			debugf("Test passed")
+		} else {
+			debugf("Test failed")
+		}
 	}
 	return nil
 }

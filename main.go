@@ -9,8 +9,10 @@ import (
 const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
 const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
 
+const trace = false
+
 func main() {
-	qupla.SetLog(nil, true)
+	qupla.SetLog(nil, trace)
 
 	moduleYAML, err := quplayaml.NewQuplaModuleFromYAML(fname)
 	if err != nil {

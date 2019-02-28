@@ -52,11 +52,8 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 	return null
 }
 
-func (proc *StackProcessor) EvalVar(idx int64) bool {
+func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 	proc.numvarcall++
-	if proc.numvarcall == 102 {
-		fmt.Printf("kuku\n")
-	}
 	var null bool
 	if proc.curFrame == nil {
 		panic("variable can't be evaluated in nil context")
@@ -68,19 +65,26 @@ func (proc *StackProcessor) EvalVar(idx int64) bool {
 
 	tracef("%vEvalVar %v(%v) in '%v'", proc.LevelPrefix(), vi.Name, idx, proc.curFrame.context.funcDef.name)
 
-	res := proc.curFrame.buffer[vi.Offset : vi.Offset+vi.Size]
+	//if proc.numvarcall == 45{
+	//	fmt.Printf("------ kuku\n")
+	//}
+	ret := proc.Slice(vi.Offset, vi.Size)
 	if vi.IsParam {
+		expr := proc.curFrame.context.args[vi.Idx]
 		saveCurFrame := proc.curFrame
 		proc.curFrame = proc.curFrame.parent
-		null = proc.Eval(proc.curFrame.context.args[vi.Idx], res)
+		null = proc.Eval(expr, ret)
 		proc.curFrame = saveCurFrame
 	} else {
-		null = proc.Eval(vi.Expr, res)
+		null = proc.Eval(vi.Expr, ret)
 	}
 	tracef("%vReturn EvalVar %v(%v) in '%v': res = '%v' null = %v",
-		proc.LevelPrefix(), vi.Name, idx, proc.curFrame.context.funcDef.name, TritsToString(res), null)
+		proc.LevelPrefix(), vi.Name, idx, proc.curFrame.context.funcDef.name, TritsToString(ret), null)
 
-	return null
+	if null {
+		return nil, true
+	}
+	return ret, false
 }
 
 func (proc *StackProcessor) Slice(offset, size int64) Trits {
