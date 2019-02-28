@@ -1,8 +1,9 @@
-package quplayaml
+package qupla
 
 import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
+	. "github.com/lunfardo314/goq/quplayaml"
 )
 
 type ExpressionFactoryFromYAML struct{}

@@ -1,4 +1,4 @@
-package quplayaml
+package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"

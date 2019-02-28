@@ -1,8 +1,9 @@
-package quplayaml
+package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
+	. "github.com/lunfardo314/goq/quplayaml"
 )
 
 type QuplaExecStmt struct {

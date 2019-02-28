@@ -120,6 +120,7 @@ type QuplaSliceExprYAML struct {
 }
 
 type QuplaValueExprYAML struct {
+	Value  string `yaml:"value"`
 	Trits  string `yaml:"trits"`
 	Trytes string `yaml:"trytes"`
 }

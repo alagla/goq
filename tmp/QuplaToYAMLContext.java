@@ -113,6 +113,8 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
     @Override
     public void evalVector(VectorExpr vectorExpr) {
         indent();
+        append("value: " + vectorExpr.name);
+        newline();
         append("trits: " + "'"+vectorExpr.vector.trits()+"'");
         newline();
         // not necessary

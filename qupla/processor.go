@@ -1,6 +1,7 @@
-package quplayaml
+package qupla
 
 import (
+	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	"strings"
 )
@@ -16,9 +17,11 @@ type CallFrame struct {
 }
 
 type StackProcessor struct {
-	levelFunc int
-	level     int
-	curFrame  *CallFrame
+	levelFunc  int
+	level      int
+	numfuncall int
+	numvarcall int
+	curFrame   *CallFrame
 }
 
 func NewStackProcessor() *StackProcessor {
@@ -26,12 +29,14 @@ func NewStackProcessor() *StackProcessor {
 }
 
 func (proc *StackProcessor) LevelPrefix() string {
-	return strings.Repeat(".", proc.levelFunc) + strings.Repeat(" ", proc.level)
+	r := strings.Repeat(".", proc.levelFunc) + strings.Repeat(" ", proc.level)
+	return fmt.Sprintf("%5d-%5d: "+r, proc.numfuncall, proc.numvarcall)
 }
 
 func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 	funExpr, isFunction := expr.(*QuplaFuncExpr)
 	if isFunction {
+		proc.numfuncall++
 		proc.levelFunc++
 		proc.curFrame = funExpr.NewCallFrame(proc.curFrame)
 	} else {
@@ -48,6 +53,10 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 }
 
 func (proc *StackProcessor) EvalVar(idx int64) bool {
+	proc.numvarcall++
+	if proc.numvarcall == 102 {
+		fmt.Printf("kuku\n")
+	}
 	var null bool
 	if proc.curFrame == nil {
 		panic("variable can't be evaluated in nil context")

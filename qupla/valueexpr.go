@@ -1,12 +1,15 @@
-package quplayaml
+package qupla
 
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
+	. "github.com/lunfardo314/goq/quplayaml"
+	"strconv"
 )
 
 type QuplaValueExpr struct {
+	Value     int64
 	TritValue Trits
 }
 
@@ -29,10 +32,20 @@ func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module ModuleInterface, _ Fu
 			return nil, fmt.Errorf("invalid trit string '%v'", exprYAML.Trits)
 		}
 	}
+	orig, err := strconv.Atoi(exprYAML.Value)
+	if err != nil {
+		return nil, fmt.Errorf("wrong 'value' field in ValueExpr")
+	}
+
 	ret := &QuplaValueExpr{}
-	var err error
+	ret.Value = int64(orig)
 	if ret.TritValue, err = NewTrits(t); err != nil {
 		return nil, err
+	}
+
+	if ret.Value != TritsToInt(ret.TritValue) {
+		return nil, fmt.Errorf("wrong 'value' ('%v') or 'trits' ('%v') field in value expr",
+			exprYAML.Value, exprYAML.Trits)
 	}
 	return ret, nil
 }
