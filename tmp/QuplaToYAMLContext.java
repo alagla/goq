@@ -113,7 +113,7 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
     @Override
     public void evalVector(VectorExpr vectorExpr) {
         indent();
-        append("value: " + vectorExpr.name);
+        append("value: " + "'" +vectorExpr.name+ "'");
         newline();
         append("trits: " + "'"+vectorExpr.vector.trits()+"'");
         newline();
@@ -431,7 +431,7 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
         if (conditional.trueBranch != null){
             evalExpression(conditional.trueBranch);
         } else {
-            append("null");
+            append("NullExpr:");
             newline();
         }
         undent();
@@ -442,7 +442,7 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
         if (conditional.falseBranch != null){
             evalExpression(conditional.falseBranch);
         } else {
-            append("null");
+            append("NullExpr: ''");
             newline();
         }
         undent();

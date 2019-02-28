@@ -27,6 +27,9 @@ func AnalyzeCondExpr(exprYAML *QuplaCondExprYAML, module ModuleInterface, scope 
 	if ret.thenExpr, err = module.AnalyzeExpression(exprYAML.Then, scope); err != nil {
 		return nil, err
 	}
+	if exprYAML.Else == nil {
+		fmt.Printf("kuku")
+	}
 	if ret.elseExpr, err = module.AnalyzeExpression(exprYAML.Else, scope); err != nil {
 		return nil, err
 	}

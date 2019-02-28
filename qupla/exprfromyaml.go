@@ -37,6 +37,8 @@ func (ef *ExpressionFactoryFromYAML) AnalyzeExpression(
 		return AnalyzeMergeExpr(data, module, scope)
 	case *QuplaTypeExprYAML:
 		return AnalyzeTypeExpr(data, module, scope)
+	case *QuplaNullExprYAML:
+		return AnalyzeNullExpr(data, module, scope)
 	case *QuplaExpressionYAML:
 		r, err := data.Unwrap()
 		if err != nil {

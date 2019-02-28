@@ -67,7 +67,10 @@ type QuplaExpressionYAML struct {
 	ConcatExpr    *QuplaConcatExprYAML    `yaml:"ConcatExpr,omitempty"`
 	MergeExpr     *QuplaMergeExprYAML     `yaml:"MergeExpr,omitempty"`
 	TypeExpr      *QuplaTypeExprYAML      `yaml:"TypeExpr,omitempty"`
+	NullExpr      *QuplaNullExprYAML      `yaml:"NullExpr,omitempty"`
 }
+
+type QuplaNullExprYAML string
 
 type QuplaConcatExprYAML struct {
 	Lhs *QuplaExpressionYAML `yaml:"lhs"`
@@ -220,6 +223,10 @@ func (e *QuplaExpressionYAML) Unwrap() (interface{}, error) {
 	}
 	if e.TypeExpr != nil {
 		ret = e.TypeExpr
+		numCases++
+	}
+	if e.NullExpr != nil {
+		ret = e.NullExpr
 		numCases++
 	}
 	if numCases == 0 {

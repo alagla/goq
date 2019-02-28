@@ -32,9 +32,15 @@ func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module ModuleInterface, _ Fu
 			return nil, fmt.Errorf("invalid trit string '%v'", exprYAML.Trits)
 		}
 	}
-	orig, err := strconv.Atoi(exprYAML.Value)
-	if err != nil {
-		return nil, fmt.Errorf("wrong 'value' field in ValueExpr")
+	var orig int
+	var err error
+	if exprYAML.Value == "-" {
+		orig = -1
+	} else {
+		orig, err = strconv.Atoi(exprYAML.Value)
+		if err != nil {
+			return nil, fmt.Errorf("wrong 'value' field in ValueExpr")
+		}
 	}
 
 	ret := &QuplaValueExpr{}
