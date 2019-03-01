@@ -187,6 +187,9 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
 
     @Override
     public void evalSlice(SliceExpr slice) {
+        append("source: '" + slice.toString() + "'");
+        newline();
+
         append("var: ");
         append(slice.name);
         newline();
@@ -371,6 +374,9 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
 
     @Override
     public void evalFuncCall(FuncExpr call) {
+        append("source: '" + call.toString() + "'");
+        newline();
+
         append("name: ");
         append(call.name);
         newline();
@@ -388,6 +394,9 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
 
     @Override
     public void evalMerge(MergeExpr merge) {
+        append("source: '" + merge.toString() + "'");
+        newline();
+
         append("lhs: ");
         newline();
         indent();
@@ -404,6 +413,9 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
 
     @Override
     public void evalConcat(ConcatExpr concat) {
+        append("source: '" + concat.toString() + "'");
+        newline();
+
         append("lhs: ");
         newline();
         indent();
@@ -419,6 +431,8 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
 
     @Override
     public void evalConditional(CondExpr conditional) {
+        append("source: '" + conditional.toString() + "'");
+        newline();
         append("if: ");
         newline();
         indent();
