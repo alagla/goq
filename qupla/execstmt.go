@@ -15,6 +15,7 @@ type QuplaExecStmt struct {
 	expr         ExpressionInterface
 	exprExpected ExpressionInterface
 	module       *QuplaModule
+	num          int
 }
 
 func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error {
@@ -47,8 +48,11 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 }
 
 func (ex *QuplaExecStmt) Execute() error {
+
+	ex.module.processor.SetTrace(ex.num == 303, 400)
+
 	debugf("-------------")
-	debugf("running: '%v'", ex.GetSource())
+	debugf("running #%v: '%v'", ex.num, ex.GetSource())
 
 	start := time.Now()
 

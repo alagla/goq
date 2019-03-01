@@ -5,7 +5,6 @@ import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
-	"github.com/lunfardo314/goq/utils"
 )
 
 type QuplaSliceExpr struct {
@@ -47,19 +46,13 @@ func (e *QuplaSliceExpr) Size() int64 {
 }
 
 func (e *QuplaSliceExpr) Eval(proc ProcessorInterface, result Trits) bool {
-	tracef("%v sliceExpr in scope '%v' idx = %v offset = %v size = %v",
-		proc.LevelPrefix(), e.varScope.name, e.localVarIdx, e.offset, e.size)
 	restmp, null := proc.EvalVar(e.localVarIdx)
 	if null {
-		tracef("%v sliceExpr in scope '%v' idx = %v result == null",
-			proc.LevelPrefix(), e.varScope.name, e.localVarIdx)
 		return true
 	}
 	numCopy := copy(result, restmp[e.offset:e.offset+e.size])
 	if int64(numCopy) != e.size {
-		panic("wrong slice length 1")
+		panic(fmt.Sprintf("wrong slice length in '%v'", e.GetSource()))
 	}
-	tracef("%v sliceExpr '%v' in scope '%v' offset = %v size = %v result = '%v'",
-		proc.LevelPrefix(), e.varScope.name, e.localVarIdx, e.offset, e.size, utils.TritsToString(result))
 	return false
 }

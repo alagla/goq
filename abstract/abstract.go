@@ -51,6 +51,7 @@ type ProcessorInterface interface {
 	EvalVar(int64) (Trits, bool)
 	Slice(int64, int64) Trits
 	LevelPrefix() string
+	SetTrace(bool, int)
 }
 
 func MatchSizes(e1, e2 ExpressionInterface) error {

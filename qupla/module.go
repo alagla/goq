@@ -45,6 +45,7 @@ func (module *QuplaModule) AnalyzeExpression(data interface{}, scope FuncDefInte
 }
 
 func (module *QuplaModule) AddExec(exec *QuplaExecStmt) {
+	exec.num = len(module.execs)
 	module.execs = append(module.execs, exec)
 }
 

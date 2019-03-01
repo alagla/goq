@@ -23,15 +23,13 @@ type StackProcessor struct {
 	numfuncall int
 	numvarcall int
 	curFrame   *CallFrame
+	trace      bool
+	maxTraces  int
+	curTraces  int
 }
 
 func NewStackProcessor() *StackProcessor {
 	return &StackProcessor{}
-}
-
-func (proc *StackProcessor) LevelPrefix() string {
-	r := strings.Repeat(".", proc.levelFunc) + strings.Repeat(" ", proc.level)
-	return fmt.Sprintf("%5d-%5d: "+r, proc.numfuncall, proc.numvarcall)
 }
 
 func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
@@ -39,14 +37,14 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 	if isFunction {
 		proc.numfuncall++
 		proc.levelFunc++
-		tracef("%vprocessor open funExpr '%v'", proc.LevelPrefix(), funExpr.name)
+		proc.tracef("IN funExpr '%v'", funExpr.name)
 		proc.curFrame = funExpr.NewCallFrame(proc.curFrame)
 	} else {
 		proc.level++
 	}
 	null := expr.Eval(proc, result)
 	if isFunction {
-		tracef("%vprocessor close funExpr '%v'", proc.LevelPrefix(), funExpr.name)
+		proc.tracef("OUT funExpr '%v'", funExpr.name)
 		proc.levelFunc--
 		proc.curFrame = proc.curFrame.parent
 	} else {
@@ -66,12 +64,12 @@ func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 		panic("wrong var idx")
 	}
 
-	tracef("%vEvalVar %v(%v) in '%v'", proc.LevelPrefix(), vi.Name, idx, proc.curFrame.context.funcDef.name)
-
-	//if proc.numvarcall == 45{
-	//	fmt.Printf("------ kuku\n")
-	//}
 	ret := proc.Slice(vi.Offset, vi.Size)
+	if proc.curFrame.evaluated[vi.Idx] {
+		proc.tracef("EvalVar %v(%v) in '%v': already evaluated", vi.Name, idx, proc.curFrame.context.funcDef.name)
+		return ret, proc.curFrame.isNull[vi.Idx]
+	}
+	proc.tracef("EvalVar %v(%v) in '%v'", vi.Name, idx, proc.curFrame.context.funcDef.name)
 	if vi.IsParam {
 		expr := proc.curFrame.context.args[vi.Idx]
 		saveCurFrame := proc.curFrame
@@ -81,8 +79,11 @@ func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 	} else {
 		null = proc.Eval(vi.Assign, ret)
 	}
-	tracef("%vReturn EvalVar %v(%v) in '%v': res = '%v' null = %v",
-		proc.LevelPrefix(), vi.Name, idx, proc.curFrame.context.funcDef.name, utils.TritsToString(ret), null)
+	proc.tracef("Return EvalVar %v(%v) in '%v': res = '%v' null = %v",
+		vi.Name, idx, proc.curFrame.context.funcDef.name, utils.TritsToString(ret), null)
+
+	proc.curFrame.evaluated[vi.Idx] = true
+	proc.curFrame.isNull[vi.Idx] = null
 
 	if null {
 		return nil, true
@@ -92,4 +93,25 @@ func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 
 func (proc *StackProcessor) Slice(offset, size int64) Trits {
 	return proc.curFrame.buffer[offset : offset+size]
+}
+
+func (proc *StackProcessor) SetTrace(trace bool, maxTraces int) {
+	proc.trace = trace
+	proc.maxTraces = maxTraces
+	proc.curTraces = 0
+}
+
+func (proc *StackProcessor) LevelPrefix() string {
+	r := strings.Repeat(".", proc.levelFunc) + strings.Repeat(" ", proc.level)
+	return fmt.Sprintf("%4d: %s", proc.curTraces, r)
+	//return fmt.Sprintf("%5d-%5d: "+r, proc.numfuncall, proc.numvarcall)
+}
+
+func (proc *StackProcessor) tracef(format string, args ...interface{}) {
+	if !proc.trace {
+		return
+	}
+	tracef("proc-> "+proc.LevelPrefix()+format, args...)
+	proc.trace = proc.curTraces < proc.maxTraces
+	proc.curTraces++
 }

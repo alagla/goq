@@ -63,6 +63,8 @@ func (e *QuplaCondExpr) Eval(proc ProcessorInterface, result Trits) bool {
 		return proc.Eval(e.thenExpr, result)
 	case 0:
 		return proc.Eval(e.elseExpr, result)
+	case -1:
+		return true
 	}
 	panic(fmt.Sprintf("trit value in cond expr '%v'", e.source))
 }
