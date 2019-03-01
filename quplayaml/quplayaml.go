@@ -15,6 +15,7 @@ type QuplaModuleYAML struct {
 }
 
 type QuplaExecStmtYAML struct {
+	Source   string               `yaml:"source"`
 	Expr     *QuplaExpressionYAML `yaml:"expr"`
 	Expected *QuplaExpressionYAML `yaml:"expected,omitempty"`
 }

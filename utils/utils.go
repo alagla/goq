@@ -24,9 +24,9 @@ func TritsToString(trits Trits) string {
 }
 
 var (
-	a0 = big.NewInt(0)
-	a1 = big.NewInt(1)
-	a2 = big.NewInt(2)
+	a0 = big.NewInt(-1)
+	a1 = big.NewInt(0)
+	a2 = big.NewInt(1)
 )
 
 func TritToBigInt(t int8) (*big.Int, error) {

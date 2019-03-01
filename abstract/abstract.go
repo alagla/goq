@@ -19,19 +19,20 @@ type ModuleInterface interface {
 }
 
 type VarInfo struct {
-	Name     string
-	Analyzed bool
-	Idx      int64
-	Offset   int64
-	Size     int64
-	IsState  bool
-	IsParam  bool
-	Expr     ExpressionInterface
+	Name       string
+	Analyzed   bool
+	Idx        int64
+	Offset     int64
+	Size       int64
+	IsState    bool
+	IsNewValue bool
+	IsParam    bool
+	Assign     ExpressionInterface
 }
 type FuncDefInterface interface {
 	GetName() string
 	Size() int64
-	GetVarInfo(string, ModuleInterface) (*VarInfo, error)
+	GetVarInfo(string) (*VarInfo, error)
 }
 
 type LUTInterface interface {

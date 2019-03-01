@@ -4,10 +4,12 @@ import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
+	"strings"
 )
 
 type QuplaFuncDef struct {
 	yamlSource *QuplaFuncDefYAML // needed for analysis phase only
+	module     ModuleInterface
 	name       string
 	retSize    int64
 	retExpr    ExpressionInterface
@@ -39,6 +41,7 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 
 	def := &QuplaFuncDef{
 		yamlSource: defYAML,
+		module:     module,
 		name:       name,
 	}
 	// return size. Must be const expression
@@ -60,7 +63,7 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 	if err = def.createVarScope(); err != nil {
 		return err
 	}
-	if err = def.analyzeAssigns(defYAML, module); err != nil {
+	if err = def.analyzeAssigns(); err != nil {
 		return err
 	}
 	if err = def.finalizeLocalVars(); err != nil {
@@ -96,22 +99,15 @@ func (def *QuplaFuncDef) VarByIdx(idx int64) *VarInfo {
 	return def.localVars[idx]
 }
 
-// it tries to find var idx, offset, size. Analyzes var if not analyzed yet
-// TODO
-//  with cyclycal size definition (through state variables) as in
-//  func Transaction arcLeaf<Hash, Transaction>(Traversal param) {
-//	  state Arc arc
-//	  oldValue = arc
-//    cmd = param.cmd
-//	  arc = isZero[cmd] ? oldValue : isOne[cmd] ? arcLeafSet<Hash, Transaction>(oldValue, param.value) : isMin[cmd] ? arcLeafRemove<Hash, Transaction>(oldValue) : null
-//	  return oldValue.value
-//
-func (def *QuplaFuncDef) GetVarInfo(name string, module ModuleInterface) (*VarInfo, error) {
-	idx := def.GetVarIdx(name)
-	if idx < 0 {
+func (def *QuplaFuncDef) VarByName(name string) *VarInfo {
+	return def.VarByIdx(def.GetVarIdx(name))
+}
+
+func (def *QuplaFuncDef) GetVarInfo(name string) (*VarInfo, error) {
+	ret := def.VarByName(name)
+	if ret == nil {
 		return nil, nil
 	}
-	ret := def.localVars[idx]
 	if ret.Analyzed {
 		return ret, nil
 	}
@@ -120,31 +116,37 @@ func (def *QuplaFuncDef) GetVarInfo(name string, module ModuleInterface) (*VarIn
 
 	if ret.IsParam {
 		// param
-		ret.Expr = nil
+		ret.Assign = nil
 	} else {
 		// local var
-		e, ok := def.yamlSource.Assigns[name]
+		realVarName := name
+		if ret.IsState {
+			realVarName = strings.TrimSuffix(name, stateVarNewValueSuffix)
+		}
+		e, ok := def.yamlSource.Assigns[realVarName]
 		if !ok {
 			return nil, fmt.Errorf("inconsistency with vars")
 		}
-		if ret.Expr, err = module.AnalyzeExpression(e, def); err != nil {
+		if ret.Assign, err = def.module.AnalyzeExpression(e, def); err != nil {
 			return ret, err
 		}
 		if ret.IsState {
-			if ret.Size != ret.Expr.Size() {
+			if ret.Size != ret.Assign.Size() {
 				return nil, fmt.Errorf("expression and state variable has different sizes in the assign")
 			}
 		} else {
-			ret.Size = ret.Expr.Size()
+			ret.Size = ret.Assign.Size()
 		}
 	}
 	return ret, nil
 }
 
+const stateVarNewValueSuffix = "$$$_$$$"
+
 func (def *QuplaFuncDef) createVarScope() error {
 	src := def.yamlSource
 	def.localVars = make([]*VarInfo, 0, len(src.Params)+len(src.Assigns))
-	// first numParams indices belong to parameters
+	// function parameters (first numParams)
 	def.numParams = int64(len(src.Params))
 	for idx, arg := range src.Params {
 		if def.GetVarIdx(arg.ArgName) >= 0 {
@@ -156,57 +158,83 @@ func (def *QuplaFuncDef) createVarScope() error {
 			Size:     arg.Size,
 			Analyzed: true,
 			IsParam:  true,
+			IsState:  false,
 		})
 	}
 	// the rest of indices belong to local vars (incl state)
+	// state variables. Creating two entries for each:
+	//    'name' for old value
+	//    'name$$$_$$$ for new value
 	var idx int64
 	for name, s := range src.State {
 		idx = def.GetVarIdx(name)
 		if idx >= 0 {
 			return fmt.Errorf("wrong declared state variable: '%v' in '%v'", name, def.name)
 		} else {
+			// for old value
+			def.localVars = append(def.localVars, &VarInfo{
+				Idx:        int64(len(def.localVars)),
+				Name:       name,
+				Size:       s.Size,
+				IsState:    true,
+				IsNewValue: false,
+				Analyzed:   true,
+			})
+		}
+		def.module.IncStat("numStateVars")
+	}
+	// variables defined by assigns
+	var vi *VarInfo
+	for name := range src.Assigns {
+		vi = def.VarByName(name)
+		if vi != nil {
+			if vi.IsParam {
+				return fmt.Errorf("cannot assign to function parameter: '%v' in '%v'", name, def.name)
+			}
+			if !vi.IsState {
+				return fmt.Errorf("several assignment to the same var '%v' in '%v' is not allowed", name, def.name)
+			}
+			// ! isParam && isState
+			// creating another variable for new value with name+'$$$_$$$'
+			if def.VarByName(name+stateVarNewValueSuffix) != nil {
+				return fmt.Errorf("internal inconsistency with state vars: '%v' in '%v'", name, def.name)
+			}
+			def.localVars = append(def.localVars, &VarInfo{
+				Idx:        int64(len(def.localVars)),
+				Name:       name + stateVarNewValueSuffix,
+				Size:       vi.Size,
+				IsState:    true,
+				IsNewValue: true,
+			})
+		} else {
 			def.localVars = append(def.localVars, &VarInfo{
 				Idx:     int64(len(def.localVars)),
 				Name:    name,
-				Size:    s.Size,
-				IsState: true,
+				Size:    0, // unknown yet
+				IsState: false,
 				IsParam: false,
-			})
-		}
-	}
-	for name := range src.Assigns {
-		idx = def.GetVarIdx(name)
-		if idx >= 0 {
-			if idx < def.numParams {
-				return fmt.Errorf("cannot assign to function parameter: '%v' in '%v'", name, def.name)
-			} else {
-				v := def.localVars[idx]
-				if !v.IsState {
-					return fmt.Errorf("several assignment to the same var '%v' in '%v' is not allowed", name, def.name)
-				}
-			}
-		} else {
-			def.localVars = append(def.localVars, &VarInfo{
-				Idx:  int64(len(def.localVars)),
-				Name: name,
 			})
 		}
 	}
 	return nil
 }
 
-func (def *QuplaFuncDef) analyzeAssigns(defYAML *QuplaFuncDefYAML, module *QuplaModule) error {
+func (def *QuplaFuncDef) analyzeAssigns() error {
 	var err error
 	var vi *VarInfo
-	for name := range defYAML.Assigns {
-		if vi, err = def.GetVarInfo(name, module); err != nil {
+	for name := range def.yamlSource.Assigns {
+		if vi, err = def.GetVarInfo(name); err != nil {
 			return err
 		}
-		s := vi.Expr.Size()
-		if vi.IsState && s != vi.Size {
+		if vi.IsState {
+			// looking for newValue variable
+			if vi, err = def.GetVarInfo(name + stateVarNewValueSuffix); err != nil {
+				return err
+			}
+		}
+		if vi.Assign.Size() != vi.Size {
 			return fmt.Errorf("sizes doesn't match for var '%v' in '%v'", name, def.GetName())
 		}
-		vi.Size = s
 	}
 	return nil
 }

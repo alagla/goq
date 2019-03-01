@@ -23,7 +23,7 @@ func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module ModuleInterface, scop
 	}
 	module.IncStat("numSliceExpr")
 	var vi *VarInfo
-	if vi, err = scope.GetVarInfo(exprYAML.Var, module); err != nil {
+	if vi, err = scope.GetVarInfo(exprYAML.Var); err != nil {
 		return nil, err
 	}
 	ret.localVarIdx = vi.Idx

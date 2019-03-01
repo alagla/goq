@@ -79,7 +79,7 @@ func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 		null = proc.Eval(expr, ret)
 		proc.curFrame = saveCurFrame
 	} else {
-		null = proc.Eval(vi.Expr, ret)
+		null = proc.Eval(vi.Assign, ret)
 	}
 	tracef("%vReturn EvalVar %v(%v) in '%v': res = '%v' null = %v",
 		proc.LevelPrefix(), vi.Name, idx, proc.curFrame.context.funcDef.name, utils.TritsToString(ret), null)

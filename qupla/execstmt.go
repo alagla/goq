@@ -5,9 +5,11 @@ import (
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
 	"github.com/lunfardo314/goq/utils"
+	"time"
 )
 
 type QuplaExecStmt struct {
+	source       string
 	isTest       bool
 	expr         ExpressionInterface
 	exprExpected ExpressionInterface
@@ -17,6 +19,7 @@ type QuplaExecStmt struct {
 func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error {
 	res := &QuplaExecStmt{
 		module: module,
+		source: execStmtYAML.Source,
 	}
 	var err error
 	res.expr, err = module.factory.AnalyzeExpression(execStmtYAML.Expr, module, nil)
@@ -43,12 +46,25 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 }
 
 func (ex *QuplaExecStmt) Execute() error {
+	debugf("-------------")
+	debugf("running: %v", ex.source)
+
+	start := time.Now()
+
 	resExpr := make(Trits, ex.expr.Size(), ex.expr.Size())
 	null := ex.module.processor.Eval(ex.expr, resExpr)
+
+	debugf("Duration: %v", time.Since(start))
+
 	if null {
 		debugf("eval result is null")
+		if ex.isTest {
+			debugf("Test FAILED")
+			return nil
+		}
 	} else {
-		debugf("eval result trits = '%v'", utils.TritsToString(resExpr))
+		d, _ := utils.TritsToBigInt(resExpr)
+		debugf("eval result dec = %v trits = '%v' ", d, utils.TritsToString(resExpr))
 	}
 	if ex.isTest {
 		resExpected := make(Trits, ex.expr.Size(), ex.exprExpected.Size())
@@ -58,11 +74,11 @@ func (ex *QuplaExecStmt) Execute() error {
 		if err != nil {
 			return err
 		}
-		debugf("expected trits are '%v'", exp)
+		debugf("expected dec = %v", exp)
 		if eq, _ := TritsEqual(resExpected, resExpr); eq {
-			debugf("Test passed")
+			debugf("Test PASSED")
 		} else {
-			debugf("Test failed")
+			debugf("Test FAILED")
 		}
 	}
 	return nil

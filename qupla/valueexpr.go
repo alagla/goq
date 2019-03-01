@@ -52,9 +52,15 @@ func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module ModuleInterface, _ Fu
 
 	// Todo checking big values
 
-	//if ret.Value != TritsToInt(ret.TritValue) {
-	//	return nil, fmt.Errorf("wrong 'value' ('%v') or 'trits' ('%v') field in value expr",
-	//		exprYAML.Value, exprYAML.Trits)
+	//bi, err := utils.TritsToBigInt(ret.TritValue)
+	//bif := big.NewFloat(0)
+	//bif.SetInt(bi)
+	//
+	//if err != nil{
+	//	return nil, fmt.Errorf("can't convert trits to BigInt")
+	//}
+	//if orig.Cmp(bif) != 0{
+	//	return nil, fmt.Errorf("not equal values between trits and decimal '%v' != '%v'", orig, bif)
 	//}
 	return ret, nil
 }
