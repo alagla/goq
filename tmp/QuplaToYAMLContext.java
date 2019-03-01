@@ -32,7 +32,7 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
     }
 
     private void appendExprAsComment(BaseExpr expr){
-        appendStringAsComment(expr.toString()); ;
+        appendStringAsComment(expr.toString());
     }
 
     private String getExpressionTypeTag(BaseExpr expr){
@@ -564,9 +564,15 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
 
     private void evalExec(final ExecStmt exec)
     {
+        String str = exec.toString();
+        appendStringAsComment(str);
+
         append("-");
         newline();
         indent();
+
+        append("source: '" + str + "'");
+        newline();
 
         if (exec.expected != null){
             append("expected: ");
