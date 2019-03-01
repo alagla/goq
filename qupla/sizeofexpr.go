@@ -9,6 +9,7 @@ import (
 )
 
 type QuplaSizeofExpr struct {
+	QuplaExprBase
 	Value     int64
 	TritValue Trits
 }

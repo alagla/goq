@@ -9,6 +9,8 @@ import (
 )
 
 type QuplaFuncExpr struct {
+	QuplaExprBase
+	source  string
 	name    string
 	funcDef *QuplaFuncDef
 	args    []ExpressionInterface
@@ -17,7 +19,8 @@ type QuplaFuncExpr struct {
 func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaFuncExpr, error) {
 	var err error
 	ret := &QuplaFuncExpr{
-		name: exprYAML.Name,
+		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
+		name:          exprYAML.Name,
 	}
 	var fdi FuncDefInterface
 	fdi, err = module.FindFuncDef(exprYAML.Name)

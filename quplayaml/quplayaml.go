@@ -46,6 +46,7 @@ type QuplaStateVar struct {
 }
 
 type QuplaFuncDefYAML struct {
+	Source     string                          `yaml:"source"`
 	ReturnType *QuplaExpressionYAML            `yaml:"returnType"` // only size is necessary
 	Params     []*QuplaFuncArgYAML             `yaml:"params"`
 	State      map[string]*QuplaStateVar       `yaml:"state"`
@@ -75,14 +76,16 @@ type QuplaExpressionYAML struct {
 type QuplaNullExprYAML string
 
 type QuplaConcatExprYAML struct {
-	Lhs *QuplaExpressionYAML `yaml:"lhs"`
-	Rhs *QuplaExpressionYAML `yaml:"rhs"`
+	Source string               `yaml:"source"`
+	Lhs    *QuplaExpressionYAML `yaml:"lhs"`
+	Rhs    *QuplaExpressionYAML `yaml:"rhs"`
 }
 
 type QuplaCondExprYAML struct {
-	If   *QuplaExpressionYAML `yaml:"if"`
-	Then *QuplaExpressionYAML `yaml:"then"`
-	Else *QuplaExpressionYAML `yaml:"else"`
+	Source string               `yaml:"source"`
+	If     *QuplaExpressionYAML `yaml:"if"`
+	Then   *QuplaExpressionYAML `yaml:"then"`
+	Else   *QuplaExpressionYAML `yaml:"else"`
 }
 
 type QuplaConstExprYAML struct {
@@ -112,11 +115,13 @@ type QuplaFieldExprYAML struct {
 }
 
 type QuplaLutExprYAML struct {
-	Name string                 `yaml:"name"`
-	Args []*QuplaExpressionYAML `yaml:"args"`
+	Source string                 `yaml:"source"`
+	Name   string                 `yaml:"name"`
+	Args   []*QuplaExpressionYAML `yaml:"args"`
 }
 
 type QuplaSliceExprYAML struct {
+	Source    string               `yaml:"source"`
 	Var       string               `yaml:"var"`
 	Offset    int64                `yaml:"offset"`
 	SliceSize int64                `yaml:"size"`
@@ -137,13 +142,15 @@ type QuplaSizeofExprYAML struct {
 }
 
 type QuplaFuncExprYAML struct {
-	Name string                 `yaml:"name"`
-	Args []*QuplaExpressionYAML `yaml:"args"`
+	Source string                 `yaml:"source"`
+	Name   string                 `yaml:"name"`
+	Args   []*QuplaExpressionYAML `yaml:"args"`
 }
 
 type QuplaMergeExprYAML struct {
-	Lhs *QuplaExpressionYAML `yaml:"lhs"`
-	Rhs *QuplaExpressionYAML `yaml:"rhs"`
+	Source string               `yaml:"source"`
+	Lhs    *QuplaExpressionYAML `yaml:"lhs"`
+	Rhs    *QuplaExpressionYAML `yaml:"rhs"`
 }
 
 // ----- ?????? do we need it?

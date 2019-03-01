@@ -8,6 +8,7 @@ import (
 )
 
 type QuplaConcatExpr struct {
+	QuplaExprBase
 	lhsExpr ExpressionInterface
 	rhsExpr ExpressionInterface
 }
@@ -16,7 +17,9 @@ func AnalyzeConcatExpr(exprYAML *QuplaConcatExprYAML, module ModuleInterface, sc
 	var err error
 	module.IncStat("numConcat")
 
-	ret := &QuplaConcatExpr{}
+	ret := &QuplaConcatExpr{
+		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
+	}
 	if ret.lhsExpr, err = module.AnalyzeExpression(exprYAML.Lhs, scope); err != nil {
 		return nil, err
 	}

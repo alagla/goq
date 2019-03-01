@@ -7,6 +7,7 @@ import (
 )
 
 type QuplaNullExpr struct {
+	QuplaExprBase
 	size int64
 }
 

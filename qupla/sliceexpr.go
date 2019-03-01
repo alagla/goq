@@ -9,6 +9,7 @@ import (
 )
 
 type QuplaSliceExpr struct {
+	QuplaExprBase
 	localVarIdx int64
 	varScope    *QuplaFuncDef
 	offset      int64
@@ -18,8 +19,9 @@ type QuplaSliceExpr struct {
 func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaSliceExpr, error) {
 	var err error
 	ret := &QuplaSliceExpr{
-		offset: exprYAML.Offset,
-		size:   exprYAML.SliceSize,
+		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
+		offset:        exprYAML.Offset,
+		size:          exprYAML.SliceSize,
 	}
 	module.IncStat("numSliceExpr")
 	var vi *VarInfo

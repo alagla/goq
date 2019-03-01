@@ -9,6 +9,7 @@ import (
 )
 
 type QuplaLutExpr struct {
+	QuplaExprBase
 	argExpr []ExpressionInterface
 	lutDef  *QuplaLutDef
 }
@@ -18,7 +19,9 @@ func AnalyzeLutExpr(exprYAML *QuplaLutExprYAML, module ModuleInterface, scope Fu
 	var ae ExpressionInterface
 	var li LUTInterface
 	var ok bool
-	ret := &QuplaLutExpr{}
+	ret := &QuplaLutExpr{
+		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
+	}
 	li, err = module.FindLUTDef(exprYAML.Name)
 	if err != nil {
 		return nil, err

@@ -7,6 +7,7 @@ import (
 )
 
 type QuplaFieldExpr struct {
+	QuplaExprBase
 	condExpr ExpressionInterface
 }
 

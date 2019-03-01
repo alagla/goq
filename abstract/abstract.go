@@ -41,6 +41,7 @@ type LUTInterface interface {
 }
 
 type ExpressionInterface interface {
+	GetSource() string
 	Size() int64
 	Eval(ProcessorInterface, Trits) bool
 }

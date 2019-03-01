@@ -9,6 +9,7 @@ import (
 
 // ----- ?????? do we need it?
 type QuplaTypeExpr struct {
+	QuplaExprBase
 	expr   ExpressionInterface
 	size   int64
 	fields map[string]ExpressionInterface

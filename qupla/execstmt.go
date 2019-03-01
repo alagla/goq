@@ -9,6 +9,7 @@ import (
 )
 
 type QuplaExecStmt struct {
+	QuplaExprBase
 	source       string
 	isTest       bool
 	expr         ExpressionInterface
@@ -18,8 +19,8 @@ type QuplaExecStmt struct {
 
 func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error {
 	res := &QuplaExecStmt{
-		module: module,
-		source: execStmtYAML.Source,
+		QuplaExprBase: NewQuplaExprBase(execStmtYAML.Source),
+		module:        module,
 	}
 	var err error
 	res.expr, err = module.factory.AnalyzeExpression(execStmtYAML.Expr, module, nil)
@@ -47,7 +48,7 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 
 func (ex *QuplaExecStmt) Execute() error {
 	debugf("-------------")
-	debugf("running: %v", ex.source)
+	debugf("running: '%v'", ex.GetSource())
 
 	start := time.Now()
 

@@ -8,6 +8,7 @@ import (
 )
 
 type QuplaMergeExpr struct {
+	QuplaExprBase
 	lhsExpr ExpressionInterface
 	rhsExpr ExpressionInterface
 }
@@ -16,7 +17,9 @@ func AnalyzeMergeExpr(exprYAML *QuplaMergeExprYAML, module ModuleInterface, scop
 	var err error
 	module.IncStat("numMergeExpr")
 
-	ret := &QuplaMergeExpr{}
+	ret := &QuplaMergeExpr{
+		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
+	}
 	ret.lhsExpr, err = module.AnalyzeExpression(exprYAML.Lhs, scope)
 	if err != nil {
 		return nil, err
