@@ -35,9 +35,6 @@ func NewStackProcessor() *StackProcessor {
 func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 	funExpr, isFunction := expr.(*QuplaFuncExpr)
 	if isFunction {
-		if funExpr.name == "fixSign_9" {
-			fmt.Printf("kuku\n")
-		}
 		proc.numfuncall++
 		proc.levelFunc++
 		proc.tracef("IN funExpr '%v'", funExpr.name)
@@ -119,6 +116,6 @@ func (proc *StackProcessor) tracef(format string, args ...interface{}) {
 		return
 	}
 	tracef("proc-> "+proc.LevelPrefix()+format, args...)
-	proc.trace = proc.curTraces < proc.maxTraces
+	proc.trace = proc.maxTraces <= 0 || proc.curTraces < proc.maxTraces
 	proc.curTraces++
 }

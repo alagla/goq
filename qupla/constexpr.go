@@ -10,13 +10,15 @@ import (
 )
 
 type ConstExpression interface {
-	GetConstValue() int
+	ExpressionInterface
+	GetConstValue() int64
+	GetConstName() string
 }
 
 type ConstValue struct {
 	QuplaExprBase
-	Value int64
-	Name  string
+	value int64
+	name  string
 	size  int64
 }
 
@@ -28,23 +30,15 @@ func (_ *ConstValue) Eval(_ ProcessorInterface, _ Trits) bool {
 	return true // todo
 }
 
-func IsConstExpression(e interface{}) bool {
-	switch e.(type) {
-	case *QuplaConstExprYAML:
-		return true
-	case *QuplaConstTermYAML:
-		return true
-	case *QuplaConstTypeNameYAML:
-		return true
-	case *QuplaConstNumberYAML:
-		return true
-	case *ConstValue:
-		return true
-	}
-	return false
+func (e *ConstValue) GetConstValue() int64 {
+	return e.value
 }
 
-func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module ModuleInterface, scope FuncDefInterface) (*ConstValue, error) {
+func (e *ConstValue) GetConstName() string {
+	return e.name
+}
+
+func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module ModuleInterface, scope FuncDefInterface) (ConstExpression, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
@@ -57,27 +51,24 @@ func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module ModuleInterface, scop
 	if rei, err = module.AnalyzeExpression(exprYAML.Rhs, scope); err != nil {
 		return nil, err
 	}
-	if !IsConstExpression(lei) || !IsConstExpression(rei) {
-		return nil, fmt.Errorf("operands must be constant expression")
+	var rv, lv ConstExpression
+	if lv, ok = lei.(ConstExpression); !ok {
+		return nil, fmt.Errorf("must be constant expression")
 	}
-	var rv, lv *ConstValue
-	if lv, ok = lei.(*ConstValue); !ok {
-		return nil, fmt.Errorf("inconsistency I")
+	if rv, ok = rei.(ConstExpression); !ok {
+		return nil, fmt.Errorf("must be constant expression")
 	}
-	if rv, ok = rei.(*ConstValue); !ok {
-		return nil, fmt.Errorf("inconsistency II")
-	}
-	var ret *ConstValue
+	var ret ConstExpression
 	switch exprYAML.Operator {
 	case "+":
-		ret = NewConstValue("", lv.Value+rv.Value)
+		ret = NewConstValue("", lv.GetConstValue()+rv.GetConstValue())
 	case "-":
-		ret = NewConstValue("", lv.Value-rv.Value)
+		ret = NewConstValue("", lv.GetConstValue()-rv.GetConstValue())
 	}
 	return ret, nil
 }
 
-func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module ModuleInterface, scope FuncDefInterface) (*ConstValue, error) {
+func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module ModuleInterface, scope FuncDefInterface) (ConstExpression, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
@@ -90,29 +81,26 @@ func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module ModuleInterface, scop
 	if rei, err = module.AnalyzeExpression(exprYAML.Rhs, scope); err != nil {
 		return nil, err
 	}
-	if !IsConstExpression(lei) || !IsConstExpression(rei) {
-		return nil, fmt.Errorf("operands must be constant expression")
-	}
-	var rv, lv *ConstValue
-	if lv, ok = lei.(*ConstValue); !ok {
+	var rv, lv ConstExpression
+	if lv, ok = lei.(ConstExpression); !ok {
 		return nil, fmt.Errorf("inconsistency I")
 	}
-	if rv, ok = rei.(*ConstValue); !ok {
+	if rv, ok = rei.(ConstExpression); !ok {
 		return nil, fmt.Errorf("inconsistency II")
 	}
-	var ret *ConstValue
+	var ret ConstExpression
 	switch exprYAML.Operator {
 	case "*":
-		ret = NewConstValue("", lv.Value*rv.Value)
+		ret = NewConstValue("", lv.GetConstValue()*rv.GetConstValue())
 	case "/":
-		if rv.Value != 0 {
-			ret = NewConstValue("", lv.Value/rv.Value)
+		if rv.GetConstValue() != 0 {
+			ret = NewConstValue("", lv.GetConstValue()/rv.GetConstValue())
 		} else {
 			return nil, fmt.Errorf("division by 0 in constant expression")
 		}
 	case "%":
-		if rv.Value != 0 {
-			ret = NewConstValue("", lv.Value%rv.Value)
+		if rv.GetConstValue() != 0 {
+			ret = NewConstValue("", lv.GetConstValue()%rv.GetConstValue())
 		} else {
 			return nil, fmt.Errorf("division by 0 in constant expression")
 		}
@@ -120,16 +108,7 @@ func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module ModuleInterface, scop
 	return ret, nil
 }
 
-func AnalyzeConstTypeName(exprYAML *QuplaConstTypeNameYAML, _ ModuleInterface, _ FuncDefInterface) (*ConstValue, error) {
-	var err error
-	var ret int
-	if ret, err = strconv.Atoi(exprYAML.SizeString); err != nil {
-		return nil, err
-	}
-	return NewConstValue(exprYAML.TypeName, int64(ret)), nil
-}
-
-func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ ModuleInterface, _ FuncDefInterface) (*ConstValue, error) {
+func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ ModuleInterface, _ FuncDefInterface) (ConstExpression, error) {
 	ret, err := strconv.Atoi(exprYAML.Value)
 	if err != nil {
 		return nil, err
@@ -137,15 +116,15 @@ func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ ModuleInterface, _ Fun
 	return NewConstValue("", int64(ret)), nil
 }
 
-func NewConstValue(name string, value int64) *ConstValue {
+func NewConstValue(name string, value int64) ConstExpression {
 	return &ConstValue{
-		Name:  name,
-		Value: value,
+		name:  name,
+		value: value,
 	}
 }
 
 func (e *ConstValue) GetTrits() Trits {
-	t := IntToTrits(e.Value)
+	t := IntToTrits(e.value)
 	if e.size == 0 {
 		return t
 	}
@@ -158,11 +137,11 @@ func (e *ConstValue) GetTrits() Trits {
 }
 
 func GetConstValue(expr ExpressionInterface) (int64, error) {
-	cv, ok := expr.(*ConstValue)
+	ce, ok := expr.(ConstExpression)
 	if !ok {
 		return 0, fmt.Errorf("not a constant value")
 	}
-	return cv.Value, nil
+	return ce.GetConstValue(), nil
 }
 
 func GetConstName(expr ExpressionInterface) (string, error) {
@@ -170,5 +149,5 @@ func GetConstName(expr ExpressionInterface) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("not a constant value")
 	}
-	return cv.Name, nil
+	return cv.name, nil
 }

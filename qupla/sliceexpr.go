@@ -50,9 +50,6 @@ func (e *QuplaSliceExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	if null {
 		return true
 	}
-	numCopy := copy(result, restmp[e.offset:e.offset+e.size])
-	if int64(numCopy) != e.size {
-		panic(fmt.Sprintf("wrong slice length in '%v'", e.GetSource()))
-	}
+	copy(result, restmp[e.offset:e.offset+e.size])
 	return false
 }

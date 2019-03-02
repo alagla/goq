@@ -105,9 +105,15 @@ type QuplaConstTermYAML struct {
 	Rhs      *QuplaExpressionYAML `yaml:"rhs"`
 }
 
+type QuplaFieldTypeInfo struct {
+	SizeString   string `yaml:"size"`
+	OffsetString string `yaml:"offset"`
+}
+
 type QuplaConstTypeNameYAML struct {
-	TypeName   string `yaml:"typeName"` // not used
-	SizeString string `yaml:"size"`
+	TypeName   string                         `yaml:"typeName"` // not used
+	SizeString string                         `yaml:"size"`
+	Fields     map[string]*QuplaFieldTypeInfo `yaml:"fields,omitempty"`
 }
 
 type QuplaConstNumberYAML struct {
@@ -160,9 +166,9 @@ type QuplaMergeExprYAML struct {
 
 // ----- ?????? do we need it?
 type QuplaTypeExprYAML struct {
-	Source        string                          `yaml:"source"`
-	TypeNameConst *QuplaExpressionYAML            `yaml:"type"`
-	Fields        map[string]*QuplaExpressionYAML `yaml:"fields"`
+	Source   string                          `yaml:"source"`
+	TypeInfo *QuplaExpressionYAML            `yaml:"type"`
+	Fields   map[string]*QuplaExpressionYAML `yaml:"fieldValues"`
 }
 
 func NewQuplaModuleFromYAML(fname string) (*QuplaModuleYAML, error) {
