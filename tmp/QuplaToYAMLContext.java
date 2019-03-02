@@ -124,8 +124,10 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
     }
 
     private void evalTritVector(final TritVectorDef vector) {
-        append("size: ");
+        append("vector: ");
         append(vector.typeExpr.toString().trim());
+        newline();
+        append("size: '" + vector.size + "'");
         newline();
     }
 
@@ -144,6 +146,7 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
             indent();
             evalTritVector((TritVectorDef) field);
             undent();
+
             undent();
         }
         undent();
@@ -481,6 +484,10 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
 
     @Override
     public void evalType(TypeExpr type) {
+        String src = type.toString().replace("\n", " / ");
+        append("source: '" + src + "'");
+        newline();
+
         append("type: ");
         newline();
         indent();
