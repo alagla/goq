@@ -35,6 +35,9 @@ func NewStackProcessor() *StackProcessor {
 func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 	funExpr, isFunction := expr.(*QuplaFuncExpr)
 	if isFunction {
+		if funExpr.name == "fixSign_9" {
+			fmt.Printf("kuku\n")
+		}
 		proc.numfuncall++
 		proc.levelFunc++
 		proc.tracef("IN funExpr '%v'", funExpr.name)
@@ -44,7 +47,7 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 	}
 	null := expr.Eval(proc, result)
 	if isFunction {
-		proc.tracef("OUT funExpr '%v'", funExpr.name)
+		proc.tracef("OUT funExpr '%v' null = %v res = '%v'", funExpr.name, null, utils.TritsToString(result))
 		proc.levelFunc--
 		proc.curFrame = proc.curFrame.parent
 	} else {
@@ -66,20 +69,24 @@ func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 
 	ret := proc.Slice(vi.Offset, vi.Size)
 	if proc.curFrame.evaluated[vi.Idx] {
-		proc.tracef("EvalVar %v(%v) in '%v': already evaluated", vi.Name, idx, proc.curFrame.context.funcDef.name)
+		proc.tracef("EvalVar %v(%v) in '%v': already evaluated to '%v' null = %v",
+			vi.Name, idx, proc.curFrame.context.funcDef.name, utils.TritsToString(ret), proc.curFrame.isNull[vi.Idx])
 		return ret, proc.curFrame.isNull[vi.Idx]
 	}
-	proc.tracef("EvalVar %v(%v) in '%v'", vi.Name, idx, proc.curFrame.context.funcDef.name)
 	if vi.IsParam {
 		expr := proc.curFrame.context.args[vi.Idx]
+		proc.tracef("EvalVar %v(idx=%v) in '%v' param=true expr = '%v'",
+			vi.Name, idx, proc.curFrame.context.funcDef.name, expr.GetSource())
 		saveCurFrame := proc.curFrame
 		proc.curFrame = proc.curFrame.parent
 		null = proc.Eval(expr, ret)
 		proc.curFrame = saveCurFrame
 	} else {
+		proc.tracef("EvalVar %v (idx=%v) in '%v' param=false expr = '%v'",
+			vi.Name, idx, proc.curFrame.context.funcDef.name, vi.Assign.GetSource())
 		null = proc.Eval(vi.Assign, ret)
 	}
-	proc.tracef("Return EvalVar %v(%v) in '%v': res = '%v' null = %v",
+	proc.tracef("Return EvalVar %v (idx=%v) in '%v': res = '%v' null = %v",
 		vi.Name, idx, proc.curFrame.context.funcDef.name, utils.TritsToString(ret), null)
 
 	proc.curFrame.evaluated[vi.Idx] = true

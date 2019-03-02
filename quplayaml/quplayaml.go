@@ -20,9 +20,14 @@ type QuplaExecStmtYAML struct {
 	Expected *QuplaExpressionYAML `yaml:"expected,omitempty"`
 }
 
+type QuplaTypeFieldYAML struct {
+	Vector string `yaml:"vector"`
+	Size   string `yaml:"size"`
+}
+
 type QuplaTypeDefYAML struct {
-	Size   string                            `yaml:"size"`
-	Fields map[string]*struct{ Size string } `yaml:"fields,omitempty"`
+	Size   string                         `yaml:"size"`
+	Fields map[string]*QuplaTypeFieldYAML `yaml:"fields,omitempty"`
 }
 
 type QuplaLutDefYAML struct {
@@ -155,8 +160,9 @@ type QuplaMergeExprYAML struct {
 
 // ----- ?????? do we need it?
 type QuplaTypeExprYAML struct {
-	TypeExpr *QuplaExpressionYAML            `yaml:"type"`
-	Fields   map[string]*QuplaExpressionYAML `yaml:"fields"`
+	Source        string                          `yaml:"source"`
+	TypeNameConst *QuplaExpressionYAML            `yaml:"type"`
+	Fields        map[string]*QuplaExpressionYAML `yaml:"fields"`
 }
 
 func NewQuplaModuleFromYAML(fname string) (*QuplaModuleYAML, error) {

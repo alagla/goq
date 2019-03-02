@@ -16,6 +16,7 @@ type ConstExpression interface {
 type ConstValue struct {
 	QuplaExprBase
 	Value int64
+	Name  string
 	size  int64
 }
 
@@ -69,9 +70,9 @@ func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module ModuleInterface, scop
 	var ret *ConstValue
 	switch exprYAML.Operator {
 	case "+":
-		ret = NewConstValue(lv.Value + rv.Value)
+		ret = NewConstValue("", lv.Value+rv.Value)
 	case "-":
-		ret = NewConstValue(lv.Value - rv.Value)
+		ret = NewConstValue("", lv.Value-rv.Value)
 	}
 	return ret, nil
 }
@@ -102,16 +103,16 @@ func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module ModuleInterface, scop
 	var ret *ConstValue
 	switch exprYAML.Operator {
 	case "*":
-		ret = NewConstValue(lv.Value * rv.Value)
+		ret = NewConstValue("", lv.Value*rv.Value)
 	case "/":
 		if rv.Value != 0 {
-			ret = NewConstValue(lv.Value / rv.Value)
+			ret = NewConstValue("", lv.Value/rv.Value)
 		} else {
 			return nil, fmt.Errorf("division by 0 in constant expression")
 		}
 	case "%":
 		if rv.Value != 0 {
-			ret = NewConstValue(lv.Value % rv.Value)
+			ret = NewConstValue("", lv.Value%rv.Value)
 		} else {
 			return nil, fmt.Errorf("division by 0 in constant expression")
 		}
@@ -125,7 +126,7 @@ func AnalyzeConstTypeName(exprYAML *QuplaConstTypeNameYAML, _ ModuleInterface, _
 	if ret, err = strconv.Atoi(exprYAML.SizeString); err != nil {
 		return nil, err
 	}
-	return NewConstValue(int64(ret)), nil
+	return NewConstValue(exprYAML.TypeName, int64(ret)), nil
 }
 
 func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ ModuleInterface, _ FuncDefInterface) (*ConstValue, error) {
@@ -133,11 +134,12 @@ func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ ModuleInterface, _ Fun
 	if err != nil {
 		return nil, err
 	}
-	return NewConstValue(int64(ret)), nil
+	return NewConstValue("", int64(ret)), nil
 }
 
-func NewConstValue(value int64) *ConstValue {
+func NewConstValue(name string, value int64) *ConstValue {
 	return &ConstValue{
+		Name:  name,
 		Value: value,
 	}
 }
@@ -161,4 +163,12 @@ func GetConstValue(expr ExpressionInterface) (int64, error) {
 		return 0, fmt.Errorf("not a constant value")
 	}
 	return cv.Value, nil
+}
+
+func GetConstName(expr ExpressionInterface) (string, error) {
+	cv, ok := expr.(*ConstValue)
+	if !ok {
+		return "", fmt.Errorf("not a constant value")
+	}
+	return cv.Name, nil
 }

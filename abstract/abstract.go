@@ -16,8 +16,8 @@ type ModuleInterface interface {
 	AddLutDef(string, LUTInterface)
 	FindLUTDef(string) (LUTInterface, error)
 	IncStat(string)
+	GetTypeFieldInfo(string, string) (int64, int64, error)
 }
-
 type VarInfo struct {
 	Name       string
 	Analyzed   bool

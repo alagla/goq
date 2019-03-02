@@ -7,35 +7,56 @@ import (
 	. "github.com/lunfardo314/goq/quplayaml"
 )
 
-// ----- ?????? do we need it?
+type fieldExpr struct {
+	offset int64
+	size   int64
+	expr   ExpressionInterface
+}
 type QuplaTypeExpr struct {
 	QuplaExprBase
-	expr   ExpressionInterface
 	size   int64
-	fields map[string]ExpressionInterface
+	fields map[string]*fieldExpr
 }
 
 func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaTypeExpr, error) {
 	ret := &QuplaTypeExpr{
-		fields: make(map[string]ExpressionInterface),
+		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
+		fields:        make(map[string]*fieldExpr),
 	}
 	var err error
 	module.IncStat("numTypeExpr")
 
-	if ret.expr, err = module.AnalyzeExpression(exprYAML.TypeExpr, scope); err != nil {
+	var constexpr ExpressionInterface
+	if constexpr, err = module.AnalyzeExpression(exprYAML.TypeNameConst, scope); err != nil {
 		return nil, err
 	}
 
-	if ret.size, err = GetConstValue(ret.expr); err != nil {
+	if ret.size, err = GetConstValue(constexpr); err != nil {
+		return nil, err
+	}
+	var typeName string
+	if typeName, err = GetConstName(constexpr); err != nil {
 		return nil, err
 	}
 
 	var fe ExpressionInterface
-	for name, expr := range exprYAML.Fields {
+	var offset, size int64
+
+	for fldName, expr := range exprYAML.Fields {
+		offset, size, err = module.GetTypeFieldInfo(typeName, fldName)
+
 		if fe, err = module.AnalyzeExpression(expr, scope); err != nil {
 			return nil, err
 		}
-		ret.fields[name] = fe
+		if fe.Size() != size {
+			return nil, fmt.Errorf("field '%v' size mismatch in type expression '%v'", fldName, exprYAML.Source)
+		}
+
+		ret.fields[fldName] = &fieldExpr{
+			offset: offset,
+			size:   size,
+			expr:   fe, // TODO must be condExpr by syntaxis. Not exactly ConditionExpression
+		}
 	}
 	if err = ret.CheckSize(); err != nil {
 		return nil, err
@@ -54,14 +75,19 @@ func (e *QuplaTypeExpr) CheckSize() error {
 	var sumFld int64
 
 	for _, f := range e.fields {
-		sumFld += f.Size()
+		sumFld += f.size
 	}
 	if sumFld != e.size {
-		return fmt.Errorf("sum of field sizes != type end")
+		return fmt.Errorf("sum of field sizes != type end in field expression")
 	}
 	return nil
 }
 
-func (e *QuplaTypeExpr) Eval(_ ProcessorInterface, _ Trits) bool {
+func (e *QuplaTypeExpr) Eval(proc ProcessorInterface, result Trits) bool {
+	for _, fi := range e.fields {
+		if proc.Eval(fi.expr, result[fi.offset:fi.size]) {
+
+		}
+	}
 	return true
 }
