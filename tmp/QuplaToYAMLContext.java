@@ -493,7 +493,7 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
         indent();
         evalExpression(type.type);
         undent();
-        append("fields: ");
+        append("fieldValues: ");
         newline();
 
         indent();
@@ -515,8 +515,29 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
         append("size: ");
         append("" + constTypeName.size);
         newline();
-        appendStringAsComment("typeInfo: '" + constTypeName.typeInfo.toString().replaceAll("\n", "") + "'");
-        newline();
+        if (constTypeName.typeInfo.struct != null){
+            append("fields:");
+            newline();
+            int offset = 0;
+            for (BaseExpr fe : constTypeName.typeInfo.struct.fields){
+                TritVectorDef fld = (TritVectorDef) fe;
+                indent();
+                append(fld.name + ": ");
+                newline();
+
+                indent();
+                append("size: '" + fld.size + "'");
+                newline();
+                append("offset: '" + offset + "'");
+                newline();
+
+                undent();
+                undent();
+                offset += fld.size;
+            }
+        }
+//        appendStringAsComment("typeInfo: '" + constTypeName.typeInfo.toString().replaceAll("\n", "") + "'");
+//        newline();
     }
 
     private void evalConstNumber(ConstNumber constNumber){
