@@ -46,10 +46,22 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 		proc.tracef("OUT funExpr '%v' null = %v res = '%v'", funExpr.name, null, utils.TritsToString(result))
 		proc.levelFunc--
 		proc.curFrame = proc.curFrame.parent
+		if proc.curFrame == nil {
+			proc.reportAndResetStats()
+		}
 	} else {
 		proc.level--
 	}
 	return null
+}
+
+func (proc *StackProcessor) reportAndResetStats() {
+	debugf("Proc stats: numfuncall = %v numvarcall = %v levelFunc = %v level = %v",
+		proc.numfuncall, proc.numvarcall, proc.levelFunc, proc.level)
+	proc.numfuncall = 0
+	proc.numvarcall = 0
+	proc.levelFunc = 0
+	proc.level = 0
 }
 
 func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
