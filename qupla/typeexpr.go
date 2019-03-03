@@ -74,7 +74,7 @@ func (e *QuplaTypeExpr) Size() int64 {
 
 func (e *QuplaTypeExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	for _, fi := range e.fields {
-		if proc.Eval(fi.expr, result[fi.offset:fi.size]) {
+		if proc.Eval(fi.expr, result[fi.offset:fi.offset+fi.size]) {
 			return true
 		}
 	}

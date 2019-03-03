@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
+	"time"
 )
 
 type QuplaModule struct {
@@ -163,12 +164,46 @@ func (module *QuplaModule) FindLUTDef(name string) (LUTInterface, error) {
 	return ret, nil
 }
 
-func (module *QuplaModule) Execute() {
+func (module *QuplaModule) Execute(test bool) {
+	module.processor.SetTrace(true, 0)
+
+	if test {
+		infof("Executing tests..")
+	} else {
+		infof("Executing evals and tests (total %v)..", len(module.execs))
+	}
+
+	testsPassed := 0
+	totalTests := 0
+	start := time.Now()
 	for _, exec := range module.execs {
-		if err := exec.Execute(); err != nil {
-			errorf("execute error: %v", err)
+		if duration, passed, err := exec.Execute(); err != nil {
+			errorf("Error: %v", err)
+		} else {
+			if exec.isTest {
+				totalTests++
+				if passed {
+					testsPassed++
+					infof("Test PASSED. Duration %v", duration)
+				} else {
+					infof("Test FAILED. Duration %v", duration)
+				}
+			} else {
+				infof("Duration %v", duration)
+			}
 		}
 	}
+	infof("Total tests and evals: %v", len(module.execs))
+	var p string
+	if testsPassed == 0 {
+		p = "n/a"
+	} else {
+		p = fmt.Sprintf("%v%%", (testsPassed*100)/totalTests)
+	}
+	infof("---------------------")
+	infof("---------------------")
+	infof("Tests PASSED: %v out of %v (%v)", testsPassed, totalTests, p)
+	infof("Total duration: %v ", time.Since(start))
 }
 
 func (module *QuplaModule) IncStat(key string) {

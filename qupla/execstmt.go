@@ -47,7 +47,7 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 	return nil
 }
 
-func (ex *QuplaExecStmt) Execute() error {
+func (ex *QuplaExecStmt) Execute() (time.Duration, bool, error) {
 
 	//ex.module.processor.SetTrace(ex.num == 19, 0)
 
@@ -59,32 +59,26 @@ func (ex *QuplaExecStmt) Execute() error {
 	resExpr := make(Trits, ex.expr.Size(), ex.expr.Size())
 	null := ex.module.processor.Eval(ex.expr, resExpr)
 
-	debugf("Duration: %v", time.Since(start))
-
 	if null {
 		debugf("eval result is null")
 		if ex.isTest {
-			debugf("Test FAILED")
-			return nil
+			return time.Since(start), false, nil
 		}
 	} else {
 		d, _ := utils.TritsToBigInt(resExpr)
-		debugf("eval result dec = %v trits = '%v' ", d, utils.TritsToString(resExpr))
+		debugf("eval result '%v' (dec = %v) ", utils.TritsToString(resExpr), d)
 	}
+	passed := false
 	if ex.isTest {
 		resExpected := make(Trits, ex.expr.Size(), ex.exprExpected.Size())
 		null = ex.module.processor.Eval(ex.exprExpected, resExpected)
 
 		exp, err := utils.TritsToBigInt(resExpected)
 		if err != nil {
-			return err
+			return time.Since(start), false, err
 		}
-		debugf("expected dec = %v", exp)
-		if eq, _ := TritsEqual(resExpected, resExpr); eq {
-			debugf("Test PASSED")
-		} else {
-			debugf("Test FAILED")
-		}
+		debugf("expected result '%v' (dec = %v)", utils.TritsToString(resExpected), exp)
+		passed, _ = TritsEqual(resExpected, resExpr)
 	}
-	return nil
+	return time.Since(start), passed, nil
 }

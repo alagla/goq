@@ -28,7 +28,7 @@ func main() {
 	if !succ {
 		errorf("Failed analyzing Qupla module")
 	} else {
-		module.Execute()
+		module.Execute(true)
 	}
 	infof("Ciao!")
 }
