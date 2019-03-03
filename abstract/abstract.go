@@ -25,7 +25,6 @@ type VarInfo struct {
 	Size     int64
 	IsState  bool
 	IsParam  bool
-	HasState bool
 	Assign   ExpressionInterface
 }
 type FuncDefInterface interface {

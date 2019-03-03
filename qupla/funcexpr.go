@@ -30,7 +30,6 @@ func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module ModuleInterface, scope 
 	if ret.funcDef, ok = fdi.(*QuplaFuncDef); !ok {
 		return nil, fmt.Errorf("inconsistency with types in %v", exprYAML.Name)
 	}
-	ret.hasState = ret.funcDef.HasState()
 
 	var fe ExpressionInterface
 	module.IncStat("numFuncExpr")
@@ -41,10 +40,21 @@ func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module ModuleInterface, scope 
 			return nil, err
 		}
 		ret.args = append(ret.args, fe)
-		ret.hasState = ret.hasState || fe.HasState()
 	}
 	err = ret.funcDef.checkArgSizes(ret.args)
 	return ret, err
+}
+
+func (e *QuplaFuncExpr) HasState() bool {
+	if e.funcDef.HasState() {
+		return true
+	}
+	for _, arg := range e.args {
+		if arg.HasState() {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *QuplaFuncExpr) Size() int64 {

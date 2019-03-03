@@ -7,15 +7,16 @@ import (
 )
 
 type QuplaFuncDef struct {
-	yamlSource *QuplaFuncDefYAML // needed for analysis phase only
-	module     ModuleInterface
-	name       string
-	retSize    int64
-	retExpr    ExpressionInterface
-	localVars  []*VarInfo
-	numParams  int64 // idx < numParams represents parameter, idx >= represents local var (assign)
-	bufLen     int64 // total length of the local var buffer
-	hasState   bool
+	yamlSource        *QuplaFuncDefYAML // needed for analysis phase only
+	module            ModuleInterface
+	name              string
+	retSize           int64
+	retExpr           ExpressionInterface
+	localVars         []*VarInfo
+	numParams         int64 // idx < numParams represents parameter, idx >= represents local var (assign)
+	bufLen            int64 // total length of the local var buffer
+	hasStateVariables bool
+	wasHere           bool // to prevent endless recursion
 }
 
 func (def *QuplaFuncDef) SetName(name string) {
@@ -30,7 +31,25 @@ func (def *QuplaFuncDef) GetName() string {
 }
 
 func (def *QuplaFuncDef) HasState() bool {
-	return def.hasState
+	// TODO klaida
+	if def.hasStateVariables {
+		return true
+	}
+	if def.wasHere {
+		def.wasHere = false
+		return false
+	}
+	def.wasHere = true
+
+	if def.retExpr.HasState() {
+		return true
+	}
+	for _, vi := range def.localVars {
+		if vi.Assign != nil && vi.Assign.HasState() {
+			return true
+		}
+	}
+	return false
 }
 
 func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) error {
@@ -41,6 +60,9 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 		}
 	}(&err)
 
+	if name == "arcLeaf_243_8019" {
+		fmt.Printf("kuku\n")
+	}
 	module.IncStat("numFuncDef")
 
 	def := &QuplaFuncDef{
@@ -163,6 +185,7 @@ func (def *QuplaFuncDef) createVarScope() error {
 	// the rest of indices belong to local vars (incl state)
 	// state variables
 	var idx int64
+	def.hasStateVariables = len(src.State) > 0
 	for name, s := range src.State {
 		idx = def.GetVarIdx(name)
 		if idx >= 0 {
@@ -224,12 +247,10 @@ func (def *QuplaFuncDef) finalizeLocalVars() error {
 		}
 		v.Offset = curOffset
 		curOffset += v.Size
-		def.hasState = def.hasState || v.IsState
 		if !v.IsParam {
 			if v.Assign == nil {
 				return fmt.Errorf("variable '%v' in '%v' is not assigned", v.Name, def.GetName())
 			}
-			def.hasState = def.hasState || v.Assign.HasState()
 		}
 		if v.Assign != nil && v.Assign.Size() != v.Size {
 			return fmt.Errorf("sizes doesn't match for var '%v' in '%v'", v.Name, def.GetName())
@@ -237,7 +258,7 @@ func (def *QuplaFuncDef) finalizeLocalVars() error {
 	}
 	def.bufLen = int64(curOffset)
 
-	if def.hasState {
+	if def.hasStateVariables {
 		def.module.IncStat("numStatefulFunDef")
 	}
 	return nil

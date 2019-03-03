@@ -172,9 +172,22 @@ func (module *QuplaModule) Execute(test bool) {
 	}
 
 	testsPassed := 0
+	testsSkipped := 0
 	totalTests := 0
 	start := time.Now()
+
 	for _, exec := range module.execs {
+		if exec.num == 7 {
+			fmt.Printf("kuku\n")
+		}
+		infof("-----------------------")
+		infof("Check exec statement: '%v'", exec.GetSource())
+
+		if exec.HasState() {
+			infof("SKIP because it has state: '%v'", exec.GetSource())
+			testsSkipped++
+			continue
+		}
 		if duration, passed, err := exec.Execute(); err != nil {
 			errorf("Error: %v", err)
 		} else {
@@ -201,6 +214,7 @@ func (module *QuplaModule) Execute(test bool) {
 	}
 	infof("---------------------")
 	infof("---------------------")
+	infof("Skipped: %v out of total %v executables", testsSkipped, len(module.execs))
 	infof("Tests PASSED: %v out of %v (%v)", testsPassed, totalTests, p)
 	infof("Total duration: %v ", time.Since(start))
 }

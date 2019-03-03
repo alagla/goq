@@ -19,7 +19,6 @@ func AnalyzeFieldExpr(exprYAML *QuplaFieldExprYAML, module ModuleInterface, scop
 	if err != nil {
 		return nil, err
 	}
-	ret.hasState = ret.condExpr.HasState()
 	return ret, nil
 }
 
@@ -32,4 +31,8 @@ func (e *QuplaFieldExpr) Size() int64 {
 
 func (e *QuplaFieldExpr) Eval(_ ProcessorInterface, _ Trits) bool {
 	return true
+}
+
+func (e *QuplaFieldExpr) HasState() bool {
+	return e.condExpr.HasState()
 }

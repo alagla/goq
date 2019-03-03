@@ -1,8 +1,7 @@
 package qupla
 
 type QuplaExprBase struct {
-	source   string
-	hasState bool
+	source string
 }
 
 func NewQuplaExprBase(source string) QuplaExprBase {
@@ -16,5 +15,5 @@ func (e *QuplaExprBase) GetSource() string {
 }
 
 func (e *QuplaExprBase) HasState() bool {
-	return e.hasState
+	return false
 }

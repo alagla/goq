@@ -37,7 +37,6 @@ func AnalyzeMergeExpr(exprYAML *QuplaMergeExprYAML, module ModuleInterface, scop
 	if ret.lhsExpr.Size() != ret.rhsExpr.Size() {
 		return nil, fmt.Errorf("operand sizes must be equal in merge expression, scope %v", scope.GetName())
 	}
-	ret.hasState = ret.lhsExpr.HasState() || ret.rhsExpr.HasState()
 	return ret, nil
 }
 
@@ -54,4 +53,8 @@ func (e *QuplaMergeExpr) Eval(proc ProcessorInterface, result Trits) bool {
 		return proc.Eval(e.rhsExpr, result)
 	}
 	return false
+}
+
+func (e *QuplaMergeExpr) HasState() bool {
+	return e.lhsExpr.HasState() || e.rhsExpr.HasState()
 }

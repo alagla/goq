@@ -48,12 +48,18 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 		module.IncStat("numEval")
 	}
 	module.AddExec(res)
+	if res.num == 6 {
+		fmt.Printf("kuku\n")
+	}
 	return nil
+}
+
+func (ex *QuplaExecStmt) HasState() bool {
+	return ex.expr.HasState()
 }
 
 func (ex *QuplaExecStmt) Execute() (time.Duration, bool, error) {
 	//ex.module.processor.SetTrace(ex.num == 0, 0)
-	debugf("-------------")
 	debugf("running #%v: '%v'", ex.num, ex.GetSource())
 
 	start := time.Now()
