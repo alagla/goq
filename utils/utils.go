@@ -59,3 +59,37 @@ func TritsToBigInt(t Trits) (*big.Int, error) {
 	}
 	return ret, nil
 }
+
+type StringSet map[string]struct{}
+
+func (s StringSet) Append(el string) bool {
+	_, exists := s[el]
+	s[el] = struct{}{}
+	return !exists
+}
+
+func (s StringSet) Delete(el string) bool {
+	_, exists := s[el]
+	delete(s, el)
+	return exists
+}
+
+func (s StringSet) AppendAll(another StringSet) int {
+	var ret int
+	for el := range another {
+		if s.Append(el) {
+			ret++
+		}
+	}
+	return ret
+}
+
+func (s StringSet) DeleteAll(another StringSet) int {
+	var ret int
+	for el := range another {
+		if s.Delete(el) {
+			ret++
+		}
+	}
+	return ret
+}

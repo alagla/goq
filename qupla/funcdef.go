@@ -16,7 +16,7 @@ type QuplaFuncDef struct {
 	numParams         int64 // idx < numParams represents parameter, idx >= represents local var (assign)
 	bufLen            int64 // total length of the local var buffer
 	hasStateVariables bool
-	wasHere           bool // to prevent endless recursion
+	hasState          bool
 }
 
 func (def *QuplaFuncDef) SetName(name string) {
@@ -31,25 +31,15 @@ func (def *QuplaFuncDef) GetName() string {
 }
 
 func (def *QuplaFuncDef) HasState() bool {
-	// TODO klaida
-	if def.hasStateVariables {
-		return true
-	}
-	if def.wasHere {
-		def.wasHere = false
-		return false
-	}
-	def.wasHere = true
+	return def.hasStateVariables || def.hasState
+}
 
-	if def.retExpr.HasState() {
-		return true
-	}
-	for _, vi := range def.localVars {
-		if vi.Assign != nil && vi.Assign.HasState() {
-			return true
-		}
-	}
-	return false
+func (def *QuplaFuncDef) MarkStateful() {
+	def.hasState = true
+}
+
+func (def *QuplaFuncDef) References(another *QuplaFuncDef) {
+	// TODO def references another in the same scope of def
 }
 
 func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) error {

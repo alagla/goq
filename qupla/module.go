@@ -52,9 +52,21 @@ func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) 
 			ret.IncStat("numErr")
 			errorf("%v", err)
 			retSucc = false
-			continue
 		}
 	}
+	analyzedFunDefs := len(ret.functions)
+	infof("Number of function definitions directly or indirectly referenced by execs: %v", analyzedFunDefs)
+
+	infof("Analyzing all function definitions, which were not analyzed yet..")
+	for funName := range moduleYAML.Functions {
+		if _, err := ret.FindFuncDef(funName); err != nil {
+			ret.IncStat("numErr")
+			errorf("%v", err)
+			retSucc = false
+		}
+	}
+	infof("Additionally, were analyzed %v function definitions", len(ret.functions)-analyzedFunDefs)
+
 	return ret, retSucc
 }
 
