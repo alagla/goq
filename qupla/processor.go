@@ -9,12 +9,11 @@ import (
 import . "github.com/lunfardo314/goq/abstract"
 
 type CallFrame struct {
-	context   *QuplaFuncExpr // which function called
-	parent    *CallFrame     // context where it was called
-	buffer    Trits          // buffer to place all params and variables
-	evaluated []bool         // flag if respective variable was evaluated
-	isNull    []bool         // flag if value was evaluated to null
-	result    Trits          // slice where to put result
+	context  *QuplaFuncExpr // which function called
+	parent   *CallFrame     // context where it was called
+	buffer   Trits          // buffer to place all params and variables
+	valueTag []uint8        // 0x01 bit mean 'evaluated', 0x02 bit means is not null
+	result   Trits          // slice where to put result
 }
 
 type StackProcessor struct {
@@ -65,10 +64,12 @@ func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 	}
 
 	ret := proc.Slice(vi.Offset, vi.Size)
-	if proc.curFrame.evaluated[vi.Idx] {
+
+	if proc.curFrame.valueTag[vi.Idx]&0x01 != 0 {
+		isNull := proc.curFrame.valueTag[vi.Idx]&0x02 != 0
 		proc.tracef("EvalVar %v(%v) in '%v': already evaluated to '%v' null = %v",
-			vi.Name, idx, proc.curFrame.context.funcDef.name, utils.TritsToString(ret), proc.curFrame.isNull[vi.Idx])
-		return ret, proc.curFrame.isNull[vi.Idx]
+			vi.Name, idx, proc.curFrame.context.funcDef.name, utils.TritsToString(ret), isNull)
+		return ret, isNull
 	}
 	if vi.IsParam {
 		expr := proc.curFrame.context.args[vi.Idx]
@@ -86,9 +87,10 @@ func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 	proc.tracef("Return EvalVar %v (idx=%v) in '%v': res = '%v' null = %v",
 		vi.Name, idx, proc.curFrame.context.funcDef.name, utils.TritsToString(ret), null)
 
-	proc.curFrame.evaluated[vi.Idx] = true
-	proc.curFrame.isNull[vi.Idx] = null
-
+	proc.curFrame.valueTag[vi.Idx] |= 0x01 // mark evaluated
+	if null {
+		proc.curFrame.valueTag[vi.Idx] |= 0x02 // mark is null
+	}
 	if null {
 		return nil, true
 	}

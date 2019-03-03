@@ -55,11 +55,10 @@ func (e *QuplaFuncExpr) Size() int64 {
 func (e *QuplaFuncExpr) NewCallFrame(parent *CallFrame) *CallFrame {
 	numVars := len(e.funcDef.localVars)
 	return &CallFrame{
-		context:   e,
-		parent:    parent,
-		buffer:    make(Trits, e.funcDef.bufLen, e.funcDef.bufLen),
-		evaluated: make([]bool, numVars, numVars),
-		isNull:    make([]bool, numVars, numVars),
+		context:  e,
+		parent:   parent,
+		buffer:   make(Trits, e.funcDef.bufLen, e.funcDef.bufLen),
+		valueTag: make([]uint8, numVars, numVars),
 	}
 }
 

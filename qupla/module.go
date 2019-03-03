@@ -165,8 +165,6 @@ func (module *QuplaModule) FindLUTDef(name string) (LUTInterface, error) {
 }
 
 func (module *QuplaModule) Execute(test bool) {
-	module.processor.SetTrace(true, 0)
-
 	if test {
 		infof("Executing tests..")
 	} else {

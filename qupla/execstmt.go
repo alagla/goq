@@ -49,7 +49,7 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 
 func (ex *QuplaExecStmt) Execute() (time.Duration, bool, error) {
 
-	//ex.module.processor.SetTrace(ex.num == 19, 0)
+	//ex.module.processor.SetTrace(ex.num == 0, 0)
 
 	debugf("-------------")
 	debugf("running #%v: '%v'", ex.num, ex.GetSource())
