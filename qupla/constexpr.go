@@ -143,11 +143,3 @@ func GetConstValue(expr ExpressionInterface) (int64, error) {
 	}
 	return ce.GetConstValue(), nil
 }
-
-func GetConstName(expr ExpressionInterface) (string, error) {
-	cv, ok := expr.(*ConstValue)
-	if !ok {
-		return "", fmt.Errorf("not a constant value")
-	}
-	return cv.name, nil
-}

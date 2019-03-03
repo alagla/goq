@@ -42,6 +42,7 @@ func AnalyzeCondExpr(exprYAML *QuplaCondExprYAML, module ModuleInterface, scope 
 	if IsNullExpr(ret.elseExpr) {
 		ret.elseExpr.(*QuplaNullExpr).SetSize(ret.thenExpr.Size())
 	}
+	ret.hasState = ret.ifExpr.HasState() || ret.thenExpr.HasState() || ret.elseExpr.HasState()
 	return ret, nil
 }
 func (e *QuplaCondExpr) Size() int64 {

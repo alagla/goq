@@ -29,6 +29,7 @@ func AnalyzeConcatExpr(exprYAML *QuplaConcatExprYAML, module ModuleInterface, sc
 	if ret.rhsExpr.Size() == 0 || ret.lhsExpr.Size() == 0 {
 		return nil, fmt.Errorf("size of concat opeation can't be 0: scope '%v'", scope.GetName())
 	}
+	ret.hasState = ret.lhsExpr.HasState() || ret.rhsExpr.HasState()
 	return ret, nil
 }
 

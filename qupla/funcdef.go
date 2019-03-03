@@ -4,7 +4,6 @@ import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
-	"strings"
 )
 
 type QuplaFuncDef struct {
@@ -16,6 +15,7 @@ type QuplaFuncDef struct {
 	localVars  []*VarInfo
 	numParams  int64 // idx < numParams represents parameter, idx >= represents local var (assign)
 	bufLen     int64 // total length of the local var buffer
+	hasState   bool
 }
 
 func (def *QuplaFuncDef) SetName(name string) {
@@ -27,6 +27,10 @@ func (def *QuplaFuncDef) GetName() string {
 		return "(undef)"
 	}
 	return def.name
+}
+
+func (def *QuplaFuncDef) HasState() bool {
+	return def.hasState
 }
 
 func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) error {
@@ -118,11 +122,8 @@ func (def *QuplaFuncDef) GetVarInfo(name string) (*VarInfo, error) {
 		// param
 		ret.Assign = nil
 	} else {
-		// local var
+		// local var (can be state)
 		realVarName := name
-		if ret.IsState {
-			realVarName = strings.TrimSuffix(name, stateVarNewValueSuffix)
-		}
 		e, ok := def.yamlSource.Assigns[realVarName]
 		if !ok {
 			return nil, fmt.Errorf("inconsistency with vars")
@@ -140,8 +141,6 @@ func (def *QuplaFuncDef) GetVarInfo(name string) (*VarInfo, error) {
 	}
 	return ret, nil
 }
-
-const stateVarNewValueSuffix = "$$$_$$$"
 
 func (def *QuplaFuncDef) createVarScope() error {
 	src := def.yamlSource
@@ -162,9 +161,7 @@ func (def *QuplaFuncDef) createVarScope() error {
 		})
 	}
 	// the rest of indices belong to local vars (incl state)
-	// state variables. Creating two entries for each:
-	//    'name' for old value
-	//    'name$$$_$$$ for new value
+	// state variables
 	var idx int64
 	for name, s := range src.State {
 		idx = def.GetVarIdx(name)
@@ -173,12 +170,10 @@ func (def *QuplaFuncDef) createVarScope() error {
 		} else {
 			// for old value
 			def.localVars = append(def.localVars, &VarInfo{
-				Idx:        int64(len(def.localVars)),
-				Name:       name,
-				Size:       s.Size,
-				IsState:    true,
-				IsNewValue: false,
-				Analyzed:   true,
+				Idx:     int64(len(def.localVars)),
+				Name:    name,
+				Size:    s.Size,
+				IsState: true,
 			})
 		}
 		def.module.IncStat("numStateVars")
@@ -194,18 +189,6 @@ func (def *QuplaFuncDef) createVarScope() error {
 			if !vi.IsState {
 				return fmt.Errorf("several assignment to the same var '%v' in '%v' is not allowed", name, def.name)
 			}
-			// ! isParam && isState
-			// creating another variable for new value with name+'$$$_$$$'
-			if def.VarByName(name+stateVarNewValueSuffix) != nil {
-				return fmt.Errorf("internal inconsistency with state vars: '%v' in '%v'", name, def.name)
-			}
-			def.localVars = append(def.localVars, &VarInfo{
-				Idx:        int64(len(def.localVars)),
-				Name:       name + stateVarNewValueSuffix,
-				Size:       vi.Size,
-				IsState:    true,
-				IsNewValue: true,
-			})
 		} else {
 			def.localVars = append(def.localVars, &VarInfo{
 				Idx:     int64(len(def.localVars)),
@@ -221,19 +204,10 @@ func (def *QuplaFuncDef) createVarScope() error {
 
 func (def *QuplaFuncDef) analyzeAssigns() error {
 	var err error
-	var vi *VarInfo
 	for name := range def.yamlSource.Assigns {
-		if vi, err = def.GetVarInfo(name); err != nil {
+		// GetVarInfo analyzes expression if necessary
+		if _, err = def.GetVarInfo(name); err != nil {
 			return err
-		}
-		if vi.IsState {
-			// looking for newValue variable
-			if vi, err = def.GetVarInfo(name + stateVarNewValueSuffix); err != nil {
-				return err
-			}
-		}
-		if vi.Assign.Size() != vi.Size {
-			return fmt.Errorf("sizes doesn't match for var '%v' in '%v'", name, def.GetName())
 		}
 	}
 	return nil
@@ -243,12 +217,29 @@ func (def *QuplaFuncDef) finalizeLocalVars() error {
 	var curOffset int64
 	for _, v := range def.localVars {
 		if v.Size == 0 {
+			v.Size = v.Assign.Size()
+		}
+		if v.Size == 0 {
 			return fmt.Errorf("can't determine var size '%v': '%v'", v.Name, def.GetName())
 		}
 		v.Offset = curOffset
 		curOffset += v.Size
+		def.hasState = def.hasState || v.IsState
+		if !v.IsParam {
+			if v.Assign == nil {
+				return fmt.Errorf("variable '%v' in '%v' is not assigned", v.Name, def.GetName())
+			}
+			def.hasState = def.hasState || v.Assign.HasState()
+		}
+		if v.Assign != nil && v.Assign.Size() != v.Size {
+			return fmt.Errorf("sizes doesn't match for var '%v' in '%v'", v.Name, def.GetName())
+		}
 	}
 	def.bufLen = int64(curOffset)
+
+	if def.hasState {
+		def.module.IncStat("numStatefulFunDef")
+	}
 	return nil
 }
 

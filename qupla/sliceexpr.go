@@ -32,9 +32,9 @@ func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module ModuleInterface, scop
 		return nil, fmt.Errorf("can't find local variable '%v' in scope '%v'", exprYAML.Var, scope.GetName())
 	}
 	ret.varScope = scope.(*QuplaFuncDef)
-	if ret.offset+ret.size > vi.Size {
-		return nil, fmt.Errorf("wrong offset/size for the slice of '%v'", exprYAML.Var)
-	}
+	//if ret.offset+ret.size > vi.Size {
+	//	return nil, fmt.Errorf("wrong offset/size for the slice of '%v'", exprYAML.Var)
+	//}
 	return ret, nil
 }
 

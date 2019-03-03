@@ -19,6 +19,7 @@ func AnalyzeFieldExpr(exprYAML *QuplaFieldExprYAML, module ModuleInterface, scop
 	if err != nil {
 		return nil, err
 	}
+	ret.hasState = ret.condExpr.HasState()
 	return ret, nil
 }
 

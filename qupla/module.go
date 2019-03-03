@@ -190,6 +190,7 @@ func (module *QuplaModule) Execute(test bool) {
 				infof("Duration %v", duration)
 			}
 		}
+		module.processor.Reset()
 	}
 	infof("Total tests and evals: %v", len(module.execs))
 	var p string

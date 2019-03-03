@@ -18,20 +18,21 @@ type ModuleInterface interface {
 	IncStat(string)
 }
 type VarInfo struct {
-	Name       string
-	Analyzed   bool
-	Idx        int64
-	Offset     int64
-	Size       int64
-	IsState    bool
-	IsNewValue bool
-	IsParam    bool
-	Assign     ExpressionInterface
+	Name     string
+	Analyzed bool
+	Idx      int64
+	Offset   int64
+	Size     int64
+	IsState  bool
+	IsParam  bool
+	HasState bool
+	Assign   ExpressionInterface
 }
 type FuncDefInterface interface {
 	GetName() string
 	Size() int64
 	GetVarInfo(string) (*VarInfo, error)
+	HasState() bool
 }
 
 type LUTInterface interface {
@@ -43,6 +44,7 @@ type ExpressionInterface interface {
 	GetSource() string
 	Size() int64
 	Eval(ProcessorInterface, Trits) bool
+	HasState() bool
 }
 
 type ProcessorInterface interface {
@@ -51,6 +53,7 @@ type ProcessorInterface interface {
 	Slice(int64, int64) Trits
 	LevelPrefix() string
 	SetTrace(bool, int)
+	Reset()
 }
 
 func MatchSizes(e1, e2 ExpressionInterface) error {

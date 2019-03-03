@@ -17,14 +17,18 @@ type CallFrame struct {
 }
 
 type StackProcessor struct {
-	levelFunc  int
-	level      int
-	numfuncall int
-	numvarcall int
-	curFrame   *CallFrame
-	trace      bool
-	maxTraces  int
-	curTraces  int
+	curFrame      *CallFrame
+	curStateParam Trits
+	// aux
+	levelFunc    int
+	maxLevelFunc int
+	level        int
+	maxLevel     int
+	numfuncall   int
+	numvarcall   int
+	trace        bool
+	maxTraces    int
+	curTraces    int
 }
 
 func NewStackProcessor() *StackProcessor {
@@ -36,32 +40,39 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 	if isFunction {
 		proc.numfuncall++
 		proc.levelFunc++
+		if proc.levelFunc > proc.maxLevelFunc {
+			proc.maxLevelFunc = proc.levelFunc
+		}
 		proc.tracef("IN funExpr '%v'", funExpr.name)
+
 		proc.curFrame = funExpr.NewCallFrame(proc.curFrame)
 	} else {
 		proc.level++
+	}
+	if proc.level > proc.maxLevel {
+		proc.maxLevel = proc.level
 	}
 	null := expr.Eval(proc, result)
 	if isFunction {
 		proc.tracef("OUT funExpr '%v' null = %v res = '%v'", funExpr.name, null, utils.TritsToString(result))
 		proc.levelFunc--
 		proc.curFrame = proc.curFrame.parent
-		if proc.curFrame == nil {
-			proc.reportAndResetStats()
-		}
 	} else {
 		proc.level--
 	}
 	return null
 }
 
-func (proc *StackProcessor) reportAndResetStats() {
-	debugf("Proc stats: numfuncall = %v numvarcall = %v levelFunc = %v level = %v",
-		proc.numfuncall, proc.numvarcall, proc.levelFunc, proc.level)
+func (proc *StackProcessor) Reset() {
+	// not reset state var storage
+	debugf("Proc stats: numfuncall = %v numvarcall = %v maxLevelFunc = %v maxLevel = %v",
+		proc.numfuncall, proc.numvarcall, proc.maxLevelFunc, proc.maxLevel)
 	proc.numfuncall = 0
 	proc.numvarcall = 0
 	proc.levelFunc = 0
 	proc.level = 0
+	proc.maxLevelFunc = 0
+	proc.maxLevel = 0
 }
 
 func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {

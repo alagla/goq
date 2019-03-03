@@ -41,6 +41,7 @@ func AnalyzeLutExpr(exprYAML *QuplaLutExprYAML, module ModuleInterface, scope Fu
 			return nil, fmt.Errorf("LUT expression with '%v': %v", ret.lutDef.name, err)
 		}
 		ret.argExpr = append(ret.argExpr, ae)
+		ret.hasState = ret.hasState || ae.HasState()
 	}
 	if ret.lutDef.inputSize != len(ret.argExpr) {
 		return nil, fmt.Errorf("num arg doesnt't match input dimension of the LUT %v", ret.lutDef.name)

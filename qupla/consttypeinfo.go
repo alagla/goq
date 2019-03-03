@@ -39,6 +39,10 @@ func (e *ConstTypeInfo) Eval(_ ProcessorInterface, _ Trits) bool {
 	return true
 }
 
+func (e *ConstTypeInfo) HasState() bool {
+	return false
+}
+
 func (e *ConstTypeInfo) GetFieldInfo(fldname string) (*ConstTypeFieldInfo, error) {
 	fi, ok := e.fields[fldname]
 	if !ok {

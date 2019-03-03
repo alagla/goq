@@ -1,6 +1,7 @@
 package qupla
 
 import (
+	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
@@ -28,6 +29,9 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 	if err != nil {
 		return err
 	}
+	if _, ok := res.expr.(*QuplaFuncExpr); !ok {
+		return fmt.Errorf("top expression must be call to a function: '%v'", execStmtYAML.Source)
+	}
 	res.isTest = execStmtYAML.Expected != nil
 	if res.isTest {
 		res.exprExpected, err = module.factory.AnalyzeExpression(execStmtYAML.Expected, module, nil)
@@ -48,9 +52,7 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 }
 
 func (ex *QuplaExecStmt) Execute() (time.Duration, bool, error) {
-
 	//ex.module.processor.SetTrace(ex.num == 0, 0)
-
 	debugf("-------------")
 	debugf("running #%v: '%v'", ex.num, ex.GetSource())
 

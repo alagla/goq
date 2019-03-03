@@ -58,6 +58,7 @@ func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module ModuleInterface, scope 
 			expr:   fe, // TODO must be condExpr by syntax. Not exactly ConditionExpression
 		}
 		sumFld += fi.size
+		ret.hasState = ret.hasState || fe.HasState()
 	}
 	if sumFld != ret.size {
 		return nil, fmt.Errorf("sum of field sizes != type size in field expression '%v'", ret.source)
