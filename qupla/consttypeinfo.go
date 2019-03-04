@@ -39,7 +39,7 @@ func (e *ConstTypeInfo) Eval(_ ProcessorInterface, _ Trits) bool {
 	return true
 }
 
-func (e *ConstTypeInfo) HasState() bool {
+func (e *ConstTypeInfo) References(_ string) bool {
 	return false
 }
 

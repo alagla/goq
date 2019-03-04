@@ -11,9 +11,10 @@ import (
 
 type QuplaExecStmt struct {
 	QuplaExprBase
-	source       string
-	isTest       bool
-	expr         ExpressionInterface
+	source string
+	isTest bool
+	//expr         ExpressionInterface
+	funcExpr     *QuplaFuncExpr
 	exprExpected ExpressionInterface
 	module       *QuplaModule
 	num          int
@@ -25,11 +26,13 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 		module:        module,
 	}
 	var err error
-	res.expr, err = module.factory.AnalyzeExpression(execStmtYAML.Expr, module, nil)
+	var expr ExpressionInterface
+	var ok bool
+	expr, err = module.factory.AnalyzeExpression(execStmtYAML.Expr, module, nil)
 	if err != nil {
 		return err
 	}
-	if _, ok := res.expr.(*QuplaFuncExpr); !ok {
+	if res.funcExpr, ok = expr.(*QuplaFuncExpr); !ok {
 		return fmt.Errorf("top expression must be call to a function: '%v'", execStmtYAML.Source)
 	}
 	res.isTest = execStmtYAML.Expected != nil
@@ -39,7 +42,7 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 			return err
 		}
 		// check sizes
-		if err = MatchSizes(res.expr, res.exprExpected); err != nil {
+		if err = MatchSizes(res.funcExpr, res.exprExpected); err != nil {
 			return err
 		}
 		module.IncStat("numTest")
@@ -48,14 +51,11 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 		module.IncStat("numEval")
 	}
 	module.AddExec(res)
-	if res.num == 6 {
-		fmt.Printf("kuku\n")
-	}
 	return nil
 }
 
 func (ex *QuplaExecStmt) HasState() bool {
-	return ex.expr.HasState()
+	return ex.funcExpr.funcDef.hasState
 }
 
 func (ex *QuplaExecStmt) Execute() (time.Duration, bool, error) {
@@ -64,8 +64,8 @@ func (ex *QuplaExecStmt) Execute() (time.Duration, bool, error) {
 
 	start := time.Now()
 
-	resExpr := make(Trits, ex.expr.Size(), ex.expr.Size())
-	null := ex.module.processor.Eval(ex.expr, resExpr)
+	resExpr := make(Trits, ex.funcExpr.Size(), ex.funcExpr.Size())
+	null := ex.module.processor.Eval(ex.funcExpr, resExpr)
 
 	if null {
 		debugf("eval result is null")
@@ -78,7 +78,7 @@ func (ex *QuplaExecStmt) Execute() (time.Duration, bool, error) {
 	}
 	passed := false
 	if ex.isTest {
-		resExpected := make(Trits, ex.expr.Size(), ex.exprExpected.Size())
+		resExpected := make(Trits, ex.funcExpr.Size(), ex.exprExpected.Size())
 		null = ex.module.processor.Eval(ex.exprExpected, resExpected)
 
 		exp, err := utils.TritsToBigInt(resExpected)

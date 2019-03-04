@@ -43,7 +43,7 @@ type ExpressionInterface interface {
 	GetSource() string
 	Size() int64
 	Eval(ProcessorInterface, Trits) bool
-	HasState() bool
+	References(string) bool
 }
 
 type ProcessorInterface interface {

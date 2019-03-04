@@ -43,18 +43,6 @@ func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module ModuleInterface, scope 
 	return ret, err
 }
 
-func (e *QuplaFuncExpr) HasState() bool {
-	if e.funcDef.HasState() {
-		return true
-	}
-	for _, arg := range e.subexpr {
-		if arg.HasState() {
-			return true
-		}
-	}
-	return false
-}
-
 func (e *QuplaFuncExpr) Size() int64 {
 	if e == nil {
 		return 0
@@ -74,4 +62,11 @@ func (e *QuplaFuncExpr) NewCallFrame(parent *CallFrame) *CallFrame {
 
 func (e *QuplaFuncExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	return proc.Eval(e.funcDef.retExpr, result)
+}
+
+func (e *QuplaFuncExpr) References(funName string) bool {
+	if e.funcDef.name == funName {
+		return true
+	}
+	return e.ReferencesSubExprs(funName)
 }

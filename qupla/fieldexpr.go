@@ -32,7 +32,3 @@ func (e *QuplaFieldExpr) Size() int64 {
 func (e *QuplaFieldExpr) Eval(_ ProcessorInterface, _ Trits) bool {
 	return true
 }
-
-func (e *QuplaFieldExpr) HasState() bool {
-	return e.condExpr.HasState()
-}

@@ -29,10 +29,6 @@ func AnalyzeConcatExpr(exprYAML *QuplaConcatExprYAML, module ModuleInterface, sc
 	return ret, nil
 }
 
-func (e *QuplaConcatExpr) HasState() bool {
-	return e.subexpr[0].HasState() || e.subexpr[1].HasState()
-}
-
 func (e *QuplaConcatExpr) Size() int64 {
 	if e == nil {
 		return 0

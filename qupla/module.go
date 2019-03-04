@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
+	. "github.com/lunfardo314/goq/utils"
 	"time"
 )
 
@@ -66,6 +67,11 @@ func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) 
 		}
 	}
 	infof("Additionally, were analyzed %v function definitions", len(ret.functions)-analyzedFunDefs)
+
+	infof("Determining stateful function definitions")
+	numWithStateVars, numStateful := ret.markStateful()
+	infof("Found %v func def with state vars and %v stateful function definition (which references them)",
+		numWithStateVars, numStateful)
 
 	return ret, retSucc
 }
@@ -243,4 +249,40 @@ func (module *QuplaModule) PrintStats() {
 	for k, v := range module.stats {
 		fmt.Printf("  %v : %v\n", k, v)
 	}
+}
+
+func (module *QuplaModule) markStateful() (int, int) {
+	stateful := make(StringSet)
+	for name, fd := range module.functions {
+		if fd.hasStateVariables {
+			stateful.Append(name)
+		}
+	}
+	hasStateVars := len(stateful)
+	newCollected := module.collectReferencingFuncs(stateful)
+	for ; newCollected > 0; newCollected = module.collectReferencingFuncs(stateful) {
+	}
+
+	for name := range stateful {
+		module.functions[name].hasState = true
+	}
+	return hasStateVars, len(stateful)
+}
+
+func (module *QuplaModule) collectReferencingFuncs(nameSet StringSet) int {
+	tmpList := make([]string, 0)
+	for name := range nameSet {
+		tmpList = append(tmpList, name)
+	}
+	ret := 0
+	for _, statefulName := range tmpList {
+		for name, fd := range module.functions {
+			if fd.References(statefulName) {
+				if nameSet.Append(name) {
+					ret++
+				}
+			}
+		}
+	}
+	return ret
 }

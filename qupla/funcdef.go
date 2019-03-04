@@ -34,12 +34,13 @@ func (def *QuplaFuncDef) HasState() bool {
 	return def.hasStateVariables || def.hasState
 }
 
-func (def *QuplaFuncDef) MarkStateful() {
-	def.hasState = true
-}
-
-func (def *QuplaFuncDef) References(another *QuplaFuncDef) {
-	// TODO def references another in the same scope of def
+func (def *QuplaFuncDef) References(funName string) bool {
+	for _, vi := range def.localVars {
+		if vi.Assign != nil && vi.Assign.References(funName) {
+			return true
+		}
+	}
+	return def.retExpr.References(funName)
 }
 
 func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) error {

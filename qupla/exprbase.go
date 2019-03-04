@@ -26,6 +26,15 @@ func (e *QuplaExprBase) HasSubExpr() bool {
 	return len(e.subexpr) > 0
 }
 
-func (e *QuplaExprBase) HasState() bool {
+func (e *QuplaExprBase) ReferencesSubExprs(funName string) bool {
+	for _, se := range e.subexpr {
+		if se.References(funName) {
+			return true
+		}
+	}
 	return false
+}
+
+func (e *QuplaExprBase) References(funName string) bool {
+	return e.ReferencesSubExprs(funName)
 }

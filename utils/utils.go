@@ -62,6 +62,11 @@ func TritsToBigInt(t Trits) (*big.Int, error) {
 
 type StringSet map[string]struct{}
 
+func (s StringSet) Contains(el string) bool {
+	_, exists := s[el]
+	return exists
+}
+
 func (s StringSet) Append(el string) bool {
 	_, exists := s[el]
 	s[el] = struct{}{}

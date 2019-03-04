@@ -48,15 +48,6 @@ func AnalyzeLutExpr(exprYAML *QuplaLutExprYAML, module ModuleInterface, scope Fu
 	return ret, nil
 }
 
-func (e *QuplaLutExpr) HasState() bool {
-	for _, arg := range e.argExpr {
-		if arg.HasState() {
-			return true
-		}
-	}
-	return false
-}
-
 func (e *QuplaLutExpr) Size() int64 {
 	if e == nil {
 		return 0

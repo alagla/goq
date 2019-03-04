@@ -62,15 +62,6 @@ func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module ModuleInterface, scope 
 	return ret, nil
 }
 
-func (e *QuplaTypeExpr) HasState() bool {
-	for _, fld := range e.subexpr {
-		if fld.HasState() {
-			return true
-		}
-	}
-	return false
-}
-
 func (e *QuplaTypeExpr) Size() int64 {
 	if e == nil {
 		return 0

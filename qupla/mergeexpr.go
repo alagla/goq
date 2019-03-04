@@ -48,7 +48,3 @@ func (e *QuplaMergeExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	}
 	return false
 }
-
-func (e *QuplaMergeExpr) HasState() bool {
-	return e.subexpr[0].HasState() || e.subexpr[1].HasState()
-}

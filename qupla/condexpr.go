@@ -47,10 +47,6 @@ func AnalyzeCondExpr(exprYAML *QuplaCondExprYAML, module ModuleInterface, scope 
 	return ret, nil
 }
 
-func (e *QuplaCondExpr) HasState() bool {
-	return e.subexpr[0].HasState() || e.subexpr[1].HasState() || e.subexpr[2].HasState()
-}
-
 func (e *QuplaCondExpr) Size() int64 {
 	if e == nil {
 		return 0
