@@ -51,9 +51,6 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 		}
 	}(&err)
 
-	if name == "arcLeaf_243_8019" {
-		fmt.Printf("kuku\n")
-	}
 	module.IncStat("numFuncDef")
 
 	def := &QuplaFuncDef{
