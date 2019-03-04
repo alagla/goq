@@ -18,6 +18,7 @@ type QuplaExecStmtYAML struct {
 	Source   string               `yaml:"source"`
 	Expr     *QuplaExpressionYAML `yaml:"expr"`
 	Expected *QuplaExpressionYAML `yaml:"expected,omitempty"`
+	IsFloat  bool                 `yaml:"isFloat"`
 }
 
 type QuplaTypeFieldYAML struct {

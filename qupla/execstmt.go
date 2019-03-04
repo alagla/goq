@@ -13,8 +13,9 @@ import (
 
 type QuplaExecStmt struct {
 	QuplaExprBase
-	source string
-	isTest bool
+	source  string
+	isTest  bool
+	isFloat bool // needed for float comparison
 	//expr         ExpressionInterface
 	funcExpr     *QuplaFuncExpr
 	exprExpected ExpressionInterface
@@ -39,6 +40,7 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 	}
 	res.isTest = execStmtYAML.Expected != nil
 	if res.isTest {
+		res.isFloat = execStmtYAML.IsFloat
 		res.exprExpected, err = module.factory.AnalyzeExpression(execStmtYAML.Expected, module, nil)
 		if err != nil {
 			return err
@@ -106,6 +108,14 @@ func (ex *QuplaExecStmt) Execute() (bool, error) {
 	}
 	logf(2, "Expected result '%v' (dec = %v)", utils.TritsToString(resExpected), exp)
 	passed, _ = TritsEqual(resExpected, resExpr)
+	if !passed && ex.isFloat && len(resExpected) > 1 && len(resExpr) > 1 {
+		abs := resExpected[0] - resExpr[0]
+		if abs < 0 {
+			abs = -abs
+		}
+		passed, _ = TritsEqual(resExpected[1:], resExpr[1:])
+		passed = passed && abs <= 1
+	}
 	if passed {
 		logf(2, "Test #%v PASSED: '%v' Duration %v", ex.num, ex.GetSource(), time.Since(start))
 	} else {
