@@ -617,6 +617,9 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
         newline();
 
         if (exec.expected != null){
+            append("isFloat: " + exec.typeInfo.isFloat);
+            newline();
+
             append("expected: ");
             newline();
             indent();
