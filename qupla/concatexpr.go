@@ -1,7 +1,6 @@
 package qupla
 
 import (
-	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
@@ -9,44 +8,42 @@ import (
 
 type QuplaConcatExpr struct {
 	QuplaExprBase
-	lhsExpr ExpressionInterface
-	rhsExpr ExpressionInterface
 }
 
 func AnalyzeConcatExpr(exprYAML *QuplaConcatExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaConcatExpr, error) {
-	var err error
 	module.IncStat("numConcat")
 
 	ret := &QuplaConcatExpr{
 		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
 	}
-	if ret.lhsExpr, err = module.AnalyzeExpression(exprYAML.Lhs, scope); err != nil {
+	if lhsExpr, err := module.AnalyzeExpression(exprYAML.Lhs, scope); err != nil {
 		return nil, err
+	} else {
+		ret.AppendSubExpr(lhsExpr)
 	}
-	if ret.rhsExpr, err = module.AnalyzeExpression(exprYAML.Rhs, scope); err != nil {
+	if rhsExpr, err := module.AnalyzeExpression(exprYAML.Rhs, scope); err != nil {
 		return nil, err
-	}
-	if ret.rhsExpr.Size() == 0 || ret.lhsExpr.Size() == 0 {
-		return nil, fmt.Errorf("size of concat opeation can't be 0: scope '%v'", scope.GetName())
+	} else {
+		ret.AppendSubExpr(rhsExpr)
 	}
 	return ret, nil
 }
 
 func (e *QuplaConcatExpr) HasState() bool {
-	return e.lhsExpr.HasState() || e.rhsExpr.HasState()
+	return e.subexpr[0].HasState() || e.subexpr[1].HasState()
 }
 
 func (e *QuplaConcatExpr) Size() int64 {
 	if e == nil {
 		return 0
 	}
-	return e.lhsExpr.Size() + e.rhsExpr.Size()
+	return e.subexpr[0].Size() + e.subexpr[1].Size()
 }
 
 func (e *QuplaConcatExpr) Eval(proc ProcessorInterface, result Trits) bool {
-	null := proc.Eval(e.lhsExpr, result)
+	null := proc.Eval(e.subexpr[0], result)
 	if null {
 		return true
 	}
-	return proc.Eval(e.rhsExpr, result[e.lhsExpr.Size():])
+	return proc.Eval(e.subexpr[1], result[e.subexpr[0].Size():])
 }

@@ -9,65 +9,67 @@ import (
 
 type QuplaCondExpr struct {
 	QuplaExprBase
-	ifExpr   ExpressionInterface
-	thenExpr ExpressionInterface
-	elseExpr ExpressionInterface
 }
 
 func AnalyzeCondExpr(exprYAML *QuplaCondExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaCondExpr, error) {
-	var err error
 	module.IncStat("numCond")
 
 	ret := &QuplaCondExpr{
 		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
 	}
-	if ret.ifExpr, err = module.AnalyzeExpression(exprYAML.If, scope); err != nil {
+	if ifExpr, err := module.AnalyzeExpression(exprYAML.If, scope); err != nil {
 		return nil, err
+	} else {
+		ret.AppendSubExpr(ifExpr)
 	}
-	if ret.ifExpr.Size() != 1 {
+	if ret.subexpr[0].Size() != 1 {
 		return nil, fmt.Errorf("condition size must be 1 trit, funDef %v: '%v'", scope.GetName(), ret.source)
 	}
-	if ret.thenExpr, err = module.AnalyzeExpression(exprYAML.Then, scope); err != nil {
+	if thenExpr, err := module.AnalyzeExpression(exprYAML.Then, scope); err != nil {
 		return nil, err
+	} else {
+		ret.AppendSubExpr(thenExpr)
 	}
-	if ret.elseExpr, err = module.AnalyzeExpression(exprYAML.Else, scope); err != nil {
+	if elseExpr, err := module.AnalyzeExpression(exprYAML.Else, scope); err != nil {
 		return nil, err
+	} else {
+		ret.AppendSubExpr(elseExpr)
 	}
-	if IsNullExpr(ret.thenExpr) && IsNullExpr(ret.elseExpr) {
+	if IsNullExpr(ret.subexpr[1]) && IsNullExpr(ret.subexpr[2]) {
 		return nil, fmt.Errorf("can't be both branches null. Dunc def '%v': '%v'", scope.GetName(), ret.source)
 	}
-	if IsNullExpr(ret.thenExpr) {
-		ret.thenExpr.(*QuplaNullExpr).SetSize(ret.elseExpr.Size())
+	if IsNullExpr(ret.subexpr[1]) {
+		ret.subexpr[1].(*QuplaNullExpr).SetSize(ret.subexpr[1].Size())
 	}
-	if IsNullExpr(ret.elseExpr) {
-		ret.elseExpr.(*QuplaNullExpr).SetSize(ret.thenExpr.Size())
+	if IsNullExpr(ret.subexpr[2]) {
+		ret.subexpr[2].(*QuplaNullExpr).SetSize(ret.subexpr[1].Size())
 	}
 	return ret, nil
 }
 
 func (e *QuplaCondExpr) HasState() bool {
-	return e.ifExpr.HasState() || e.thenExpr.HasState() || e.elseExpr.HasState()
+	return e.subexpr[0].HasState() || e.subexpr[1].HasState() || e.subexpr[2].HasState()
 }
 
 func (e *QuplaCondExpr) Size() int64 {
 	if e == nil {
 		return 0
 	}
-	return e.thenExpr.Size()
+	return e.subexpr[1].Size()
 }
 
 func (e *QuplaCondExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	var buf [1]int8
-	null := proc.Eval(e.ifExpr, buf[:])
+	null := proc.Eval(e.subexpr[0], buf[:])
 	if null {
 		return true
 	}
 	// bool is 0/1
 	switch buf[0] {
 	case 1:
-		return proc.Eval(e.thenExpr, result)
+		return proc.Eval(e.subexpr[1], result)
 	case 0:
-		return proc.Eval(e.elseExpr, result)
+		return proc.Eval(e.subexpr[2], result)
 	case -1:
 		return true
 	}

@@ -12,7 +12,6 @@ type QuplaFuncExpr struct {
 	source  string
 	name    string
 	funcDef *QuplaFuncDef
-	args    []ExpressionInterface
 }
 
 func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaFuncExpr, error) {
@@ -34,14 +33,13 @@ func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module ModuleInterface, scope 
 	var fe ExpressionInterface
 	module.IncStat("numFuncExpr")
 
-	ret.args = make([]ExpressionInterface, 0, len(exprYAML.Args))
 	for _, arg := range exprYAML.Args {
 		if fe, err = module.AnalyzeExpression(arg, scope); err != nil {
 			return nil, err
 		}
-		ret.args = append(ret.args, fe)
+		ret.AppendSubExpr(fe)
 	}
-	err = ret.funcDef.checkArgSizes(ret.args)
+	err = ret.funcDef.checkArgSizes(ret.subexpr)
 	return ret, err
 }
 
@@ -49,7 +47,7 @@ func (e *QuplaFuncExpr) HasState() bool {
 	if e.funcDef.HasState() {
 		return true
 	}
-	for _, arg := range e.args {
+	for _, arg := range e.subexpr {
 		if arg.HasState() {
 			return true
 		}

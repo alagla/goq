@@ -95,7 +95,7 @@ func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 		return ret, isNull
 	}
 	if vi.IsParam {
-		expr := proc.curFrame.context.args[vi.Idx]
+		expr := proc.curFrame.context.subexpr[vi.Idx]
 		proc.tracef("EvalVar %v(idx=%v) in '%v' param=true expr = '%v'",
 			vi.Name, idx, proc.curFrame.context.funcDef.name, expr.GetSource())
 		saveCurFrame := proc.curFrame

@@ -9,32 +9,26 @@ import (
 
 type QuplaMergeExpr struct {
 	QuplaExprBase
-	lhsExpr ExpressionInterface
-	rhsExpr ExpressionInterface
 }
 
 func AnalyzeMergeExpr(exprYAML *QuplaMergeExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaMergeExpr, error) {
-	var err error
 	module.IncStat("numMergeExpr")
 
 	ret := &QuplaMergeExpr{
 		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
 	}
-	ret.lhsExpr, err = module.AnalyzeExpression(exprYAML.Lhs, scope)
-	if err != nil {
+
+	if lhsExpr, err := module.AnalyzeExpression(exprYAML.Lhs, scope); err != nil {
 		return nil, err
+	} else {
+		ret.AppendSubExpr(lhsExpr)
 	}
-	if IsNullExpr(ret.lhsExpr) {
-		return nil, fmt.Errorf("constant null in merge expression, scope %v", scope.GetName())
-	}
-	ret.rhsExpr, err = module.AnalyzeExpression(exprYAML.Rhs, scope)
-	if err != nil {
+	if rhsExpr, err := module.AnalyzeExpression(exprYAML.Rhs, scope); err != nil {
 		return nil, err
+	} else {
+		ret.AppendSubExpr(rhsExpr)
 	}
-	if IsNullExpr(ret.rhsExpr) {
-		return nil, fmt.Errorf("constant null in merge expression, scope %v", scope.GetName())
-	}
-	if ret.lhsExpr.Size() != ret.rhsExpr.Size() {
+	if ret.subexpr[0].Size() != ret.subexpr[1].Size() {
 		return nil, fmt.Errorf("operand sizes must be equal in merge expression, scope %v", scope.GetName())
 	}
 	return ret, nil
@@ -44,17 +38,17 @@ func (e *QuplaMergeExpr) Size() int64 {
 	if e == nil {
 		return 0
 	}
-	return e.lhsExpr.Size()
+	return e.subexpr[0].Size()
 }
 
 func (e *QuplaMergeExpr) Eval(proc ProcessorInterface, result Trits) bool {
-	null := proc.Eval(e.lhsExpr, result)
+	null := proc.Eval(e.subexpr[0], result)
 	if null {
-		return proc.Eval(e.rhsExpr, result)
+		return proc.Eval(e.subexpr[1], result)
 	}
 	return false
 }
 
 func (e *QuplaMergeExpr) HasState() bool {
-	return e.lhsExpr.HasState() || e.rhsExpr.HasState()
+	return e.subexpr[0].HasState() || e.subexpr[1].HasState()
 }

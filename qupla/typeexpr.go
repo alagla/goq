@@ -10,18 +10,17 @@ import (
 type fieldExpr struct {
 	offset int64
 	size   int64
-	expr   ExpressionInterface
 }
 type QuplaTypeExpr struct {
 	QuplaExprBase
 	size   int64
-	fields map[string]*fieldExpr
+	fields []fieldExpr
 }
 
 func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaTypeExpr, error) {
 	ret := &QuplaTypeExpr{
 		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
-		fields:        make(map[string]*fieldExpr),
+		fields:        make([]fieldExpr, 0, len(exprYAML.Fields)),
 	}
 	var err error
 	module.IncStat("numTypeExpr")
@@ -51,12 +50,10 @@ func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module ModuleInterface, scope 
 		if fe.Size() != fi.size {
 			return nil, fmt.Errorf("field '%v' size mismatch in type expression '%v'", fldName, exprYAML.Source)
 		}
-
-		ret.fields[fldName] = &fieldExpr{
+		ret.fields = append(ret.fields, fieldExpr{
 			offset: fi.offset,
 			size:   fi.size,
-			expr:   fe, // TODO must be condExpr by syntax. Not exactly ConditionExpression
-		}
+		})
 		sumFld += fi.size
 	}
 	if sumFld != ret.size {
@@ -66,8 +63,8 @@ func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module ModuleInterface, scope 
 }
 
 func (e *QuplaTypeExpr) HasState() bool {
-	for _, fld := range e.fields {
-		if fld.expr.HasState() {
+	for _, fld := range e.subexpr {
+		if fld.HasState() {
 			return true
 		}
 	}
@@ -82,8 +79,8 @@ func (e *QuplaTypeExpr) Size() int64 {
 }
 
 func (e *QuplaTypeExpr) Eval(proc ProcessorInterface, result Trits) bool {
-	for _, fi := range e.fields {
-		if proc.Eval(fi.expr, result[fi.offset:fi.offset+fi.size]) {
+	for idx, subExpr := range e.subexpr {
+		if proc.Eval(subExpr, result[e.fields[idx].offset:e.fields[idx].offset+e.fields[idx].size]) {
 			return true
 		}
 	}
