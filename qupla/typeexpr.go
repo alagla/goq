@@ -54,6 +54,7 @@ func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module ModuleInterface, scope 
 			offset: fi.offset,
 			size:   fi.size,
 		})
+		ret.AppendSubExpr(fe)
 		sumFld += fi.size
 	}
 	if sumFld != ret.size {

@@ -65,7 +65,7 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 
 func (proc *StackProcessor) Reset() {
 	// not reset state var storage
-	debugf("Proc stats: numfuncall = %v numvarcall = %v maxLevelFunc = %v maxLevel = %v",
+	logf(2, "Proc stats: numfuncall = %v numvarcall = %v maxLevelFunc = %v maxLevel = %v",
 		proc.numfuncall, proc.numvarcall, proc.maxLevelFunc, proc.maxLevel)
 	proc.numfuncall = 0
 	proc.numvarcall = 0
@@ -140,7 +140,7 @@ func (proc *StackProcessor) tracef(format string, args ...interface{}) {
 	if !proc.trace {
 		return
 	}
-	tracef("proc-> "+proc.LevelPrefix()+format, args...)
+	logf(0, "proc-> "+proc.LevelPrefix()+format, args...)
 	proc.trace = proc.maxTraces <= 0 || proc.curTraces < proc.maxTraces
 	proc.curTraces++
 }

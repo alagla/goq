@@ -3,6 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
+	"github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/quplayaml"
 	. "github.com/lunfardo314/goq/utils"
 	"time"
@@ -46,7 +47,7 @@ func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) 
 	//}
 
 	retSucc := true
-	infof("Analyzing tests and evals..")
+	logf(0, "Analyzing execs (tests and evals)..")
 	for _, execYAML := range moduleYAML.Execs {
 		err := AnalyzeExecStmt(execYAML, ret)
 		if err != nil {
@@ -56,9 +57,9 @@ func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) 
 		}
 	}
 	analyzedFunDefs := len(ret.functions)
-	infof("Number of function definitions directly or indirectly referenced by execs: %v", analyzedFunDefs)
+	logf(0, "Number of function definitions directly or indirectly referenced by execs: %v", analyzedFunDefs)
 
-	infof("Analyzing all function definitions, which were not analyzed yet..")
+	logf(0, "Analyzing all function definitions, which were not analyzed yet")
 	for funName := range moduleYAML.Functions {
 		if _, err := ret.FindFuncDef(funName); err != nil {
 			ret.IncStat("numErr")
@@ -66,11 +67,11 @@ func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) 
 			retSucc = false
 		}
 	}
-	infof("Additionally, were analyzed %v function definitions", len(ret.functions)-analyzedFunDefs)
+	logf(0, "Additionally were analyzed %v function definitions", len(ret.functions)-analyzedFunDefs)
 
-	infof("Determining stateful function definitions")
+	logf(0, "Determining stateful function definitions")
 	numWithStateVars, numStateful := ret.markStateful()
-	infof("Found %v func def with state vars and %v stateful function definition (which references them)",
+	logf(0, "Found %v func def with state vars and %v stateful function definition (which references them)",
 		numWithStateVars, numStateful)
 
 	return ret, retSucc
@@ -182,59 +183,61 @@ func (module *QuplaModule) FindLUTDef(name string) (LUTInterface, error) {
 	return ret, nil
 }
 
-func (module *QuplaModule) Execute(test bool) {
-	if test {
-		infof("Executing tests..")
-	} else {
-		infof("Executing evals and tests (total %v)..", len(module.execs))
+func (module *QuplaModule) Execute() {
+	switch {
+	case cfg.Config.ExecEvals && cfg.Config.ExecTests:
+		logf(0, "Executing evals and tests (total %v)", len(module.execs))
+	case cfg.Config.ExecEvals && !cfg.Config.ExecTests:
+		logf(0, "Executing evals only")
+	case !cfg.Config.ExecEvals && cfg.Config.ExecTests:
+		logf(0, "Executing tests only")
+	case !cfg.Config.ExecEvals && !cfg.Config.ExecTests:
+		logf(0, "Wrong config values. Assume: executing tests only")
 	}
 
 	testsPassed := 0
+	testsFailed := 0
 	testsSkipped := 0
 	totalTests := 0
 	start := time.Now()
 
 	for _, exec := range module.execs {
-		if exec.num == 7 {
-			fmt.Printf("kuku\n")
-		}
-		infof("-----------------------")
-		infof("Check exec statement: '%v'", exec.GetSource())
+		logf(2, "-----------------------")
 
 		if exec.HasState() {
-			infof("SKIP because it has state: '%v'", exec.GetSource())
+			logf(1, "SKIP stateful exec statement: '%v'", exec.GetSource())
 			testsSkipped++
 			continue
 		}
-		if duration, passed, err := exec.Execute(); err != nil {
-			errorf("Error: %v", err)
+		if passed, err := exec.Execute(); err != nil {
+			logf(0, "Error: %v", err)
 		} else {
 			if exec.isTest {
 				totalTests++
 				if passed {
 					testsPassed++
-					infof("Test PASSED. Duration %v", duration)
 				} else {
-					infof("Test FAILED. Duration %v", duration)
+					testsFailed++
 				}
-			} else {
-				infof("Duration %v", duration)
 			}
 		}
 		module.processor.Reset()
 	}
-	infof("Total tests and evals: %v", len(module.execs))
-	var p string
-	if testsPassed == 0 {
+	logf(0, "Total tests and evals: %v", len(module.execs))
+	var p, f string
+	if totalTests == 0 {
 		p = "n/a"
+		f = "n/a"
 	} else {
 		p = fmt.Sprintf("%v%%", (testsPassed*100)/totalTests)
+		f = fmt.Sprintf("%v%%", (testsFailed*100)/totalTests)
 	}
-	infof("---------------------")
-	infof("---------------------")
-	infof("Skipped: %v out of total %v executables", testsSkipped, len(module.execs))
-	infof("Tests PASSED: %v out of %v (%v)", testsPassed, totalTests, p)
-	infof("Total duration: %v ", time.Since(start))
+	logf(0, "---------------------")
+	logf(0, "---------------------")
+	logf(0, "Skipped: %v out of total %v executables", testsSkipped, len(module.execs))
+	logf(0, "Tests PASSED: %v out of %v (%v)", testsPassed, totalTests, p)
+	logf(0, "Tests FAILED: %v out of %v (%v)", testsFailed, totalTests, f)
+	logf(0, "Total duration: %v ", time.Since(start))
 }
 
 func (module *QuplaModule) IncStat(key string) {
@@ -245,9 +248,9 @@ func (module *QuplaModule) IncStat(key string) {
 }
 
 func (module *QuplaModule) PrintStats() {
-	fmt.Printf("Analyzed: \n")
+	logf(0, "Module stats:")
 	for k, v := range module.stats {
-		fmt.Printf("  %v : %v\n", k, v)
+		logf(0, "  %v : %v", k, v)
 	}
 }
 
