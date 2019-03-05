@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/lunfardo314/goq/cfg"
+	dispatcher2 "github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/qupla"
 	"github.com/lunfardo314/goq/quplayaml"
 	"os"
@@ -27,8 +28,11 @@ func main() {
 	logf(0, "Echo Qupla module to file %v", testout)
 	_ = moduleYAML.WriteToFile(testout)
 
-	module, succ := qupla.AnalyzeQuplaModule(moduleYAML, &qupla.ExpressionFactoryFromYAML{})
+	module, succ := qupla.AnalyzeQuplaModule("single_module", moduleYAML, &qupla.ExpressionFactoryFromYAML{})
 	module.PrintStats()
+
+	dispatcher := dispatcher2.StartDispatcher()
+	module.AttachToDispatcher(dispatcher)
 
 	if !succ {
 		logf(0, "Failed analyzing Qupla module")

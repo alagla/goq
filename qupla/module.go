@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
 	"github.com/lunfardo314/goq/cfg"
+	"github.com/lunfardo314/goq/dispatcher"
 	. "github.com/lunfardo314/goq/quplayaml"
 	. "github.com/lunfardo314/goq/utils"
 	"time"
@@ -11,6 +12,7 @@ import (
 
 type QuplaModule struct {
 	yamlSource   *QuplaModuleYAML
+	name         string
 	factory      ExpressionFactory
 	types        map[string]*QuplaTypeDef
 	luts         map[string]*QuplaLutDef
@@ -31,9 +33,10 @@ type QuplaTypeDef struct {
 	fields map[string]*QuplaTypeField
 }
 
-func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) (*QuplaModule, bool) {
+func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML, factory ExpressionFactory) (*QuplaModule, bool) {
 	ret := &QuplaModule{
 		yamlSource:   moduleYAML,
+		name:         name,
 		factory:      factory,
 		types:        make(map[string]*QuplaTypeDef),
 		luts:         make(map[string]*QuplaLutDef),
@@ -97,45 +100,9 @@ func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) 
 	return ret, retSucc
 }
 
-//func (module *QuplaModule) AnalyzeType(name string, src *QuplaTypeDefYAML) bool {
-//	if _, ok := module.types[name]; ok {
-//		errorf("duplicate type name %v", name)
-//		module.IncStat("numErr")
-//		return false
-//	}
-//	ret := &QuplaTypeDef{
-//		fields: make(map[string]*QuplaTypeField),
-//	}
-//	if src.Size != "*" {
-//		if sz, err := strconv.Atoi(src.Size); err != nil {
-//			errorf("wrong size '%v' in type '%v'", src.Size, name)
-//			module.IncStat("numErr")
-//			return false
-//		} else {
-//			ret.size = int64(sz)
-//			module.types[name] = ret
-//			return true
-//		}
-//	}
-//
-//	var offset int64
-//	for fldname, fld := range src.Fields {
-//		if sz, err := strconv.Atoi(fld.Size); err != nil {
-//			errorf("wrong size '%v' in field '%v' of type '%v'", fld.Size, fldname, name)
-//			module.IncStat("numErr")
-//			return false
-//
-//		} else {
-//			ret.fields[fldname] = &QuplaTypeField{
-//				offset: offset,
-//				size:   int64(sz),
-//			}
-//			offset += ret.size
-//		}
-//	}
-//	module.types[name] = ret
-//	return true
-//}
+func (module *QuplaModule) GetName() string {
+	return module.name
+}
 
 func (module *QuplaModule) GetTypeFieldInfo(typeName, fldName string) (int64, int64, error) {
 	if _, ok := module.types[typeName]; !ok {
@@ -309,3 +276,69 @@ func (module *QuplaModule) collectReferencingFuncs(nameSet StringSet) int {
 	}
 	return ret
 }
+
+func (module *QuplaModule) AttachToDispatcher(dispatcher *dispatcher.Dispatcher) {
+	for _, funcdef := range module.functions {
+		if !funcdef.HasEnvStmt() {
+			continue
+		}
+		for envName := range funcdef.joins {
+			if err := dispatcher.AddJoin(module, envName, funcdef); err != nil {
+				logf(0, "Failed to join function '%v' to the environment '%v'",
+					funcdef.GetName(), envName)
+			} else {
+				logf(1, "Function '%v' joined environment '%v'",
+					funcdef.GetName(), envName)
+			}
+		}
+		for envName := range funcdef.affects {
+			if err := dispatcher.AddAffect(module, envName, funcdef); err != nil {
+				logf(0, "Failed to register 'affect' of function '%v' to the environment '%v'",
+					funcdef.GetName(), envName)
+			} else {
+				logf(1, "Function '%v' will affect environment '%v'",
+					funcdef.GetName(), envName)
+			}
+		}
+	}
+}
+
+//func (module *QuplaModule) AnalyzeType(name string, src *QuplaTypeDefYAML) bool {
+//	if _, ok := module.types[name]; ok {
+//		errorf("duplicate type name %v", name)
+//		module.IncStat("numErr")
+//		return false
+//	}
+//	ret := &QuplaTypeDef{
+//		fields: make(map[string]*QuplaTypeField),
+//	}
+//	if src.Size != "*" {
+//		if sz, err := strconv.Atoi(src.Size); err != nil {
+//			errorf("wrong size '%v' in type '%v'", src.Size, name)
+//			module.IncStat("numErr")
+//			return false
+//		} else {
+//			ret.size = int64(sz)
+//			module.types[name] = ret
+//			return true
+//		}
+//	}
+//
+//	var offset int64
+//	for fldname, fld := range src.Fields {
+//		if sz, err := strconv.Atoi(fld.Size); err != nil {
+//			errorf("wrong size '%v' in field '%v' of type '%v'", fld.Size, fldname, name)
+//			module.IncStat("numErr")
+//			return false
+//
+//		} else {
+//			ret.fields[fldname] = &QuplaTypeField{
+//				offset: offset,
+//				size:   int64(sz),
+//			}
+//			offset += ret.size
+//		}
+//	}
+//	module.types[name] = ret
+//	return true
+//}

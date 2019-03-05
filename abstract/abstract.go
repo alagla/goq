@@ -10,6 +10,7 @@ type ExpressionFactory interface {
 }
 
 type ModuleInterface interface {
+	GetName() string
 	AnalyzeExpression(interface{}, FuncDefInterface) (ExpressionInterface, error)
 	AddFuncDef(string, FuncDefInterface)
 	FindFuncDef(string) (FuncDefInterface, error)
