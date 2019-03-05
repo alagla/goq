@@ -9,6 +9,8 @@ import (
 type QuplaFuncDef struct {
 	yamlSource        *QuplaFuncDefYAML // needed for analysis phase only
 	module            ModuleInterface
+	joins             []string
+	affects           []string
 	name              string
 	retSize           int64
 	retExpr           ExpressionInterface
@@ -58,9 +60,13 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 		module:     module,
 		name:       name,
 	}
+	def.AnalyzeEnvironmentStatements()
+	if def.HasEnvStmt() {
+		def.module.IncStat("numEnvFundef")
+	}
 	// return size. Must be const expression
 	// this must be first because in recursive calls return size must be known
-	// scope must be nil because const value do not scope
+	// scope must be nil because const value do not have scope
 	ce, err := module.AnalyzeExpression(defYAML.ReturnType, nil)
 	if err != nil {
 		return err
@@ -95,6 +101,36 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 
 func (def *QuplaFuncDef) Size() int64 {
 	return def.retSize
+}
+
+func (def *QuplaFuncDef) AnalyzeEnvironmentStatements() {
+	for _, envYAML := range def.yamlSource.Env {
+		if envYAML.Join {
+			if def.joins == nil {
+				def.joins = make([]string, 0)
+				def.joins = append(def.joins, envYAML.Name)
+			}
+			def.module.IncStat("numEnvJoin")
+		} else {
+			if def.affects == nil {
+				def.affects = make([]string, 0)
+				def.affects = append(def.affects, envYAML.Name)
+			}
+			def.module.IncStat("numEnvAffect")
+		}
+	}
+}
+
+func (def *QuplaFuncDef) HasEnvStmt() bool {
+	return len(def.joins) > 0 || len(def.affects) > 0
+}
+
+func (def *QuplaFuncDef) GetJoinEnv() []string {
+	return def.joins
+}
+
+func (def *QuplaFuncDef) GetAffectEnv() []string {
+	return def.affects
 }
 
 func (def *QuplaFuncDef) GetVarIdx(name string) int64 {

@@ -6,6 +6,7 @@ import (
 	"github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/quplayaml"
 	. "github.com/lunfardo314/goq/utils"
+	"strings"
 	"time"
 )
 
@@ -57,9 +58,9 @@ func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) 
 		}
 	}
 	analyzedFunDefs := len(ret.functions)
-	logf(0, "Number of function definitions directly or indirectly referenced by execs: %v", analyzedFunDefs)
+	logf(0, "Number of functions directly or indirectly referenced by execs: %v", analyzedFunDefs)
 
-	logf(0, "Analyzing all function definitions, which were not analyzed yet")
+	logf(0, "Analyzing all functions, which were not analyzed yet")
 	for funName := range moduleYAML.Functions {
 		if _, err := ret.FindFuncDef(funName); err != nil {
 			ret.IncStat("numErr")
@@ -67,13 +68,24 @@ func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) 
 			retSucc = false
 		}
 	}
-	logf(0, "Additionally were analyzed %v function definitions", len(ret.functions)-analyzedFunDefs)
+	logf(0, "Additionally were analyzed %v functions", len(ret.functions)-analyzedFunDefs)
 
-	logf(0, "Determining stateful function definitions")
+	logf(0, "Determining stateful functions")
 	numWithStateVars, numStateful := ret.markStateful()
-	logf(0, "Found %v func def with state vars and %v stateful function definition (which references them)",
+	logf(0, "Found %v func def with state vars and %v stateful functions (which references them)",
 		numWithStateVars, numStateful)
 
+	if n, ok := ret.stats["numEnvFundef"]; ok {
+		logf(0, "Functions joins/affects environments: %v", n)
+	} else {
+		logf(0, "No function joins/affects environments")
+	}
+	for funname, fundef := range ret.functions {
+		if fundef.HasEnvStmt() {
+			logf(1, "    Function '%v' joins '%v', affects '%v'",
+				funname, strings.Join(fundef.GetJoinEnv(), ","), strings.Join(fundef.GetAffectEnv(), ","))
+		}
+	}
 	return ret, retSucc
 }
 
