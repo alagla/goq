@@ -277,18 +277,23 @@ func (module *QuplaModule) collectReferencingFuncs(nameSet StringSet) int {
 	return ret
 }
 
-func (module *QuplaModule) AttachToDispatcher(dispatcher *dispatcher.Dispatcher) {
+func (module *QuplaModule) AttachToDispatcher(disp *dispatcher.Dispatcher) {
 	for _, funcdef := range module.functions {
 		if !funcdef.HasEnvStmt() {
 			continue
 		}
+		entity := dispatcher.NewFunctionEntity(funcdef)
 		for envName := range funcdef.joins {
-			dispatcher.Join(envName, funcdef)
+			if _, err := disp.Join(envName, entity); err != nil {
+				logf(0, "dispatcher::Join: %v", err)
+			}
 			logf(1, "Function '%v' joined environment '%v'",
 				funcdef.GetName(), envName)
 		}
 		for envName := range funcdef.affects {
-			dispatcher.Affect(envName, funcdef)
+			if _, err := disp.Affect(envName, entity); err != nil {
+				logf(0, "dispatcher::Affect: %v", err)
+			}
 			logf(1, "Function '%v' will affect environment '%v'",
 				funcdef.GetName(), envName)
 		}

@@ -31,6 +31,7 @@ type VarInfo struct {
 type FuncDefInterface interface {
 	GetName() string
 	Size() int64
+	ArgSize() int64
 	GetVarInfo(string) (*VarInfo, error)
 	HasState() bool
 }

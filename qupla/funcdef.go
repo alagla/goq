@@ -20,6 +20,7 @@ type QuplaFuncDef struct {
 	bufLen            int64 // total length of the local var buffer
 	hasStateVariables bool
 	hasState          bool
+	argSize           int64
 }
 
 func (def *QuplaFuncDef) SetName(name string) {
@@ -102,6 +103,10 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 
 func (def *QuplaFuncDef) Size() int64 {
 	return def.retSize
+}
+
+func (def *QuplaFuncDef) ArgSize() int64 {
+	return def.argSize
 }
 
 func (def *QuplaFuncDef) AnalyzeEnvironmentStatements() {
@@ -263,6 +268,7 @@ func (def *QuplaFuncDef) analyzeAssigns() error {
 
 func (def *QuplaFuncDef) finalizeLocalVars() error {
 	var curOffset int64
+	var argSize int64
 	for _, v := range def.localVars {
 		if v.Size == 0 {
 			v.Size = v.Assign.Size()
@@ -276,6 +282,8 @@ func (def *QuplaFuncDef) finalizeLocalVars() error {
 			if v.Assign == nil {
 				return fmt.Errorf("variable '%v' in '%v' is not assigned", v.Name, def.GetName())
 			}
+		} else {
+			argSize += v.Size
 		}
 		if v.Assign != nil && v.Assign.Size() != v.Size {
 			return fmt.Errorf("sizes doesn't match for var '%v' in '%v'", v.Name, def.GetName())

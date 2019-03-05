@@ -1,7 +1,6 @@
 package dispatcher
 
 import (
-	. "github.com/lunfardo314/goq/abstract"
 	"sync"
 )
 
@@ -27,14 +26,12 @@ func (disp *Dispatcher) GetEnvironment(name string) *Environment {
 
 }
 
-func (disp *Dispatcher) Join(envName string, fun FuncDefInterface) *Environment {
+func (disp *Dispatcher) Join(envName string, entity EntityInterface) (*Environment, error) {
 	env := disp.GetEnvironment(envName)
-	env.Join(fun)
-	return env
+	return env, entity.Join(env)
 }
 
-func (disp *Dispatcher) Affect(envName string, fun FuncDefInterface) *Environment {
+func (disp *Dispatcher) Affect(envName string, entity EntityInterface) (*Environment, error) {
 	env := disp.GetEnvironment(envName)
-	env.Affect(fun)
-	return env
+	return env, entity.Affect(env)
 }
