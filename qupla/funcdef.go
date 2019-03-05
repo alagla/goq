@@ -4,13 +4,14 @@ import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
+	. "github.com/lunfardo314/goq/utils"
 )
 
 type QuplaFuncDef struct {
 	yamlSource        *QuplaFuncDefYAML // needed for analysis phase only
 	module            ModuleInterface
-	joins             []string
-	affects           []string
+	joins             StringSet
+	affects           StringSet
 	name              string
 	retSize           int64
 	retExpr           ExpressionInterface
@@ -107,14 +108,14 @@ func (def *QuplaFuncDef) AnalyzeEnvironmentStatements() {
 	for _, envYAML := range def.yamlSource.Env {
 		if envYAML.Join {
 			if def.joins == nil {
-				def.joins = make([]string, 0)
-				def.joins = append(def.joins, envYAML.Name)
+				def.joins = make(StringSet)
+				def.joins.Append(envYAML.Name)
 			}
 			def.module.IncStat("numEnvJoin")
 		} else {
 			if def.affects == nil {
-				def.affects = make([]string, 0)
-				def.affects = append(def.affects, envYAML.Name)
+				def.affects = make(StringSet)
+				def.affects.Append(envYAML.Name)
 			}
 			def.module.IncStat("numEnvAffect")
 		}
@@ -125,11 +126,11 @@ func (def *QuplaFuncDef) HasEnvStmt() bool {
 	return len(def.joins) > 0 || len(def.affects) > 0
 }
 
-func (def *QuplaFuncDef) GetJoinEnv() []string {
+func (def *QuplaFuncDef) GetJoinEnv() StringSet {
 	return def.joins
 }
 
-func (def *QuplaFuncDef) GetAffectEnv() []string {
+func (def *QuplaFuncDef) GetAffectEnv() StringSet {
 	return def.affects
 }
 

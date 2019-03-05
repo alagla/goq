@@ -98,3 +98,17 @@ func (s StringSet) DeleteAll(another StringSet) int {
 	}
 	return ret
 }
+
+func (s StringSet) Join(d string) string {
+	ret := ""
+	first := true
+	for str := range s {
+		if !first {
+			ret += d + str
+		} else {
+			ret = str
+			first = false
+		}
+	}
+	return ret
+}

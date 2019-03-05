@@ -6,19 +6,19 @@ import (
 	"github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/quplayaml"
 	. "github.com/lunfardo314/goq/utils"
-	"strings"
 	"time"
 )
 
 type QuplaModule struct {
-	yamlSource *QuplaModuleYAML
-	factory    ExpressionFactory
-	types      map[string]*QuplaTypeDef
-	luts       map[string]*QuplaLutDef
-	functions  map[string]*QuplaFuncDef
-	execs      []*QuplaExecStmt
-	stats      map[string]int
-	processor  ProcessorInterface
+	yamlSource   *QuplaModuleYAML
+	factory      ExpressionFactory
+	types        map[string]*QuplaTypeDef
+	luts         map[string]*QuplaLutDef
+	functions    map[string]*QuplaFuncDef
+	execs        []*QuplaExecStmt
+	stats        map[string]int
+	processor    ProcessorInterface
+	environments StringSet
 }
 
 type QuplaTypeField struct {
@@ -33,14 +33,15 @@ type QuplaTypeDef struct {
 
 func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) (*QuplaModule, bool) {
 	ret := &QuplaModule{
-		yamlSource: moduleYAML,
-		factory:    factory,
-		types:      make(map[string]*QuplaTypeDef),
-		luts:       make(map[string]*QuplaLutDef),
-		functions:  make(map[string]*QuplaFuncDef),
-		execs:      make([]*QuplaExecStmt, 0, len(moduleYAML.Execs)),
-		stats:      make(map[string]int),
-		processor:  NewStackProcessor(),
+		yamlSource:   moduleYAML,
+		factory:      factory,
+		types:        make(map[string]*QuplaTypeDef),
+		luts:         make(map[string]*QuplaLutDef),
+		functions:    make(map[string]*QuplaFuncDef),
+		execs:        make([]*QuplaExecStmt, 0, len(moduleYAML.Execs)),
+		stats:        make(map[string]int),
+		processor:    NewStackProcessor(),
+		environments: make(StringSet),
 	}
 	//infof("Analyzing types..")
 	//for name, td := range moduleYAML.Types {
@@ -82,9 +83,16 @@ func AnalyzeQuplaModule(moduleYAML *QuplaModuleYAML, factory ExpressionFactory) 
 	}
 	for funname, fundef := range ret.functions {
 		if fundef.HasEnvStmt() {
-			logf(1, "    Function '%v' joins '%v', affects '%v'",
-				funname, strings.Join(fundef.GetJoinEnv(), ","), strings.Join(fundef.GetAffectEnv(), ","))
+			ret.environments.AppendAll(fundef.affects)
+			ret.environments.AppendAll(fundef.joins)
+			logf(1, "    Function '%v' joins: '%v', affects: '%v'",
+				funname, fundef.GetJoinEnv().Join(","), fundef.GetAffectEnv().Join(","))
 		}
+	}
+	if len(ret.environments) > 0 {
+		logf(0, "Environments detected: '%v'", ret.environments.Join(", "))
+	} else {
+		logf(0, "Environments detected: none")
 	}
 	return ret, retSucc
 }
