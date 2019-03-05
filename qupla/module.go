@@ -283,22 +283,14 @@ func (module *QuplaModule) AttachToDispatcher(dispatcher *dispatcher.Dispatcher)
 			continue
 		}
 		for envName := range funcdef.joins {
-			if err := dispatcher.AddJoin(module, envName, funcdef); err != nil {
-				logf(0, "Failed to join function '%v' to the environment '%v'",
-					funcdef.GetName(), envName)
-			} else {
-				logf(1, "Function '%v' joined environment '%v'",
-					funcdef.GetName(), envName)
-			}
+			dispatcher.Join(envName, funcdef)
+			logf(1, "Function '%v' joined environment '%v'",
+				funcdef.GetName(), envName)
 		}
 		for envName := range funcdef.affects {
-			if err := dispatcher.AddAffect(module, envName, funcdef); err != nil {
-				logf(0, "Failed to register 'affect' of function '%v' to the environment '%v'",
-					funcdef.GetName(), envName)
-			} else {
-				logf(1, "Function '%v' will affect environment '%v'",
-					funcdef.GetName(), envName)
-			}
+			dispatcher.Affect(envName, funcdef)
+			logf(1, "Function '%v' will affect environment '%v'",
+				funcdef.GetName(), envName)
 		}
 	}
 }

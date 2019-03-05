@@ -5,43 +5,36 @@ import (
 	"sync"
 )
 
-type environment struct {
-	joins   []FuncDefInterface
-	affects []FuncDefInterface
-}
-
 type Dispatcher struct {
 	sync.RWMutex
-	environments map[string]*environment
+	environments map[string]*Environment
 }
 
-func StartDispatcher() *Dispatcher {
-	ret := &Dispatcher{}
-	return ret
-}
-
-func (disp *Dispatcher) Stop() {
-
-}
-
-func (disp *Dispatcher) AddJoin(module ModuleInterface, envName string, fun FuncDefInterface) error {
-	disp.Lock()
-	defer disp.Unlock()
-
-	name := module.GetName() + "::" + envName
-	if env, ok := disp.environments[name]; ok {
-		env.joins = append(env.joins, fun)
+func NewDispatcher() *Dispatcher {
+	return &Dispatcher{
+		environments: make(map[string]*Environment),
 	}
-	return nil
 }
 
-func (disp *Dispatcher) AddAffect(module ModuleInterface, envName string, fun FuncDefInterface) error {
-	disp.Lock()
-	defer disp.Unlock()
-
-	name := module.GetName() + "::" + envName
-	if env, ok := disp.environments[name]; ok {
-		env.affects = append(env.affects, fun)
+func (disp *Dispatcher) GetEnvironment(name string) *Environment {
+	disp.RLock()
+	defer disp.RUnlock()
+	_, ok := disp.environments[name]
+	if !ok {
+		disp.environments[name] = NewEnvironment(name)
 	}
-	return nil
+	return disp.environments[name]
+
+}
+
+func (disp *Dispatcher) Join(envName string, fun FuncDefInterface) *Environment {
+	env := disp.GetEnvironment(envName)
+	env.Join(fun)
+	return env
+}
+
+func (disp *Dispatcher) Affect(envName string, fun FuncDefInterface) *Environment {
+	env := disp.GetEnvironment(envName)
+	env.Affect(fun)
+	return env
 }
