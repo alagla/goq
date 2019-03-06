@@ -8,8 +8,8 @@ import (
 
 type EntityInterface interface {
 	GetName() string
-	OutSize() int64
-	InSize() int64
+	OutSize() int64 // result
+	InSize() int64  // arguments
 	Join(*Environment) error
 	Affect(*Environment) error
 	Call(Trits) Trits
@@ -67,15 +67,29 @@ func (ent *BaseEntity) Call(_ Trits) Trits {
 type FunctionEntity struct {
 	BaseEntity
 	funDef FuncDefInterface
+	inChan chan Trits
 }
 
 func NewFunctionEntity(funDef FuncDefInterface) *FunctionEntity {
-	return &FunctionEntity{
+	ret := &FunctionEntity{
 		BaseEntity: *NewBaseEntity(funDef.GetName(), funDef.ArgSize(), funDef.Size()),
 		funDef:     funDef,
+		inChan:     make(chan Trits, 1), // buffer to avoid deadlocks
 	}
+	go ret.loopEffects()
+	return ret
 }
 
-func (ent *FunctionEntity) Call(_ Trits) Trits {
+func (ent *FunctionEntity) Call(args Trits) Trits {
 	return nil
+}
+
+func (ent *FunctionEntity) invoke(t Trits) {
+	ent.inChan <- t
+}
+
+func (ent *FunctionEntity) loopEffects() {
+	for t := range ent.inChan {
+		_ = ent.Call(t)
+	}
 }

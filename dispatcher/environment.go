@@ -19,7 +19,7 @@ func NewEnvironment(name string) *Environment {
 	ret := &Environment{
 		name:       name,
 		joins:      make([]EntityInterface, 0),
-		affectChan: make(chan Trits),
+		affectChan: make(chan Trits, 1), // buffer to avoid deadlocks
 	}
 	go ret.AffectLoop()
 	return ret
@@ -56,11 +56,15 @@ func (env *Environment) PostEffect(effect Trits) {
 	env.affectChan <- effect
 }
 
+// loop waits for effect in the environment and then process it
+// null result mean nil
 func (env *Environment) AffectLoop() {
 	for effect := range env.affectChan {
-		logf(1, "Value '%v' reached environment '%v'",
-			TritsToString(effect), env.name)
-		env.processEffect(effect)
+		if effect != nil {
+			logf(1, "Value '%v' reached environment '%v'",
+				TritsToString(effect), env.name)
+			env.processEffect(effect)
+		}
 	}
 }
 
@@ -68,11 +72,11 @@ func (env *Environment) processEffect(effect Trits) {
 	env.RLock()
 	defer env.RUnlock()
 	for _, entity := range env.joins {
-		go env.calculateEntity(entity, effect)
+		go env.invokeEntity(entity, effect)
 	}
 }
 
-func (env *Environment) calculateEntity(entity EntityInterface, effect Trits) {
+func (env *Environment) invokeEntity(entity EntityInterface, effect Trits) {
 	logf(1, "Value '%v' triggered entity %v in environment '%v'",
 		TritsToString(effect), entity.GetName(), env.name)
 	// TODO calls function and then affects environment
