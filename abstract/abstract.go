@@ -34,6 +34,7 @@ type FuncDefInterface interface {
 	ArgSize() int64
 	GetVarInfo(string) (*VarInfo, error)
 	HasState() bool
+	//Eval(Trits)
 }
 
 type LUTInterface interface {
