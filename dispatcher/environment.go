@@ -38,14 +38,14 @@ func (env *Environment) Join(entity EntityInterface) error {
 	env.Lock()
 	defer env.Unlock()
 	if env.existsEntity(entity.GetName()) {
-		return fmt.Errorf("duplicated entity '%v' in join to '%v'", entity.GetName(), env.name)
+		return fmt.Errorf("duplicated entity '%v' attempt to join to '%v'", entity.GetName(), env.name)
 	}
 	if env.size == 0 {
 		env.size = entity.InSize()
 	} else {
 		if entity.InSize() != env.size {
-			return fmt.Errorf("size mismatch between environment '%v' and joining entity '%v'",
-				env.name, entity.GetName())
+			return fmt.Errorf("size mismatch between environment '%v', size = %v and joining entity '%v', size = %v",
+				env.name, env.size, entity.GetName(), entity.InSize())
 		}
 	}
 	env.joins = append(env.joins, entity)

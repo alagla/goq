@@ -268,7 +268,7 @@ func (def *QuplaFuncDef) analyzeAssigns() error {
 
 func (def *QuplaFuncDef) finalizeLocalVars() error {
 	var curOffset int64
-	var argSize int64
+	def.argSize = 0
 	for _, v := range def.localVars {
 		if v.Size == 0 {
 			v.Size = v.Assign.Size()
@@ -283,7 +283,7 @@ func (def *QuplaFuncDef) finalizeLocalVars() error {
 				return fmt.Errorf("variable '%v' in '%v' is not assigned", v.Name, def.GetName())
 			}
 		} else {
-			argSize += v.Size
+			def.argSize += v.Size
 		}
 		if v.Assign != nil && v.Assign.Size() != v.Size {
 			return fmt.Errorf("sizes doesn't match for var '%v' in '%v'", v.Name, def.GetName())
