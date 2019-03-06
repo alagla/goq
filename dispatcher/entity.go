@@ -2,6 +2,7 @@ package dispatcher
 
 import (
 	"fmt"
+	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 )
 
@@ -11,6 +12,7 @@ type EntityInterface interface {
 	InSize() int64
 	Join(*Environment) error
 	Affect(*Environment) error
+	Call(Trits) Trits
 }
 
 type BaseEntity struct {
@@ -58,6 +60,10 @@ func (ent *BaseEntity) Join(env *Environment) error {
 	return env.Join(ent)
 }
 
+func (ent *BaseEntity) Call(_ Trits) Trits {
+	return nil
+}
+
 type FunctionEntity struct {
 	BaseEntity
 	funDef FuncDefInterface
@@ -68,4 +74,8 @@ func NewFunctionEntity(funDef FuncDefInterface) *FunctionEntity {
 		BaseEntity: *NewBaseEntity(funDef.GetName(), funDef.ArgSize(), funDef.Size()),
 		funDef:     funDef,
 	}
+}
+
+func (ent *FunctionEntity) Call(_ Trits) Trits {
+	return nil
 }
