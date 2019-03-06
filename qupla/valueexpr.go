@@ -10,8 +10,13 @@ import (
 
 type QuplaValueExpr struct {
 	QuplaExprBase
-	Value     *big.Float
 	TritValue Trits
+}
+
+func NewQuplaValueExpr(t Trits) *QuplaValueExpr {
+	return &QuplaValueExpr{
+		TritValue: t,
+	}
 }
 
 func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module ModuleInterface, _ FuncDefInterface) (*QuplaValueExpr, error) {
@@ -45,11 +50,11 @@ func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module ModuleInterface, _ Fu
 		}
 	}
 
-	ret := &QuplaValueExpr{
-		Value: orig,
-	}
-	if ret.TritValue, err = NewTrits(t); err != nil {
+	var ret *QuplaValueExpr
+	if t, err = NewTrits(t); err != nil {
 		return nil, err
+	} else {
+		ret = NewQuplaValueExpr(t)
 	}
 
 	// Todo checking float values
