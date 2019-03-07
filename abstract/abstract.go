@@ -34,7 +34,7 @@ type FuncDefInterface interface {
 	ArgSize() int64
 	GetVarInfo(string) (*VarInfo, error)
 	HasState() bool
-	//Eval(Trits)
+	NewExpressionWithArgs(Trits) (ExpressionInterface, error)
 }
 
 type LUTInterface interface {

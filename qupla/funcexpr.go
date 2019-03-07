@@ -10,15 +10,24 @@ import (
 type QuplaFuncExpr struct {
 	QuplaExprBase
 	source  string
-	name    string
 	funcDef *QuplaFuncDef
+}
+
+func NewQuplaFuncExpr(src string, funcDef FuncDefInterface) *QuplaFuncExpr {
+	if fd, ok := funcDef.(*QuplaFuncDef); !ok {
+		return nil
+	} else {
+		return &QuplaFuncExpr{
+			QuplaExprBase: NewQuplaExprBase(src),
+			funcDef:       fd,
+		}
+	}
 }
 
 func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaFuncExpr, error) {
 	var err error
 	ret := &QuplaFuncExpr{
 		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
-		name:          exprYAML.Name,
 	}
 	var fdi FuncDefInterface
 	fdi, err = module.FindFuncDef(exprYAML.Name)
@@ -65,7 +74,7 @@ func (e *QuplaFuncExpr) Eval(proc ProcessorInterface, result Trits) bool {
 }
 
 func (e *QuplaFuncExpr) References(funName string) bool {
-	if e.funcDef.name == funName {
+	if e.funcDef.GetName() == funName {
 		return true
 	}
 	return e.ReferencesSubExprs(funName)

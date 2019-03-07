@@ -2,6 +2,7 @@ package qupla
 
 import (
 	"fmt"
+	"github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/quplayaml"
 	. "github.com/lunfardo314/goq/utils"
@@ -21,6 +22,7 @@ type QuplaFuncDef struct {
 	hasStateVariables bool
 	hasState          bool
 	argSize           int64
+	argSizes          []int64
 }
 
 func (def *QuplaFuncDef) SetName(name string) {
@@ -61,6 +63,7 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 		yamlSource: defYAML,
 		module:     module,
 		name:       name,
+		argSizes:   make([]int64, 0, len(defYAML.Params)),
 	}
 	def.AnalyzeEnvironmentStatements()
 	if def.HasEnvStmt() {
@@ -284,6 +287,7 @@ func (def *QuplaFuncDef) finalizeLocalVars() error {
 			}
 		} else {
 			def.argSize += v.Size
+			def.argSizes = append(def.argSizes, v.Size)
 		}
 		if v.Assign != nil && v.Assign.Size() != v.Size {
 			return fmt.Errorf("sizes doesn't match for var '%v' in '%v'", v.Name, def.GetName())
@@ -304,4 +308,20 @@ func (def *QuplaFuncDef) checkArgSizes(args []ExpressionInterface) error {
 		}
 	}
 	return nil
+}
+
+func (def *QuplaFuncDef) NewExpressionWithArgs(args trinary.Trits) (ExpressionInterface, error) {
+	if def.argSize != int64(len(args)) {
+		return nil, fmt.Errorf("size mismatch: fundef '%v' has arg size %v, trit vector's size = %v",
+			def.GetName(), def.ArgSize(), len(args))
+	}
+	ret := NewQuplaFuncExpr("", def)
+
+	offset := int64(0)
+	for _, sz := range def.argSizes {
+		e := NewQuplaValueExpr(args[offset : offset+sz])
+		ret.AppendSubExpr(e)
+		offset += sz
+	}
+	return ret, nil
 }

@@ -43,7 +43,7 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 		if proc.levelFunc > proc.maxLevelFunc {
 			proc.maxLevelFunc = proc.levelFunc
 		}
-		proc.tracef("IN funExpr '%v'", funExpr.name)
+		proc.tracef("IN funExpr '%v'", funExpr.funcDef.GetName())
 
 		proc.curFrame = funExpr.NewCallFrame(proc.curFrame)
 	} else {
@@ -54,7 +54,7 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 	}
 	null := expr.Eval(proc, result)
 	if isFunction {
-		proc.tracef("OUT funExpr '%v' null = %v res = '%v'", funExpr.name, null, utils.TritsToString(result))
+		proc.tracef("OUT funExpr '%v' null = %v res = '%v'", funExpr.funcDef.GetName(), null, utils.TritsToString(result))
 		proc.levelFunc--
 		proc.curFrame = proc.curFrame.parent
 	} else {
