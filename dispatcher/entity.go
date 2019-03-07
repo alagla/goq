@@ -10,6 +10,7 @@ type EntityInterface interface {
 	OutSize() int64            // result size in trits
 	InSize() int64             // concat arguments, total size in trits
 	Join(*Environment) error   // join the environment = will be listening to the environment
+	Stop()                     // stop listening to environments. Before GC
 	Affect(*Environment) error // affect the environment = any results will be sent to the environments as effects
 	Invoke(Trits)              // calls the entity with arguments
 }
@@ -18,8 +19,9 @@ type BaseEntity struct {
 	name           string
 	inSize         int64
 	outSize        int64
-	affects        []*Environment    // list of affected environments where effects are sent
-	inChan         chan Trits        // chan for incoming effects
+	affects        []*Environment // list of affected environments where effects are sent
+	inChan         chan Trits     // chan for incoming effects
+	joined         bool
 	effectCallback func(Trits) Trits // function called for each effect
 }
 
@@ -32,8 +34,15 @@ func NewBaseEntity(name string, inSize, outSize int64, effectCallback func(Trits
 		inChan:         make(chan Trits, 1), // buffer to avoid deadlocks
 		effectCallback: effectCallback,
 	}
-	go ret.loopEffects() // start listening to incoming effects
 	return ret
+}
+
+// after that entity becomes invalid
+// called by the environment only
+func (ent *BaseEntity) Stop() {
+	if ent.joined {
+		close(ent.inChan)
+	}
 }
 
 func (ent *BaseEntity) GetName() string {
@@ -57,6 +66,11 @@ func (ent *BaseEntity) Affect(env *Environment) error {
 }
 
 func (ent *BaseEntity) Join(env *Environment) error {
+	if !ent.joined {
+		ent.joined = true
+		ent.inChan = make(chan Trits, 1) // buffer to avoid deadlocks
+		go ent.loopEffects()             // start listening to incoming effects
+	}
 	return env.Join(ent)
 }
 

@@ -25,6 +25,10 @@ func NewEnvironment(name string) *Environment {
 	return ret
 }
 
+func (env *Environment) Stop() {
+	close(env.affectChan)
+}
+
 func (env *Environment) existsEntity(name string) bool {
 	for _, ei := range env.joins {
 		if ei.GetName() == name {
@@ -73,6 +77,11 @@ func (env *Environment) AffectLoop() {
 				TritsToString(effect), env.name)
 			env.processEffect(effect)
 		}
+	}
+	// if the input channel (affect) is closed,
+	// we have to close all join channels to stop listening routines
+	for _, entity := range env.joins {
+		go entity.Stop()
 	}
 }
 

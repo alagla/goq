@@ -1,4 +1,4 @@
-package funcentity
+package entities
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
@@ -8,28 +8,23 @@ import (
 
 type FunctionEntity struct {
 	BaseEntity
-	funDef     FuncDefInterface
-	argbuf     Trits
-	expression ExpressionInterface
 }
 
 func NewFunctionEntity(funDef FuncDefInterface) *FunctionEntity {
 	effectCallback := func(args Trits) Trits {
-		return callFundef(funDef, args)
-	}
-	argbuf := make(Trits, funDef.ArgSize(), funDef.ArgSize())
-	expr, err := funDef.NewExpressionWithArgs(argbuf)
-	if err != nil {
-		panic(err)
+		expr, err := funDef.NewExpressionWithArgs(args)
+		if err != nil {
+			panic(err)
+		}
+		var proc ProcessorInterface // todo
+		res := make(Trits, funDef.Size(), funDef.Size())
+		null := proc.Eval(expr, res)
+		if null {
+			return nil
+		}
+		return res
 	}
 	return &FunctionEntity{
 		BaseEntity: *NewBaseEntity(funDef.GetName(), funDef.ArgSize(), funDef.Size(), effectCallback),
-		funDef:     funDef,
-		argbuf:     argbuf,
-		expression: expr,
 	}
-}
-
-func callFundef(funDef FuncDefInterface, args Trits) Trits {
-	return nil
 }
