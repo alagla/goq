@@ -5,6 +5,7 @@ import (
 	. "github.com/lunfardo314/goq/abstract"
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/dispatcher"
+	"github.com/lunfardo314/goq/funcentity"
 	. "github.com/lunfardo314/goq/quplayaml"
 	. "github.com/lunfardo314/goq/utils"
 	"time"
@@ -282,7 +283,7 @@ func (module *QuplaModule) AttachToDispatcher(disp *dispatcher.Dispatcher) {
 		if !funcdef.HasEnvStmt() {
 			continue
 		}
-		entity := dispatcher.NewFunctionEntity(funcdef)
+		entity := funcentity.NewFunctionEntity(funcdef)
 		for envName := range funcdef.joins {
 			if _, err := disp.Join(envName, entity); err != nil {
 				logf(0, "dispatcher::Join: %v", err)

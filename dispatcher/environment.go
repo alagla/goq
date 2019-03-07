@@ -34,19 +34,27 @@ func (env *Environment) existsEntity(name string) bool {
 	return false
 }
 
+func (env *Environment) checkNewSize(size int64) error {
+	if env.size != 0 {
+		if env.size != size {
+			return fmt.Errorf("size mismatch in environment '%v'. Must be %v",
+				env.name, env.size)
+		}
+	} else {
+		env.size = size
+	}
+	return nil
+}
+
 func (env *Environment) Join(entity EntityInterface) error {
 	env.Lock()
 	defer env.Unlock()
 	if env.existsEntity(entity.GetName()) {
 		return fmt.Errorf("duplicated entity '%v' attempt to join to '%v'", entity.GetName(), env.name)
 	}
-	if env.size == 0 {
-		env.size = entity.InSize()
-	} else {
-		if entity.InSize() != env.size {
-			return fmt.Errorf("size mismatch between environment '%v', size = %v and joining entity '%v', size = %v",
-				env.name, env.size, entity.GetName(), entity.InSize())
-		}
+	if err := env.checkNewSize(entity.InSize()); err != nil {
+		return fmt.Errorf("error while joining entity '%v' to the environment '%v': %v",
+			entity.GetName(), env.name, err)
 	}
 	env.joins = append(env.joins, entity)
 	return nil
@@ -72,12 +80,6 @@ func (env *Environment) processEffect(effect Trits) {
 	env.RLock()
 	defer env.RUnlock()
 	for _, entity := range env.joins {
-		go env.invokeEntity(entity, effect)
+		go entity.Invoke(effect) // sync or async?
 	}
-}
-
-func (env *Environment) invokeEntity(entity EntityInterface, effect Trits) {
-	logf(1, "Value '%v' triggered entity %v in environment '%v'",
-		TritsToString(effect), entity.GetName(), env.name)
-	// TODO calls function and then affects environment
 }
