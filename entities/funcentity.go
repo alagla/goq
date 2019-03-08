@@ -6,25 +6,20 @@ import (
 	. "github.com/lunfardo314/goq/dispatcher"
 )
 
-type FunctionEntity struct {
-	BaseEntity
+type functionCallable struct {
+	funcDef FuncDefInterface
+	proc    ProcessorInterface
 }
 
-func NewFunctionEntity(funDef FuncDefInterface) *FunctionEntity {
-	effectCallback := func(args Trits) Trits {
-		expr, err := funDef.NewExpressionWithArgs(args)
-		if err != nil {
-			panic(err)
-		}
-		var proc ProcessorInterface // todo
-		res := make(Trits, funDef.Size(), funDef.Size())
-		null := proc.Eval(expr, res)
-		if null {
-			return nil
-		}
-		return res
+func (fc *functionCallable) Call(args Trits, res Trits) bool {
+	expr, err := fc.funcDef.NewExpressionWithArgs(args)
+	if err != nil {
+		panic(err)
 	}
-	return &FunctionEntity{
-		BaseEntity: *NewBaseEntity(funDef.GetName(), funDef.ArgSize(), funDef.Size(), effectCallback),
-	}
+	return fc.proc.Eval(expr, res)
+}
+
+func NewFunctionEntity(funcDef FuncDefInterface, proc ProcessorInterface) *BaseEntity {
+	return NewBaseEntity(funcDef.GetName(), funcDef.ArgSize(), funcDef.Size(),
+		&functionCallable{funcDef, proc})
 }

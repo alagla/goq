@@ -4,8 +4,6 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
-	"github.com/lunfardo314/goq/dispatcher"
-	"github.com/lunfardo314/goq/entities"
 	. "github.com/lunfardo314/goq/quplayaml"
 )
 
@@ -80,9 +78,4 @@ func (e *QuplaFuncExpr) References(funName string) bool {
 		return true
 	}
 	return e.ReferencesSubExprs(funName)
-}
-
-// only expressions which can be calculated in nil context are valid
-func (e *QuplaFuncExpr) NewEntity() dispatcher.EntityInterface {
-	return entities.NewFunctionEntity(e.funcDef)
 }

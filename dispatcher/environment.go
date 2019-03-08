@@ -71,6 +71,9 @@ func (env *Environment) PostEffect(effect Trits) {
 // loop waits for effect in the environment and then process it
 // null result mean nil
 func (env *Environment) AffectLoop() {
+	logf(3, "AffectLoop STARTED for environment '%v'", env.name)
+	defer logf(3, "AffectLoop STOPPED for environment '%v'", env.name)
+
 	for effect := range env.affectChan {
 		if effect != nil {
 			logf(1, "Value '%v' reached environment '%v'",

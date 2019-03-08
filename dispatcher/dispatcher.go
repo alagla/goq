@@ -28,10 +28,10 @@ func (disp *Dispatcher) GetEnvironment(name string) *Environment {
 
 func (disp *Dispatcher) Join(envName string, entity EntityInterface) (*Environment, error) {
 	env := disp.GetEnvironment(envName)
-	return env, entity.Join(env)
+	return env, entity.JoinEnvironment(env)
 }
 
 func (disp *Dispatcher) Affect(envName string, entity EntityInterface) (*Environment, error) {
 	env := disp.GetEnvironment(envName)
-	return env, entity.Affect(env)
+	return env, entity.AffectEnvironment(env)
 }

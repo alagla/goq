@@ -9,13 +9,13 @@ import (
 	. "github.com/lunfardo314/goq/quplayaml"
 	"github.com/lunfardo314/goq/utils"
 	"math/big"
+	"sync"
 	"time"
 )
 
 type QuplaExecStmt struct {
 	BaseEntity
 	QuplaExprBase
-	source        string
 	isTest        bool
 	isFloat       bool // needed for float comparison
 	funcExpr      *QuplaFuncExpr
@@ -74,7 +74,7 @@ func (ex *QuplaExecStmt) HasState() bool {
 	return ex.funcExpr.funcDef.hasState
 }
 
-func (ex *QuplaExecStmt) Execute() (bool, error) {
+func (ex *QuplaExecStmt) ExecuteOld() (bool, error) {
 	//ex.module.processor.SetTrace(ex.num == 0, 0)
 	logf(2, "Running #%v: '%v'", ex.num, ex.GetSource())
 
@@ -140,60 +140,72 @@ func (ex *QuplaExecStmt) Execute() (bool, error) {
 
 // create temporary environment
 // create two temporary entities
-//   - one for the eval function expression itself, it will affect the environment
+//   - one for the eval function expression itself, affect the environment
 //   - another for the reaction of the function result: in case of eval ir prints result, in case of test it checks test
-//   - invoke function expression
-func (ex *QuplaExecStmt) Execute2() (bool, error) {
-	env := NewEnvironment("$$tmp_environment$$")
-	exprEntity := ex.newFuncExpressionEntity()
-	resultEntity := ex.newResultEntity()
-	if err := resultEntity.Join(env); err != nil {
+//   - post effect to the environment
+func (ex *QuplaExecStmt) Execute() (bool, error) {
+	env := NewEnvironment("ENV$$" + ex.GetSource() + "$$")
+
+	exprEntity := ex.newEvalEntity()
+	if err := exprEntity.AffectEnvironment(env); err != nil {
 		return false, err
 	}
-	if err := exprEntity.Affect(env); err != nil {
+
+	var wg sync.WaitGroup
+	resultEntity := ex.newEvalResultEntity(&wg)
+	if err := resultEntity.JoinEnvironment(env); err != nil {
 		return false, err
 	}
-	exprEntity.Invoke(nil)
+	var t = Trits{0, 0, 0, 0}
+	wg.Add(1)
+	exprEntity.Invoke(t)
+	wg.Wait()
+
 	env.Stop()
 	return false, nil
 }
 
-func (ex *QuplaExecStmt) newResultEntity() *BaseEntity {
-	var callback func(Trits) Trits
-	if ex.isTest {
-		callback = func(result Trits) Trits {
-			logf(0, "Executing '%v'. Eval result: '%v'",
-				ex.source, utils.TritsToString(result))
-			logf(0, "    expected result '%v'", utils.TritsToString(ex.valueExpected))
-
-			if passed, _ := TritsEqual(result, ex.valueExpected); passed {
-				logf(0, "    test PASSED. Duration %v", ex.duration)
-			} else {
-				logf(0, "    test FAILED. Duration %v", ex.duration)
-			}
-			return nil
-		}
-	} else {
-		callback = func(result Trits) Trits {
-			logf(0, "Executing '%v'. Eval result: '%v'. Duration %v",
-				ex.source, utils.TritsToString(result), ex.duration)
-			return nil
-		}
-	}
-	return NewBaseEntity("$$eval_result_entity", ex.funcExpr.Size(), 0, callback)
+// expression shouldn't have free variables
+// only used to call from executables
+type execEvalCallable struct {
+	exec *QuplaExecStmt
 }
 
-// expression shouldn't have free variables
-func (ex *QuplaExecStmt) newFuncExpressionEntity() *BaseEntity {
-	effectCallback := func(_ Trits) Trits {
-		start := time.Now()
-		res := make(Trits, ex.funcExpr.Size(), ex.funcExpr.Size())
-		null := ex.module.processor.Eval(ex.funcExpr, res)
-		ex.duration = time.Since(start)
-		if null {
-			return nil
+func (ec *execEvalCallable) Call(_ Trits, res Trits) bool {
+	start := time.Now()
+	null := ec.exec.module.processor.Eval(ec.exec.funcExpr, res)
+	ec.exec.duration = time.Since(start)
+	return null
+}
+
+func (ex *QuplaExecStmt) newEvalEntity() *BaseEntity {
+	return NewBaseEntity(ex.funcExpr.GetSource(), 0, ex.funcExpr.Size(), &execEvalCallable{ex})
+}
+
+type execEvalResultCallable struct {
+	exec *QuplaExecStmt
+	wg   *sync.WaitGroup
+}
+
+func (ec *execEvalResultCallable) Call(result Trits, _ Trits) bool {
+	defer ec.wg.Done()
+
+	logf(0, "Executing '%v'. Eval result: '%v'. Duration %v",
+		ec.exec.source, utils.TritsToString(result), ec.exec.duration)
+
+	if ec.exec.isTest {
+		logf(0, "    expected result '%v'", utils.TritsToString(ec.exec.valueExpected))
+
+		if passed, _ := TritsEqual(result, ec.exec.valueExpected); passed {
+			logf(0, "    test PASSED")
+		} else {
+			logf(0, "    test FAILED")
 		}
-		return res
 	}
-	return NewBaseEntity(ex.funcExpr.GetSource(), 0, ex.funcExpr.Size(), effectCallback)
+	return true
+}
+
+func (ex *QuplaExecStmt) newEvalResultEntity(wg *sync.WaitGroup) *BaseEntity {
+	ec := &execEvalResultCallable{exec: ex, wg: wg}
+	return NewBaseEntity(ex.funcExpr.GetSource(), ex.funcExpr.Size(), 0, ec)
 }

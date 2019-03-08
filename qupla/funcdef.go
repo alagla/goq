@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
-	"github.com/lunfardo314/goq/entities"
 	. "github.com/lunfardo314/goq/quplayaml"
 	. "github.com/lunfardo314/goq/utils"
 )
@@ -325,8 +324,4 @@ func (def *QuplaFuncDef) NewExpressionWithArgs(args trinary.Trits) (ExpressionIn
 		offset += sz
 	}
 	return ret, nil
-}
-
-func (def *QuplaFuncDef) NewFunctionEntity() *entities.FunctionEntity {
-	return entities.NewFunctionEntity(def)
 }
