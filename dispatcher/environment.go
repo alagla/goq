@@ -76,7 +76,7 @@ func (env *Environment) AffectLoop() {
 
 	for effect := range env.affectChan {
 		if effect != nil {
-			logf(1, "Value '%v' reached environment '%v'",
+			logf(2, "Effect '%v' -> environment '%v'",
 				TritsToString(effect), env.name)
 			env.processEffect(effect)
 		}

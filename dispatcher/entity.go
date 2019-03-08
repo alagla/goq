@@ -82,7 +82,7 @@ func (ent *BaseEntity) loopEffects() {
 
 	res := make(Trits, ent.outSize)
 	for args := range ent.inChan {
-		logf(3, "effect '%v' reached entity '%v'", utils.TritsToString(args), ent.GetName())
+		logf(2, "Effect '%v' -> entity '%v'", utils.TritsToString(args), ent.GetName())
 		if !ent.effectCallable.Call(args, res) {
 			ent.postEffect(res)
 		}

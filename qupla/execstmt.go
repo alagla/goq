@@ -125,11 +125,11 @@ type execEvalResultCallable struct {
 func (ec *execEvalResultCallable) Call(result Trits, _ Trits) bool {
 	defer ec.wg.Done()
 
-	logf(0, "Executing '%v'. Eval result: '%v'. Duration %v",
-		ec.exec.source, utils.TritsToString(result), ec.exec.duration)
+	logf(0, "Executing '%v' ", ec.exec.source)
+	logf(0, "    eval result:     '%v'. Duration %v", utils.TritsToString(result), ec.exec.duration)
 
 	if ec.exec.isTest {
-		logf(0, "    expected result '%v'", utils.TritsToString(ec.exec.valueExpected))
+		logf(0, "    expected result: '%v'", utils.TritsToString(ec.exec.valueExpected))
 
 		if ec.exec.passed, _ = TritsEqual(result, ec.exec.valueExpected); ec.exec.passed {
 			logf(0, "    test PASSED")
