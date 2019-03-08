@@ -19,10 +19,18 @@ func NewEnvironment(name string) *Environment {
 	ret := &Environment{
 		name:       name,
 		joins:      make([]EntityInterface, 0),
-		affectChan: make(chan Trits, 1), // buffer to avoid deadlocks
+		affectChan: make(chan Trits), // buffer to avoid deadlocks
 	}
 	go ret.AffectLoop()
 	return ret
+}
+
+func (env *Environment) Size() int64 {
+	return env.size
+}
+
+func (env *Environment) GetName() string {
+	return env.name
 }
 
 func (env *Environment) Stop() {

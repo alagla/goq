@@ -7,6 +7,7 @@ import (
 	"github.com/lunfardo314/goq/qupla"
 	"github.com/lunfardo314/goq/quplayaml"
 	"os"
+	"time"
 )
 
 const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
@@ -36,8 +37,11 @@ func main() {
 	} else {
 		disp := dispatcher.NewDispatcher()
 		module.AttachToDispatcher(disp)
-
 		module.Execute()
+		postEffectsToDispatcher(disp)
+		for {
+			time.Sleep(1 * time.Second)
+		}
 	}
 	logf(0, "Ciao! I'll be back")
 }
