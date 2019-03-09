@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/utils"
+	"math/big"
 	"sync"
 )
 
@@ -39,7 +40,7 @@ func (env *Environment) Stop() {
 
 func (env *Environment) existsEntity(name string) bool {
 	for _, ei := range env.joins {
-		if ei.GetName() == name {
+		if ei.Name() == name {
 			return true
 		}
 	}
@@ -61,12 +62,12 @@ func (env *Environment) checkNewSize(size int64) error {
 func (env *Environment) Join(entity EntityInterface) error {
 	env.Lock()
 	defer env.Unlock()
-	if env.existsEntity(entity.GetName()) {
-		return fmt.Errorf("duplicated entity '%v' attempt to join to '%v'", entity.GetName(), env.name)
+	if env.existsEntity(entity.Name()) {
+		return fmt.Errorf("duplicated entity '%v' attempt to join to '%v'", entity.Name(), env.name)
 	}
 	if err := env.checkNewSize(entity.InSize()); err != nil {
 		return fmt.Errorf("error while joining entity '%v' to the environment '%v': %v",
-			entity.GetName(), env.name, err)
+			entity.Name(), env.name, err)
 	}
 	env.joins = append(env.joins, entity)
 	return nil
@@ -82,10 +83,12 @@ func (env *Environment) AffectLoop() {
 	logf(3, "AffectLoop STARTED for environment '%v'", env.name)
 	defer logf(3, "AffectLoop STOPPED for environment '%v'", env.name)
 
+	var dec *big.Int
 	for effect := range env.affectChan {
 		if effect != nil {
-			logf(2, "Effect '%v' -> environment '%v'",
-				TritsToString(effect), env.name)
+			dec, _ = TritsToBigInt(effect)
+			logf(2, "Environment '%v' <- '%v' (%v)",
+				env.name, TritsToString(effect), dec)
 			env.processEffect(effect)
 		}
 	}

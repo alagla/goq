@@ -11,7 +11,7 @@ type CallableWithTrits interface {
 }
 
 type EntityInterface interface {
-	GetName() string                      // name of the entity
+	Name() string                         // name of the entity
 	OutSize() int64                       // result size in trits
 	InSize() int64                        // concat arguments, total size in trits
 	JoinEnvironment(*Environment) error   // join the environment = will be listening to the environment
@@ -48,7 +48,7 @@ func (ent *BaseEntity) Stop() {
 	close(ent.inChan)
 }
 
-func (ent *BaseEntity) GetName() string {
+func (ent *BaseEntity) Name() string {
 	return ent.name
 }
 
@@ -62,7 +62,7 @@ func (ent *BaseEntity) OutSize() int64 {
 
 func (ent *BaseEntity) AffectEnvironment(env *Environment) error {
 	if err := env.checkNewSize(ent.outSize); err != nil {
-		return fmt.Errorf("error while registering affect, entity '%v': %v", ent.GetName(), err)
+		return fmt.Errorf("error while registering affect, entity '%v': %v", ent.Name(), err)
 	}
 	ent.affects = append(ent.affects, env)
 	return nil
@@ -81,8 +81,9 @@ func (ent *BaseEntity) loopEffects() {
 	defer logf(3, "loopEffects STOPPED for entity '%v'", ent.name)
 
 	res := make(Trits, ent.outSize)
+
 	for args := range ent.inChan {
-		logf(2, "Effect '%v' -> entity '%v'", utils.TritsToString(args), ent.GetName())
+		logf(2, "Entity '%v' <- '%v'", ent.Name(), utils.TritsToString(args))
 		if !ent.effectCallable.Call(args, res) {
 			ent.postEffect(res)
 		}

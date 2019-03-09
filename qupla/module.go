@@ -283,7 +283,7 @@ func (module *QuplaModule) AttachToDispatcher(disp *dispatcher.Dispatcher) {
 		if !funcdef.HasEnvStmt() {
 			continue
 		}
-		entity := entities.NewFunctionEntity(funcdef, module.processor)
+		entity := entities.NewFunctionEntity(funcdef, NewStackProcessor())
 		for envName := range funcdef.joins {
 			if _, err := disp.Join(envName, entity); err != nil {
 				logf(0, "dispatcher::JoinEvironment: %v", err)
