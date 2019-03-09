@@ -15,27 +15,13 @@ func executor(in string) {
 	if len(words) == 0 {
 		return
 	}
-	fmt.Printf("Your input: %v\n", words)
+	logf(2, "Your input: %v\n", words)
 	switch words[0] {
-	case "exit":
+	case "exit", "quit":
 		logf(0, "Bye!")
 		os.Exit(0)
 	case "verb":
-		if len(words) == 1 {
-			logf(0, "current verbosity level is %v", cfg.Config.Verbosity)
-			return
-		}
-		if len(words) != 2 {
-			logf(0, "usage: verb [0|1|2|3]")
-		}
-		var v int
-		v, err := strconv.Atoi(words[1])
-		if err != nil || v < 0 || v > 2 {
-			logf(0, "usage: verb [0|1|2|3]")
-			return
-		}
-		cfg.Config.Verbosity = v
-		logf(0, "verbosity was set to %v", cfg.Config.Verbosity)
+		CmdVerbosity(words)
 	case "load":
 		logf(0, "not implemented yet")
 	case "functions":
@@ -93,4 +79,23 @@ func logf(minVerbosity int, format string, args ...interface{}) {
 		return
 	}
 	fmt.Printf(format+"\n", args...)
+}
+
+func CmdVerbosity(words []string) {
+	if len(words) == 1 {
+		logf(0, "current verbosity level is %v", cfg.Config.Verbosity)
+		return
+	}
+	if len(words) != 2 {
+		logf(0, "usage: verb [0|1|2|3]")
+	}
+	var v int
+	v, err := strconv.Atoi(words[1])
+	if err != nil || v < 0 || v > 2 {
+		logf(0, "usage: verb [0|1|2|3]")
+		return
+	}
+	cfg.Config.Verbosity = v
+	logf(0, "verbosity was set to %v", cfg.Config.Verbosity)
+
 }
