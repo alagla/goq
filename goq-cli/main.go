@@ -1,9 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/c-bata/go-prompt"
 	"github.com/lunfardo314/goq/cfg"
+	"github.com/lunfardo314/goq/dispatcher"
+	"github.com/lunfardo314/goq/qupla"
+	"github.com/lunfardo314/goq/quplayaml"
 	"os"
 	"strconv"
 	"strings"
@@ -12,10 +16,13 @@ import (
 
 func executor(in string) {
 	words := strings.Split(in, " ")
-	if len(words) == 0 {
+	if len(words) == 0 || words[0] == "" {
 		return
 	}
-	logf(2, "Your input: %v\n", words)
+	logf(2, "----- Command '%v'", words[0])
+	start := time.Now()
+	defer logf(2, "----- Command '%v'. Duration %v", words[0], time.Since(start))
+
 	switch words[0] {
 	case "exit", "quit":
 		logf(0, "Bye!")
@@ -23,7 +30,11 @@ func executor(in string) {
 	case "verb":
 		CmdVerbosity(words)
 	case "load":
-		logf(0, "not implemented yet")
+		CmdLoadModule(words)
+	case "save":
+		CmdSaveModule(words)
+	case "run":
+		CmdRunExecs(words)
 	case "functions":
 		logf(0, "not implemented yet")
 	case "module":
@@ -65,13 +76,21 @@ func main() {
 	logf(0, "Verbosity is %v", cfg.Config.Verbosity)
 	logf(0, "Use TAB to select suggestion")
 
-	p := prompt.New(
-		executor,
-		completer,
-		prompt.OptionPrefixTextColor(prompt.LightGray),
-		prompt.OptionPrefix(">>> "),
-	)
-	p.Run()
+	pnocli := flag.Bool("nocli", false, "bypass CLI")
+	flag.Parse()
+	if *pnocli {
+		logf(0, "Bypass CLI. Load module and run it.")
+		CmdLoadModule(nil)
+		CmdRunExecs(nil)
+	} else {
+		p := prompt.New(
+			executor,
+			completer,
+			prompt.OptionPrefixTextColor(prompt.LightGray),
+			prompt.OptionPrefix(">>> "),
+		)
+		p.Run()
+	}
 }
 
 func logf(minVerbosity int, format string, args ...interface{}) {
@@ -97,5 +116,61 @@ func CmdVerbosity(words []string) {
 	}
 	cfg.Config.Verbosity = v
 	logf(0, "verbosity was set to %v", cfg.Config.Verbosity)
+
+}
+
+const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
+const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
+
+var moduleYAML *quplayaml.QuplaModuleYAML
+var module *qupla.QuplaModule
+
+func CmdLoadModule(_ []string) {
+	var err error
+
+	logf(0, "Loading module form file %v", fname)
+	moduleYAML, err = quplayaml.NewQuplaModuleFromYAML(fname)
+	if err != nil {
+		logf(0, "Error while parsing YAML file: %v", err)
+		moduleYAML = nil
+		return
+	}
+	logf(0, "Module loaded successfully")
+	logf(0, "Analyzing module")
+
+	var succ bool
+	module, succ = qupla.AnalyzeQuplaModule("single_module", moduleYAML, &qupla.ExpressionFactoryFromYAML{})
+	module.PrintStats()
+	if succ {
+		logf(0, "Module analyzed succesfully")
+	} else {
+		logf(0, "Failed to analyze module")
+		module = nil
+	}
+}
+
+func CmdSaveModule(_ []string) {
+	if moduleYAML == nil {
+		logf(0, "Error: module was not loaded")
+		return
+	}
+	logf(0, "Writing Qupla module to YAML file %v", testout)
+
+	if err := moduleYAML.WriteToFile(testout); err != nil {
+		logf(0, "Error occured: %v", err)
+	} else {
+		logf(0, "Succesfully saved Qupla module")
+	}
+}
+
+func CmdRunExecs(_ []string) {
+	if module == nil {
+		logf(0, "Error: module not loaded")
+		return
+	}
+	disp := dispatcher.NewDispatcher()
+	module.AttachToDispatcher(disp)
+	module.Execute()
+	postEffectsToDispatcher(disp)
 
 }
