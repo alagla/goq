@@ -7,7 +7,6 @@ import (
 	. "github.com/lunfardo314/goq/dispatcher"
 	. "github.com/lunfardo314/goq/quplayaml"
 	"github.com/lunfardo314/goq/utils"
-	"sync"
 	"time"
 )
 
@@ -78,26 +77,35 @@ func (ex *QuplaExecStmt) HasState() bool {
 //   - one for the eval function expression itself, affect the environment
 //   - another for the reaction of the function result: in case of eval ir prints result, in case of test it checks test
 //   - post effect to the environment
-func (ex *QuplaExecStmt) Execute() (bool, error) {
-	env := NewEnvironment("ENV$$" + ex.GetSource() + "$$")
+func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
+	envInName := "ENV_IN$$" + ex.GetSource() + "$$"
+	envOutName := "ENV_OUT$$" + ex.GetSource() + "$$"
 
-	exprEntity := ex.newEvalEntity()
-	if err := exprEntity.AffectEnvironment(env); err != nil {
+	disp.GetOrCreateEnvironment_(envInName)
+	//if err := disp.SetEnvironmentSize(envInName, 1); err != nil{
+	//	return false, err
+	//}
+	exprEntity := ex.newEvalEntity(disp)
+	if _, err := disp.Join(envInName, exprEntity); err != nil {
 		return false, err
 	}
 
-	var wg sync.WaitGroup
-	resultEntity := ex.newEvalResultEntity(&wg)
-	if err := resultEntity.JoinEnvironment(env); err != nil {
+	disp.GetOrCreateEnvironment_(envOutName)
+	if _, err := disp.Affect(envOutName, exprEntity); err != nil {
 		return false, err
 	}
-	var t = Trits{0, 0, 0, 0}
-	wg.Add(1)
-	exprEntity.Invoke(t)
-	wg.Wait()
 
-	env.Stop()
-	return ex.passed, nil
+	resultEntity := ex.newEvalResultEntity(disp)
+	if _, err := disp.Join(envOutName, resultEntity); err != nil {
+		return false, err
+	}
+	var t = Trits{0}
+	err := disp.DoQuant(envInName, t)
+
+	_ = disp.DeleteEnvironment(envInName)
+	_ = disp.DeleteEnvironment(envOutName)
+
+	return ex.passed, err
 }
 
 // expression shouldn't have free variables
@@ -113,18 +121,15 @@ func (ec *execEvalCallable) Call(_ Trits, res Trits) bool {
 	return null
 }
 
-func (ex *QuplaExecStmt) newEvalEntity() *BaseEntity {
-	return NewBaseEntity(ex.funcExpr.GetSource(), 0, ex.funcExpr.Size(), &execEvalCallable{ex})
+func (ex *QuplaExecStmt) newEvalEntity(disp *Dispatcher) *BaseEntity {
+	return NewBaseEntity(disp, ex.funcExpr.GetSource(), 0, ex.funcExpr.Size(), &execEvalCallable{ex})
 }
 
 type execEvalResultCallable struct {
 	exec *QuplaExecStmt
-	wg   *sync.WaitGroup
 }
 
 func (ec *execEvalResultCallable) Call(result Trits, _ Trits) bool {
-	defer ec.wg.Done()
-
 	logf(0, "Executing '%v' ", ec.exec.source)
 	logf(0, "    eval result:     '%v'. Duration %v", utils.TritsToString(result), ec.exec.duration)
 
@@ -140,7 +145,7 @@ func (ec *execEvalResultCallable) Call(result Trits, _ Trits) bool {
 	return true
 }
 
-func (ex *QuplaExecStmt) newEvalResultEntity(wg *sync.WaitGroup) *BaseEntity {
-	ec := &execEvalResultCallable{exec: ex, wg: wg}
-	return NewBaseEntity(ex.funcExpr.GetSource(), ex.funcExpr.Size(), 0, ec)
+func (ex *QuplaExecStmt) newEvalResultEntity(disp *Dispatcher) *BaseEntity {
+	ec := &execEvalResultCallable{exec: ex}
+	return NewBaseEntity(disp, ex.funcExpr.GetSource(), ex.funcExpr.Size(), 0, ec)
 }

@@ -170,7 +170,7 @@ func CmdRunExecs(_ []string) {
 	}
 	disp := dispatcher.NewDispatcher()
 	module.AttachToDispatcher(disp)
-	module.Execute()
+	module.Execute(disp)
 	postEffectsToDispatcher(disp)
 
 }

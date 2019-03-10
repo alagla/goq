@@ -19,7 +19,7 @@ func (fc *functionCallable) Call(args Trits, res Trits) bool {
 	return fc.proc.Eval(expr, res)
 }
 
-func NewFunctionEntity(funcDef FuncDefInterface, proc ProcessorInterface) *BaseEntity {
-	return NewBaseEntity(funcDef.GetName(), funcDef.ArgSize(), funcDef.Size(),
+func NewFunctionEntity(disp *Dispatcher, funcDef FuncDefInterface, proc ProcessorInterface) *BaseEntity {
+	return NewBaseEntity(disp, funcDef.GetName(), funcDef.ArgSize(), funcDef.Size(),
 		&functionCallable{funcDef, proc})
 }

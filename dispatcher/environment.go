@@ -4,25 +4,25 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/utils"
-	"math/big"
-	"sync"
 )
 
 type Environment struct {
-	sync.RWMutex
+	//sync.RWMutex
+	dispatcher *Dispatcher
 	name       string
 	joins      []EntityInterface
 	size       int64
-	affectChan chan Trits // where all effects are sent
+	effectChan chan Trits // where all effects are sent
 }
 
-func NewEnvironment(name string) *Environment {
+func NewEnvironment(disp *Dispatcher, name string) *Environment {
 	ret := &Environment{
+		dispatcher: disp,
 		name:       name,
 		joins:      make([]EntityInterface, 0),
-		affectChan: make(chan Trits), // buffer to avoid deadlocks
+		effectChan: make(chan Trits), // buffer to avoid deadlocks
 	}
-	go ret.AffectLoop()
+	go ret.environmentListenToEffectsLoop()
 	return ret
 }
 
@@ -34,11 +34,11 @@ func (env *Environment) GetName() string {
 	return env.name
 }
 
-func (env *Environment) Stop() {
-	close(env.affectChan)
+func (env *Environment) stop() {
+	close(env.effectChan)
 }
 
-func (env *Environment) existsEntity(name string) bool {
+func (env *Environment) existsEntity_(name string) bool {
 	for _, ei := range env.joins {
 		if ei.Name() == name {
 			return true
@@ -47,7 +47,7 @@ func (env *Environment) existsEntity(name string) bool {
 	return false
 }
 
-func (env *Environment) checkNewSize(size int64) error {
+func (env *Environment) checkNewSize_(size int64) error {
 	if env.size != 0 {
 		if env.size != size {
 			return fmt.Errorf("size mismatch in environment '%v'. Must be %v",
@@ -60,12 +60,10 @@ func (env *Environment) checkNewSize(size int64) error {
 }
 
 func (env *Environment) Join(entity EntityInterface) error {
-	env.Lock()
-	defer env.Unlock()
-	if env.existsEntity(entity.Name()) {
+	if env.existsEntity_(entity.Name()) {
 		return fmt.Errorf("duplicated entity '%v' attempt to join to '%v'", entity.Name(), env.name)
 	}
-	if err := env.checkNewSize(entity.InSize()); err != nil {
+	if err := env.checkNewSize_(entity.InSize()); err != nil {
 		return fmt.Errorf("error while joining entity '%v' to the environment '%v': %v",
 			entity.Name(), env.name, err)
 	}
@@ -74,35 +72,34 @@ func (env *Environment) Join(entity EntityInterface) error {
 }
 
 func (env *Environment) PostEffect(effect Trits) {
-	env.affectChan <- effect
+	if effect != nil {
+		dec, _ := TritsToBigInt(effect)
+		logf(2, "Environment '%v' <- '%v' (%v)", env.name, TritsToString(effect), dec)
+	} else {
+		logf(2, "Environment '%v' <- 'null'", env.name)
+	}
+	env.dispatcher.quantWG.Add(len(env.joins))
+	logf(3, "---------------- ADD %v (env '%v')", len(env.joins), env.name)
+
+	env.effectChan <- effect
+
 }
 
 // loop waits for effect in the environment and then process it
 // null result mean nil
-func (env *Environment) AffectLoop() {
-	logf(3, "AffectLoop STARTED for environment '%v'", env.name)
-	defer logf(3, "AffectLoop STOPPED for environment '%v'", env.name)
+func (env *Environment) environmentListenToEffectsLoop() {
+	logf(3, "environmentListenToEffectsLoop STARTED for environment '%v'", env.name)
+	defer logf(3, "environmentListenToEffectsLoop STOPPED for environment '%v'", env.name)
 
-	var dec *big.Int
-	for effect := range env.affectChan {
-		if effect != nil {
-			dec, _ = TritsToBigInt(effect)
-			logf(2, "Environment '%v' <- '%v' (%v)",
-				env.name, TritsToString(effect), dec)
-			env.processEffect(effect)
+	for effect := range env.effectChan {
+		//  TODO in debug mode here wait for wave
+		for _, entity := range env.joins {
+			entity.Invoke(effect) // async
 		}
 	}
 	// if the input channel (affect) is closed,
 	// we have to close all join channels to stop listening routines
 	for _, entity := range env.joins {
-		go entity.Stop()
-	}
-}
-
-func (env *Environment) processEffect(effect Trits) {
-	env.RLock()
-	defer env.RUnlock()
-	for _, entity := range env.joins {
-		go entity.Invoke(effect) // sync or async?
+		entity.Stop()
 	}
 }

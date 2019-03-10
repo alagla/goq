@@ -171,7 +171,7 @@ func (module *QuplaModule) FindLUTDef(name string) (LUTInterface, error) {
 	return ret, nil
 }
 
-func (module *QuplaModule) Execute() {
+func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher) {
 	switch {
 	case cfg.Config.ExecEvals && cfg.Config.ExecTests:
 		logf(0, "Executing evals and tests (total %v)", len(module.execs))
@@ -197,7 +197,7 @@ func (module *QuplaModule) Execute() {
 			testsSkipped++
 			continue
 		}
-		if passed, err := exec.Execute(); err != nil {
+		if passed, err := exec.Execute(disp); err != nil {
 			logf(0, "Error: %v", err)
 		} else {
 			if exec.isTest {
@@ -283,7 +283,7 @@ func (module *QuplaModule) AttachToDispatcher(disp *dispatcher.Dispatcher) {
 		if !funcdef.HasEnvStmt() {
 			continue
 		}
-		entity := entities.NewFunctionEntity(funcdef, NewStackProcessor())
+		entity := entities.NewFunctionEntity(disp, funcdef, NewStackProcessor())
 		for envName := range funcdef.joins {
 			if _, err := disp.Join(envName, entity); err != nil {
 				logf(0, "dispatcher::JoinEvironment: %v", err)

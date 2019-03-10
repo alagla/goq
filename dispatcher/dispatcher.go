@@ -10,6 +10,7 @@ import (
 type Dispatcher struct {
 	sync.RWMutex
 	environments map[string]*Environment
+	quantWG      sync.WaitGroup
 }
 
 func NewDispatcher() *Dispatcher {
@@ -18,45 +19,86 @@ func NewDispatcher() *Dispatcher {
 	}
 }
 
-func (disp *Dispatcher) GetEnvironmentInfo(name string) (int64, bool) {
-	ret, ok := disp.environments[name]
+func (disp *Dispatcher) SetEnvironmentSize(envName string, size int64) error {
+	disp.Lock()
+	defer disp.Unlock()
+
+	env, ok := disp.environments[envName]
 	if !ok {
-		return 0, false
+		return fmt.Errorf("no such environment: '%v'", envName)
 	}
-	return ret.Size(), true
+	env.size = size
+	return nil
 }
 
-func (disp *Dispatcher) GetEnvironment(name string) *Environment {
-	disp.RLock()
-	defer disp.RUnlock()
+func (disp *Dispatcher) GetOrCreateEnvironment_(name string) *Environment {
 	_, ok := disp.environments[name]
 	if !ok {
-		disp.environments[name] = NewEnvironment(name)
+		disp.environments[name] = NewEnvironment(disp, name)
 	}
 	return disp.environments[name]
-
 }
 
 func (disp *Dispatcher) Join(envName string, entity EntityInterface) (*Environment, error) {
-	env := disp.GetEnvironment(envName)
+	disp.Lock()
+	defer disp.Unlock()
+
+	env := disp.GetOrCreateEnvironment_(envName)
 	return env, entity.JoinEnvironment(env)
 }
 
 func (disp *Dispatcher) Affect(envName string, entity EntityInterface) (*Environment, error) {
-	env := disp.GetEnvironment(envName)
+	disp.Lock()
+	defer disp.Unlock()
+
+	env := disp.GetOrCreateEnvironment_(envName)
 	return env, entity.AffectEnvironment(env)
 }
 
-func (disp *Dispatcher) PostEffect(envName string, effect Trits) error {
-	env := disp.GetEnvironment(envName)
-	if env == nil {
+func (disp *Dispatcher) DeleteEnvironment(envName string) error {
+	disp.Lock()
+	defer disp.Unlock()
+	env, ok := disp.environments[envName]
+	if !ok {
 		return fmt.Errorf("can't find environment '%v'", envName)
 	}
+	env.stop()
+	delete(disp.environments, envName)
+	logf(3, "deleted environment '%v'", envName)
+	return nil
+}
 
-	if env.Size() != int64(len(effect)) {
-		return fmt.Errorf("size mismatch while posting effect '%v' to the environment '%v', size must be %v",
-			utils.TritsToString(effect), env.GetName(), env.Size())
+func (disp *Dispatcher) DoQuant(envName string, effect Trits) error {
+	// only one quant at a time
+	disp.quantWG.Wait()
+
+	// No changes to dispatcher state within a quant
+	disp.Lock()
+	defer disp.Unlock()
+
+	if effect == nil {
+		return fmt.Errorf("DoQuant: effect is nil")
+	}
+	env := disp.GetOrCreateEnvironment_(envName)
+	if env == nil {
+		return fmt.Errorf("DoQuant: can't find environment '%v'", envName)
+	}
+	size := int(env.Size())
+	if size == 0 {
+		effect = Trits{0}
+	} else {
+		if len(effect) != size {
+			if len(effect) > size {
+				return fmt.Errorf("DoQuant: trit vector '%v' is too long for the environment '%v', size = %v",
+					utils.TritsToString(effect), envName, size)
+			}
+			effect = PadTrits(effect, size)
+		}
 	}
 	env.PostEffect(effect)
+
+	// wait for quant to finish
+	disp.quantWG.Wait()
+
 	return nil
 }

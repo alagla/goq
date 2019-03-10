@@ -21,6 +21,7 @@ type EntityInterface interface {
 }
 
 type BaseEntity struct {
+	dispatcher     *Dispatcher
 	name           string
 	inSize         int64
 	outSize        int64
@@ -29,8 +30,9 @@ type BaseEntity struct {
 	effectCallable CallableWithTrits // function called for each effect
 }
 
-func NewBaseEntity(name string, inSize, outSize int64, effectCallable CallableWithTrits) *BaseEntity {
+func NewBaseEntity(disp *Dispatcher, name string, inSize, outSize int64, effectCallable CallableWithTrits) *BaseEntity {
 	ret := &BaseEntity{
+		dispatcher:     disp,
 		name:           name,
 		inSize:         inSize,
 		outSize:        outSize,
@@ -38,7 +40,7 @@ func NewBaseEntity(name string, inSize, outSize int64, effectCallable CallableWi
 		inChan:         make(chan Trits),
 		effectCallable: effectCallable,
 	}
-	go ret.loopEffects() // start listening to incoming effects
+	go ret.entityListenToEffectsLoop() // start listening to incoming effects
 	return ret
 }
 
@@ -61,7 +63,7 @@ func (ent *BaseEntity) OutSize() int64 {
 }
 
 func (ent *BaseEntity) AffectEnvironment(env *Environment) error {
-	if err := env.checkNewSize(ent.outSize); err != nil {
+	if err := env.checkNewSize_(ent.outSize); err != nil {
 		return fmt.Errorf("error while registering affect, entity '%v': %v", ent.Name(), err)
 	}
 	ent.affects = append(ent.affects, env)
@@ -76,22 +78,24 @@ func (ent *BaseEntity) Invoke(t Trits) {
 	ent.inChan <- t
 }
 
-func (ent *BaseEntity) loopEffects() {
-	logf(3, "loopEffects STARTED for entity '%v'", ent.name)
-	defer logf(3, "loopEffects STOPPED for entity '%v'", ent.name)
+func (ent *BaseEntity) entityListenToEffectsLoop() {
+	logf(3, "entityListenToEffectsLoop STARTED for entity '%v'", ent.name)
+	defer logf(3, "entityListenToEffectsLoop STOPPED for entity '%v'", ent.name)
 
 	res := make(Trits, ent.outSize)
 
-	for args := range ent.inChan {
-		logf(2, "Entity '%v' <- '%v'", ent.Name(), utils.TritsToString(args))
-		if !ent.effectCallable.Call(args, res) {
-			ent.postEffect(res)
+	for effect := range ent.inChan {
+		logf(2, "Entity '%v' <- '%v'", ent.Name(), utils.TritsToString(effect))
+		// calculate result
+		if !ent.effectCallable.Call(effect, res) {
+			// is not null
+			// mark it is done with entity
+			// distribute result to affected environments
+			for _, env := range ent.affects {
+				env.PostEffect(res) // sync or async?
+			}
 		}
-	}
-}
-
-func (ent *BaseEntity) postEffect(effect Trits) {
-	for _, env := range ent.affects {
-		env.PostEffect(effect) // sync or async?
+		ent.dispatcher.quantWG.Done()
+		logf(3, "---------------- DONE (entity '%v')", ent.name)
 	}
 }
