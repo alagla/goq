@@ -284,19 +284,9 @@ func (module *QuplaModule) AttachToDispatcher(disp *dispatcher.Dispatcher) {
 			continue
 		}
 		entity := entities.NewFunctionEntity(disp, funcdef, NewStackProcessor())
-		for envName := range funcdef.joins {
-			if _, err := disp.Join(envName, entity); err != nil {
-				logf(0, "dispatcher::JoinEvironment: %v", err)
-			}
-			logf(1, "Function '%v' joined environment '%v'",
-				funcdef.GetName(), envName)
-		}
-		for envName := range funcdef.affects {
-			if _, err := disp.Affect(envName, entity); err != nil {
-				logf(0, "dispatcher::AffectEnvironment: %v", err)
-			}
-			logf(1, "Function '%v' will affect environment '%v'",
-				funcdef.GetName(), envName)
+		if err := disp.Attach(entity, funcdef.joins.List(), funcdef.affects.List()); err != nil {
+			logf(0, "error while attaching entity '%v' to dispatcher: %v",
+				entity.GetName(), err)
 		}
 	}
 }

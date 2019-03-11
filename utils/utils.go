@@ -115,3 +115,11 @@ func (s StringSet) Join(d string) string {
 	}
 	return ret
 }
+
+func (s StringSet) List() []string {
+	ret := make([]string, 0, len(s))
+	for str := range s {
+		ret = append(ret, str)
+	}
+	return ret
+}

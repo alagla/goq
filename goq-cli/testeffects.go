@@ -30,7 +30,7 @@ func postEffectsToDispatcher(disp *dispatcher.Dispatcher) {
 		}
 		t := trinary.IntToTrits(int64(val))
 		start := time.Now()
-		err = disp.DoQuant(s.env, t)
+		err = disp.RunQuant(s.env, t, true)
 		if err != nil {
 			logf(0, "error while starting quant with value '%v' and the environment '%v': %v",
 				s.decString, s.env, err)
@@ -43,7 +43,7 @@ func postEffectsToDispatcher(disp *dispatcher.Dispatcher) {
 }
 
 func printTritMap(tm map[string]trinary.Trits) {
-	logf(2, "---- Environment values after quant:")
+	logf(2, "---- environment values after quant:")
 	var dec *big.Int
 	for name, value := range tm {
 		dec, _ = utils.TritsToBigInt(value)

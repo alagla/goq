@@ -11,7 +11,7 @@ import (
 )
 
 type QuplaExecStmt struct {
-	BaseEntity
+	Entity
 	QuplaExprBase
 	isTest        bool
 	isFloat       bool // needed for float comparison
@@ -83,26 +83,23 @@ func (ex *QuplaExecStmt) HasState() bool {
 func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 	envInName := "ENV_IN$$" + ex.GetName() + "$$"
 	envOutName := "ENV_OUT$$" + ex.GetName() + "$$"
-
-	disp.GetOrCreateEnvironment_(envInName)
-	//if err := disp.SetEnvironmentSize(envInName, 1); err != nil{
-	//	return false, err
-	//}
-	exprEntity := ex.newEvalEntity(disp)
-	if _, err := disp.Join(envInName, exprEntity); err != nil {
+	var err error
+	if err = disp.CreateEnvironment(envInName); err != nil {
+		return false, err
+	}
+	if err = disp.CreateEnvironment(envOutName); err != nil {
 		return false, err
 	}
 
-	disp.GetOrCreateEnvironment_(envOutName)
-	if _, err := disp.Affect(envOutName, exprEntity); err != nil {
-		return false, err
+	exprEntity := ex.newEvalEntity(disp)
+	if err = disp.Attach(exprEntity, []string{envInName}, []string{envOutName}); err != nil {
+		return false, nil
 	}
 
 	var t = Trits{0}
-	var err error
 	var result Trits
 
-	if err = disp.DoQuant(envInName, t); err != nil {
+	if err = disp.RunQuant(envInName, t, false); err != nil {
 		return false, err
 	}
 	if result, err = disp.Value(envOutName); err != nil {
@@ -121,7 +118,7 @@ func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 		}
 	}
 
-	//logf(0, "Environment values after quant:")
+	//logf(0, "environment values after quant:")
 	//printTritMap(disp.Values())
 
 	_ = disp.DeleteEnvironment(envInName)
@@ -143,6 +140,6 @@ func (ec *execEvalCallable) Call(_ Trits, res Trits) bool {
 	return null
 }
 
-func (ex *QuplaExecStmt) newEvalEntity(disp *Dispatcher) *BaseEntity {
-	return NewBaseEntity(disp, "EVAL_"+ex.funcExpr.GetSource(), 0, ex.funcExpr.Size(), &execEvalCallable{ex})
+func (ex *QuplaExecStmt) newEvalEntity(disp *Dispatcher) *Entity {
+	return NewEntity(disp, "EVAL_"+ex.funcExpr.GetSource(), 0, ex.funcExpr.Size(), &execEvalCallable{ex})
 }
