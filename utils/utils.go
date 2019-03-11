@@ -7,6 +7,9 @@ import (
 )
 
 func TritsToString(trits Trits) string {
+	if trits == nil {
+		return "<nil>"
+	}
 	b := make([]byte, len(trits), len(trits))
 	for i := range trits {
 		switch trits[i] {

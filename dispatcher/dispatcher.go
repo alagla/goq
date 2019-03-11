@@ -9,8 +9,10 @@ import (
 
 type Dispatcher struct {
 	sync.RWMutex
-	environments map[string]*Environment
-	quantWG      sync.WaitGroup
+	environments  map[string]*Environment
+	quantWG       sync.WaitGroup
+	waveStopWG    sync.WaitGroup
+	waveReleaseWG sync.WaitGroup
 }
 
 func NewDispatcher() *Dispatcher {
@@ -101,4 +103,28 @@ func (disp *Dispatcher) DoQuant(envName string, effect Trits) error {
 	disp.quantWG.Wait()
 
 	return nil
+}
+
+func (disp *Dispatcher) Value(envName string) (Trits, error) {
+	disp.RLock()
+	defer disp.RUnlock()
+
+	env, ok := disp.environments[envName]
+	if !ok {
+		return nil, fmt.Errorf("can't find environment '%v'", envName)
+	}
+	return env.GetValue(), nil
+}
+
+func (disp *Dispatcher) Values() map[string]Trits {
+	disp.RLock()
+	defer disp.RUnlock()
+
+	ret := make(map[string]Trits)
+	for name, env := range disp.environments {
+		if env.value != nil {
+			ret[name] = env.value
+		}
+	}
+	return ret
 }

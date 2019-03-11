@@ -79,8 +79,8 @@ func (ent *BaseEntity) Invoke(t Trits) {
 }
 
 func (ent *BaseEntity) entityListenToEffectsLoop() {
-	logf(3, "entityListenToEffectsLoop STARTED for entity '%v'", ent.name)
-	defer logf(3, "entityListenToEffectsLoop STOPPED for entity '%v'", ent.name)
+	logf(4, "entityListenToEffectsLoop STARTED for entity '%v'", ent.name)
+	defer logf(4, "entityListenToEffectsLoop STOPPED for entity '%v'", ent.name)
 
 	res := make(Trits, ent.outSize)
 
@@ -96,6 +96,6 @@ func (ent *BaseEntity) entityListenToEffectsLoop() {
 			}
 		}
 		ent.dispatcher.quantWG.Done()
-		logf(3, "---------------- DONE (entity '%v')", ent.name)
+		logf(4, "---------------- DONE (entity '%v')", ent.name)
 	}
 }

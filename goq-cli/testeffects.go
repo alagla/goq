@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/dispatcher"
+	"github.com/lunfardo314/goq/utils"
+	"math/big"
 	"strconv"
 	"time"
 )
@@ -36,5 +38,15 @@ func postEffectsToDispatcher(disp *dispatcher.Dispatcher) {
 			logf(3, "Quant %v <- '%v' was finished in %v",
 				s.decString, s.env, time.Since(start))
 		}
+		printTritMap(disp.Values())
+	}
+}
+
+func printTritMap(tm map[string]trinary.Trits) {
+	logf(2, "---- Environment values after quant:")
+	var dec *big.Int
+	for name, value := range tm {
+		dec, _ = utils.TritsToBigInt(value)
+		logf(2, "     %v: %v (%v)", name, utils.TritsToString(value), dec)
 	}
 }

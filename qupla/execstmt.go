@@ -20,7 +20,6 @@ type QuplaExecStmt struct {
 	module        *QuplaModule
 	num           int
 	duration      time.Duration
-	passed        bool
 }
 
 func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error {
@@ -68,6 +67,10 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 	return nil
 }
 
+func (ex *QuplaExecStmt) GetName() string {
+	return fmt.Sprintf("#%v-'%v'", ex.num, ex.GetSource())
+}
+
 func (ex *QuplaExecStmt) HasState() bool {
 	return ex.funcExpr.funcDef.hasState
 }
@@ -78,8 +81,8 @@ func (ex *QuplaExecStmt) HasState() bool {
 //   - another for the reaction of the function result: in case of eval ir prints result, in case of test it checks test
 //   - post effect to the environment
 func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
-	envInName := "ENV_IN$$" + ex.GetSource() + "$$"
-	envOutName := "ENV_OUT$$" + ex.GetSource() + "$$"
+	envInName := "ENV_IN$$" + ex.GetName() + "$$"
+	envOutName := "ENV_OUT$$" + ex.GetName() + "$$"
 
 	disp.GetOrCreateEnvironment_(envInName)
 	//if err := disp.SetEnvironmentSize(envInName, 1); err != nil{
@@ -95,17 +98,36 @@ func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 		return false, err
 	}
 
-	resultEntity := ex.newEvalResultEntity(disp)
-	if _, err := disp.Join(envOutName, resultEntity); err != nil {
+	var t = Trits{0}
+	var err error
+	var result Trits
+
+	if err = disp.DoQuant(envInName, t); err != nil {
 		return false, err
 	}
-	var t = Trits{0}
-	err := disp.DoQuant(envInName, t)
+	if result, err = disp.Value(envOutName); err != nil {
+		return false, err
+	}
+	logf(0, "Executing %v", ex.GetName())
+	logf(0, "    eval result:     '%v'. Duration %v", utils.TritsToString(result), ex.duration)
+
+	var passed bool
+	if ex.isTest {
+		logf(0, "    expected result: '%v'", utils.TritsToString(ex.valueExpected))
+		if passed, _ = TritsEqual(result, ex.valueExpected); passed {
+			logf(0, "    test PASSED")
+		} else {
+			logf(0, "    test FAILED")
+		}
+	}
+
+	//logf(0, "Environment values after quant:")
+	//printTritMap(disp.Values())
 
 	_ = disp.DeleteEnvironment(envInName)
 	_ = disp.DeleteEnvironment(envOutName)
 
-	return ex.passed, err
+	return passed, err
 }
 
 // expression shouldn't have free variables
@@ -122,30 +144,5 @@ func (ec *execEvalCallable) Call(_ Trits, res Trits) bool {
 }
 
 func (ex *QuplaExecStmt) newEvalEntity(disp *Dispatcher) *BaseEntity {
-	return NewBaseEntity(disp, ex.funcExpr.GetSource(), 0, ex.funcExpr.Size(), &execEvalCallable{ex})
-}
-
-type execEvalResultCallable struct {
-	exec *QuplaExecStmt
-}
-
-func (ec *execEvalResultCallable) Call(result Trits, _ Trits) bool {
-	logf(0, "Executing '%v' ", ec.exec.source)
-	logf(0, "    eval result:     '%v'. Duration %v", utils.TritsToString(result), ec.exec.duration)
-
-	if ec.exec.isTest {
-		logf(0, "    expected result: '%v'", utils.TritsToString(ec.exec.valueExpected))
-
-		if ec.exec.passed, _ = TritsEqual(result, ec.exec.valueExpected); ec.exec.passed {
-			logf(0, "    test PASSED")
-		} else {
-			logf(0, "    test FAILED")
-		}
-	}
-	return true
-}
-
-func (ex *QuplaExecStmt) newEvalResultEntity(disp *Dispatcher) *BaseEntity {
-	ec := &execEvalResultCallable{exec: ex}
-	return NewBaseEntity(disp, ex.funcExpr.GetSource(), ex.funcExpr.Size(), 0, ec)
+	return NewBaseEntity(disp, "EVAL_"+ex.funcExpr.GetSource(), 0, ex.funcExpr.Size(), &execEvalCallable{ex})
 }

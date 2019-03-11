@@ -12,7 +12,8 @@ type Environment struct {
 	name       string
 	joins      []EntityInterface
 	size       int64
-	effectChan chan Trits // where all effects are sent
+	effectChan chan struct{} // signals about changed value are sent
+	value      Trits         // valid only between waves
 }
 
 func NewEnvironment(disp *Dispatcher, name string) *Environment {
@@ -20,7 +21,7 @@ func NewEnvironment(disp *Dispatcher, name string) *Environment {
 		dispatcher: disp,
 		name:       name,
 		joins:      make([]EntityInterface, 0),
-		effectChan: make(chan Trits), // buffer to avoid deadlocks
+		effectChan: make(chan struct{}), // buffer to avoid deadlocks
 	}
 	go ret.environmentListenToEffectsLoop()
 	return ret
@@ -78,23 +79,31 @@ func (env *Environment) PostEffect(effect Trits) {
 	} else {
 		logf(2, "Environment '%v' <- 'null'", env.name)
 	}
+	env.setNewValue(effect)
 	env.dispatcher.quantWG.Add(len(env.joins))
-	logf(3, "---------------- ADD %v (env '%v')", len(env.joins), env.name)
+	logf(4, "---------------- ADD %v (env '%v')", len(env.joins), env.name)
 
-	env.effectChan <- effect
+	env.effectChan <- struct{}{}
 
 }
 
 // loop waits for effect in the environment and then process it
 // null result mean nil
 func (env *Environment) environmentListenToEffectsLoop() {
-	logf(3, "environmentListenToEffectsLoop STARTED for environment '%v'", env.name)
-	defer logf(3, "environmentListenToEffectsLoop STOPPED for environment '%v'", env.name)
+	logf(4, "environmentListenToEffectsLoop STARTED for environment '%v'", env.name)
+	defer logf(4, "environmentListenToEffectsLoop STOPPED for environment '%v'", env.name)
 
-	for effect := range env.effectChan {
-		//  TODO in debug mode here wait for wave
+	for range env.effectChan {
+		if len(env.joins) == 0 {
+			continue
+		}
+		// in wave-by-wave mode here waits
+		env.dispatcher.waveStopWG.Wait()
+		env.dispatcher.waveReleaseWG.Wait()
+		//  here starts new wave
+		prev := env.setNewValue(nil) // environment value becomes invalid
 		for _, entity := range env.joins {
-			entity.Invoke(effect) // async
+			entity.Invoke(prev) // async
 		}
 	}
 	// if the input channel (affect) is closed,
@@ -102,4 +111,15 @@ func (env *Environment) environmentListenToEffectsLoop() {
 	for _, entity := range env.joins {
 		entity.Stop()
 	}
+}
+
+func (env *Environment) setNewValue(val Trits) Trits {
+	//logf(3, "------ env '%v' set value to '%v'", env.name, TritsToString(val))
+	saveValue := env.value
+	env.value = val
+	return saveValue
+}
+
+func (env *Environment) GetValue() Trits {
+	return env.value
 }

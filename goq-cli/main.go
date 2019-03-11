@@ -172,5 +172,4 @@ func CmdRunExecs(_ []string) {
 	module.AttachToDispatcher(disp)
 	module.Execute(disp)
 	postEffectsToDispatcher(disp)
-
 }
