@@ -82,7 +82,7 @@ func (ent *Entity) entityListenToEffectsLoop() {
 			// mark it is done with entity
 			// distribute result to affected environments
 			for _, env := range ent.affects {
-				env.PostEffect(res) // sync or async?
+				env.postEffect(res)
 			}
 		}
 		ent.dispatcher.quantWG.Done()

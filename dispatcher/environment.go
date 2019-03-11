@@ -73,7 +73,7 @@ func (env *environment) join(entity *Entity) error {
 	return nil
 }
 
-func (env *environment) PostEffect(effect Trits) {
+func (env *environment) postEffect(effect Trits) {
 	if effect != nil {
 		dec, _ := TritsToBigInt(effect)
 		logf(2, "environment '%v' <- '%v' (%v)", env.name, TritsToString(effect), dec)
@@ -85,7 +85,6 @@ func (env *environment) PostEffect(effect Trits) {
 	logf(4, "---------------- ADD %v (env '%v')", len(env.joins), env.name)
 
 	env.effectChan <- struct{}{}
-
 }
 
 // loop waits for effect in the environment and then process it

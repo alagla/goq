@@ -116,22 +116,21 @@ func (disp *Dispatcher) RunQuant(envName string, effect Trits, async bool) error
 			effect = PadTrits(effect, int(env.size))
 		}
 	}
-	env.PostEffect(effect)
+	env.postEffect(effect)
 
-	waitQuantFinishFunc := func() {
-		disp.quantWG.Wait()
-		logf(3, "---------------- Quant has finished")
-		disp.running = false
-		disp.Unlock()
-	}
 	if async {
-		// wait in go routine for quant to finish
-		go waitQuantFinishFunc()
+		go disp.finishQuant()
 	} else {
-		// wait for quant to finish
-		waitQuantFinishFunc()
+		disp.finishQuant()
 	}
 	return nil
+}
+
+func (disp *Dispatcher) finishQuant() {
+	disp.quantWG.Wait()
+	logf(3, "---------------- Quant finished")
+	disp.running = false
+	disp.Unlock()
 }
 
 func (disp *Dispatcher) Value(envName string) (Trits, error) {
