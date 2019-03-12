@@ -13,8 +13,7 @@ type Dispatcher struct {
 	running        bool // is within quant
 	quantWG        sync.WaitGroup
 	waveByWaveMode bool
-	waveCatchWG    sync.WaitGroup
-	waveReleaseWG  sync.WaitGroup
+	waveWG         sync.WaitGroup
 }
 
 func NewDispatcher() *Dispatcher {

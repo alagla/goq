@@ -7,7 +7,7 @@ import (
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/qupla"
-	"github.com/lunfardo314/goq/quplayaml"
+	. "github.com/lunfardo314/quplayaml/go"
 	"os"
 	"strconv"
 	"strings"
@@ -122,20 +122,20 @@ func CmdVerbosity(words []string) {
 const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
 const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
 
-var moduleYAML *quplayaml.QuplaModuleYAML
+var moduleYAML *QuplaModuleYAML
 var module *qupla.QuplaModule
 
 func CmdLoadModule(_ []string) {
 	var err error
 
 	logf(0, "Loading module form file %v", fname)
-	moduleYAML, err = quplayaml.NewQuplaModuleFromYAML(fname)
+	moduleYAML, err = NewQuplaModuleFromYAML(fname)
 	if err != nil {
 		logf(0, "Error while parsing YAML file: %v", err)
 		moduleYAML = nil
 		return
 	}
-	logf(0, "Module loaded successfully")
+	logf(0, "Module '%v' loaded successfully", moduleYAML.Name)
 	logf(0, "Analyzing module")
 
 	var succ bool

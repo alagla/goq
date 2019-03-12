@@ -94,12 +94,12 @@ func (env *environment) environmentListenToEffectsLoop() {
 
 	for effect := range env.effectChan {
 		env.setNewValue(effect)
+		// in wave-by-wave mode here waits
+		env.dispatcher.waveWG.Wait()
+
 		if len(env.joins) == 0 {
 			continue
 		}
-		// in wave-by-wave mode here waits
-		env.dispatcher.waveCatchWG.Wait()
-		env.dispatcher.waveReleaseWG.Wait()
 		//  here starts new wave
 		env.setNewValue(nil) // environment value becomes invalid during wave
 		for _, entity := range env.joins {

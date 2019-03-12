@@ -3,7 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
-	. "github.com/lunfardo314/goq/quplayaml"
+	. "github.com/lunfardo314/quplayaml/go"
 )
 
 type ExpressionFactoryFromYAML struct{}

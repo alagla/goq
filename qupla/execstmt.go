@@ -5,8 +5,8 @@ import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/dispatcher"
-	. "github.com/lunfardo314/goq/quplayaml"
 	"github.com/lunfardo314/goq/utils"
+	. "github.com/lunfardo314/quplayaml/go"
 	"time"
 )
 

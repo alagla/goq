@@ -6,8 +6,8 @@ import (
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/entities"
-	. "github.com/lunfardo314/goq/quplayaml"
 	. "github.com/lunfardo314/goq/utils"
+	. "github.com/lunfardo314/quplayaml/go"
 	"time"
 )
 
