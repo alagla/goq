@@ -111,7 +111,7 @@ func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 	var passed bool
 	if ex.isTest {
 		logf(0, "    expected result: '%v'", utils.TritsToString(ex.valueExpected))
-		if passed, _ = TritsEqual(result, ex.valueExpected); passed {
+		if passed = ex.ResultIsExpected(result); passed {
 			logf(0, "    test PASSED")
 		} else {
 			logf(0, "    test FAILED")
@@ -125,6 +125,32 @@ func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 	_ = disp.DeleteEnvironment(envOutName)
 
 	return passed, err
+}
+
+func (ex *QuplaExecStmt) ResultIsExpected(result Trits) bool {
+	passed, _ := TritsEqual(result, ex.valueExpected)
+	if passed {
+		return true
+	}
+	if len(result) != len(ex.valueExpected) {
+		return false
+	}
+	if !ex.isFloat {
+		return false
+	}
+	dif0 := result[0] - ex.valueExpected[0]
+	if dif0 < 0 {
+		dif0 = -dif0
+	}
+	if dif0 > 1 {
+		return false
+	}
+	if len(result) == 1 {
+		return true
+	}
+	passed, _ = TritsEqual(result[1:], ex.valueExpected[1:])
+	return passed
+
 }
 
 // expression shouldn't have free variables

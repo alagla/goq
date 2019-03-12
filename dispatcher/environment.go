@@ -90,6 +90,7 @@ func (env *environment) postEffect(effect Trits) {
 	} else {
 		logf(2, "environment '%v' <- 'null'", env.name)
 	}
+	env.setNewValue(effect)
 	env.dispatcher.quantWG.Add(len(env.joins))
 	logf(4, "---------------- ADD %v (env '%v')", len(env.joins), env.name)
 
@@ -103,7 +104,6 @@ func (env *environment) environmentListenToEffectsLoop() {
 	defer logf(4, "environmentListenToEffectsLoop STOPPED for environment '%v'", env.name)
 
 	for effect := range env.effectChan {
-		env.setNewValue(effect)
 		// in wave-by-wave mode here waits
 		env.dispatcher.waveWG.Wait()
 
@@ -136,7 +136,7 @@ func (env *environment) invalidate() {
 func (env *environment) setNewValue(val Trits) Trits {
 	env.Lock()
 	defer env.Unlock()
-	logf(3, "------ env '%v' set value to '%v'", env.name, TritsToString(val))
+	logf(3, "------ SET value env '%v' = '%v'", env.name, TritsToString(val))
 	saveValue := env.value
 	env.value = val
 	return saveValue

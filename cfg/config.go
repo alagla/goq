@@ -14,8 +14,8 @@ var Config = &ConfigStruct{
 	Version:              "0.01 alpha",
 	Trace:                false,
 	ExecuteStatefulExecs: false,
-	Verbosity:            4,
+	Verbosity:            2,
 	ExecTests:            true,
 	ExecEvals:            true,
-	ExecFirstOnly:        true,
+	ExecFirstOnly:        false,
 }
