@@ -41,6 +41,9 @@ func executor(in string) {
 		logf(0, "not implemented yet")
 	case "runtime":
 		CmdRuntime(words)
+	case "mode":
+		CmdMode(words)
+	case "wave":
 	case "module":
 		logf(0, "not implemented yet")
 	default:
@@ -73,6 +76,8 @@ func completer(in prompt.Document) []prompt.Suggest {
 	//}
 	//return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
 }
+
+var dispatcherInstance = dispatcher.NewDispatcher()
 
 func main() {
 	logf(0, "goq-cli: GOQ (Qubic Dispatcher in Go) Command Line Interface ver %v", cfg.Config.Version)
@@ -172,10 +177,9 @@ func CmdRunExecs(_ []string) {
 		logf(0, "Error: module not loaded")
 		return
 	}
-	disp := dispatcher.NewDispatcher()
-	module.AttachToDispatcher(disp)
-	module.Execute(disp)
-	postEffectsToDispatcher(disp)
+	module.AttachToDispatcher(dispatcherInstance)
+	module.Execute(dispatcherInstance)
+	postEffectsToDispatcher(dispatcherInstance)
 }
 
 func CmdRuntime(_ []string) {
@@ -184,4 +188,31 @@ func CmdRuntime(_ []string) {
 	memAllocMB := math.Round(100*(float64(mem.Alloc/1024)/1024)) / 100
 	logf(0, "Memory allocated: %vM", memAllocMB)
 	logf(0, "Number of goroutines: %v", runtime.NumGoroutine())
+}
+
+func CmdMode(words []string) {
+	if len(words) == 1 {
+		if dispatcherInstance.IsWaveMode() {
+			logf(0, "Mode is 'wave'")
+		} else {
+			logf(0, "Mode is 'quant'")
+		}
+		return
+	}
+	switch {
+	case strings.HasPrefix(words[1], "w") || strings.HasPrefix(words[1], "W"):
+		dispatcherInstance.SetWaveMode(true)
+		logf(0, "Mode set to 'wave'")
+	case strings.HasPrefix(words[1], "q") || strings.HasPrefix(words[1], "Q"):
+		dispatcherInstance.SetWaveMode(false)
+		logf(0, "Mode set to 'quant'")
+	default:
+		logf(0, "Usage: mode quant | wave")
+	}
+}
+
+func CmdWave(words []string) {
+	if !dispatcherInstance.IsWaveMode() {
+		logf(0, "Not in 'wave' mode. Use 'mode wave' commend first")
+	}
 }

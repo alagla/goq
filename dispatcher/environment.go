@@ -27,7 +27,7 @@ func NewEnvironment(disp *Dispatcher, name string) *environment {
 		affects:    make([]*Entity, 0),
 		effectChan: make(chan Trits),
 	}
-	go ret.environmentListenToEffectsLoop()
+	go ret.effectsLoop()
 	return ret
 }
 
@@ -88,28 +88,33 @@ func (env *environment) postEffect(effect Trits) {
 	}
 	env.setNewValue(effect)
 	env.dispatcher.quantWG.Add(len(env.joins))
+
 	logf(4, "---------------- ADD %v (env '%v')", len(env.joins), env.name)
 
 	env.effectChan <- effect
 }
 
 // loop waits for effect in the environment and then process it
-// null result mean nil
-func (env *environment) environmentListenToEffectsLoop() {
+func (env *environment) effectsLoop() {
 	logf(4, "environment '%v': effects loop STARTED", env.name)
 	defer logf(4, "environment '%v': effects loop STOPPED", env.name)
 
 	for effect := range env.effectChan {
-		// in wave-by-wave mode here waits
-		env.dispatcher.waveWG.Wait()
+		// only passes when wave ends.
+		env.dispatcher.holdWaveWG.Wait()
+
+		// released externally.
+		env.dispatcher.releaseWaveWG.Wait()
 
 		if len(env.joins) == 0 {
 			continue
 		}
 		//  here starts new wave
+		env.dispatcher.holdWaveWG.Add(len(env.joins)) // <<<< ???????????
+
 		env.setNewValue(nil) // environment value becomes invalid during wave
 		for _, entity := range env.joins {
-			entity.invoke(effect)
+			entity.inChan <- effect
 		}
 	}
 }

@@ -5,30 +5,30 @@ import (
 	"github.com/lunfardo314/goq/utils"
 )
 
-type CallableWithTrits interface {
+type EntityCore interface {
 	Call(Trits, Trits) bool
 }
 
 type Entity struct {
-	dispatcher     *Dispatcher
-	name           string
-	inSize         int64
-	outSize        int64
-	affecting      []*environment    // list of affected environments where effects are sent
-	joined         []*environment    // list of environments which are being listened to
-	inChan         chan Trits        // chan for incoming effects
-	effectCallable CallableWithTrits // function called for each effect
+	dispatcher *Dispatcher
+	name       string
+	inSize     int64
+	outSize    int64
+	affecting  []*environment // list of affected environments where effects are sent
+	joined     []*environment // list of environments which are being listened to
+	inChan     chan Trits     // chan for incoming effects
+	entityCore EntityCore     // function called for each effect
 }
 
-func NewEntity(disp *Dispatcher, name string, inSize, outSize int64, effectCallable CallableWithTrits) *Entity {
+func NewEntity(disp *Dispatcher, name string, inSize, outSize int64, effectCallable EntityCore) *Entity {
 	ret := &Entity{
-		dispatcher:     disp,
-		name:           name,
-		inSize:         inSize,
-		outSize:        outSize,
-		affecting:      make([]*environment, 0),
-		joined:         make([]*environment, 0),
-		effectCallable: effectCallable,
+		dispatcher: disp,
+		name:       name,
+		inSize:     inSize,
+		outSize:    outSize,
+		affecting:  make([]*environment, 0),
+		joined:     make([]*environment, 0),
+		entityCore: effectCallable,
 	}
 	return ret
 }
@@ -85,15 +85,11 @@ func (ent *Entity) checkStop() {
 func (ent *Entity) checkStart() {
 	if ent.inChan == nil && len(ent.joined) != 0 {
 		ent.inChan = make(chan Trits)
-		go ent.listenToEffectsLoop()
+		go ent.effectsLoop()
 	}
 }
 
-func (ent *Entity) invoke(t Trits) {
-	ent.inChan <- t
-}
-
-func (ent *Entity) listenToEffectsLoop() {
+func (ent *Entity) effectsLoop() {
 	logf(4, "entity '%v': effects loop STARTED", ent.name)
 	defer logf(4, "entity '%v': effects loop STOPPED", ent.name)
 
@@ -102,7 +98,7 @@ func (ent *Entity) listenToEffectsLoop() {
 	for effect := range ent.inChan {
 		logf(2, "Entity '%v' <- '%v'", ent.name, utils.TritsToString(effect))
 		// calculate result
-		if !ent.effectCallable.Call(effect, res) {
+		if !ent.entityCore.Call(effect, res) {
 			// is not null
 			// mark it is done with entity
 			// distribute result to affected environments
@@ -110,6 +106,7 @@ func (ent *Entity) listenToEffectsLoop() {
 				env.postEffect(res)
 			}
 		}
+		ent.dispatcher.holdWaveWG.Done()
 		ent.dispatcher.quantWG.Done()
 		logf(4, "---------------- DONE (entity '%v')", ent.name)
 	}

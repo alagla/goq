@@ -8,12 +8,13 @@ import (
 )
 
 type Dispatcher struct {
-	sync.RWMutex   // access to environment structure, joins, affect. Except values
-	environments   map[string]*environment
-	running        bool // is within quant
-	quantWG        sync.WaitGroup
-	waveByWaveMode bool
-	waveWG         sync.WaitGroup
+	sync.RWMutex  // access to environment structure, joins, affect. Except values
+	environments  map[string]*environment
+	running       bool // is within quant
+	quantWG       sync.WaitGroup
+	holdWaveWG    sync.WaitGroup
+	releaseWaveWG sync.WaitGroup
+	isWaveMode    bool
 }
 
 func NewDispatcher() *Dispatcher {
@@ -39,6 +40,18 @@ func (disp *Dispatcher) getOrCreateEnvironment_(name string) *environment {
 	return disp.environments[name]
 }
 
+func (disp *Dispatcher) SetWaveMode(mode bool) {
+	disp.Lock()
+	defer disp.Unlock()
+	disp.isWaveMode = mode
+}
+
+func (disp *Dispatcher) IsWaveMode() bool {
+	disp.RLock()
+	defer disp.RUnlock()
+	return disp.isWaveMode
+}
+
 func (disp *Dispatcher) CreateEnvironment(name string) error {
 	disp.Lock()
 	defer disp.Unlock()
@@ -48,12 +61,6 @@ func (disp *Dispatcher) CreateEnvironment(name string) error {
 	}
 	disp.environments[name] = NewEnvironment(disp, name)
 	return nil
-}
-
-func (disp *Dispatcher) SetWByWMode(mode bool) {
-	disp.Lock()
-	defer disp.Unlock()
-	disp.waveByWaveMode = mode
 }
 
 // executes 'join' and 'affect' of the entity
@@ -115,6 +122,9 @@ func (disp *Dispatcher) RunQuant(envName string, effect Trits, async bool) error
 			effect = PadTrits(effect, int(env.size))
 		}
 	}
+	if disp.isWaveMode {
+		disp.releaseWaveWG.Add(1)
+	}
 	env.postEffect(effect)
 
 	if async {
@@ -154,4 +164,16 @@ func (disp *Dispatcher) Values() map[string]Trits {
 		}
 	}
 	return ret
+}
+
+func (disp *Dispatcher) Wave() error {
+	// TODO locking
+	if !disp.isWaveMode {
+		return fmt.Errorf("Not in 'wave' mode")
+	}
+	if !disp.running {
+		return fmt.Errorf("Quant is not started")
+	}
+	disp.releaseWaveWG.Done()
+	return nil
 }
