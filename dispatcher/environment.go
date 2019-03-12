@@ -69,6 +69,7 @@ func (env *environment) join(entity *Entity) error {
 			entity.name, env.name)
 	}
 	env.joins = append(env.joins, entity)
+	entity.joinEnvironment(env)
 	return nil
 }
 
@@ -78,6 +79,7 @@ func (env *environment) affect(entity *Entity) error {
 			entity.name, env.name)
 	}
 	env.affects = append(env.affects, entity)
+	entity.affectEnvironment(env)
 	return nil
 }
 

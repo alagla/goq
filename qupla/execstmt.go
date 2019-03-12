@@ -84,13 +84,13 @@ func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 	envInName := "ENV_IN$$" + ex.GetName() + "$$"
 	envOutName := "ENV_OUT$$" + ex.GetName() + "$$"
 	var err error
-	if err = disp.CreateEnvironment(envInName); err != nil {
-		return false, err
-	}
-	if err = disp.CreateEnvironment(envOutName); err != nil {
-		return false, err
-	}
-
+	//if err = disp.CreateEnvironment(envInName); err != nil {
+	//	return false, err
+	//}
+	//if err = disp.CreateEnvironment(envOutName); err != nil {
+	//	return false, err
+	//}
+	//
 	exprEntity := ex.newEvalEntity(disp)
 	if err = disp.Attach(exprEntity, []string{envInName}, []string{envOutName}); err != nil {
 		return false, nil
