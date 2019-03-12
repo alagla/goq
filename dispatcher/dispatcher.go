@@ -83,7 +83,7 @@ func (disp *Dispatcher) DeleteEnvironment(envName string) error {
 	if !ok {
 		return fmt.Errorf("can't find environment '%v'", envName)
 	}
-	env.stop()
+	env.invalidate()
 	delete(disp.environments, envName)
 	logf(3, "deleted environment '%v'", envName)
 	return nil

@@ -70,6 +70,7 @@ func (ent *Entity) stopListeningToEnvironment(env *environment) {
 			tmpList = append(tmpList, e)
 		}
 	}
+	ent.joined = tmpList
 	ent.checkStop()
 }
 
@@ -93,8 +94,8 @@ func (ent *Entity) invoke(t Trits) {
 }
 
 func (ent *Entity) listenToEffectsLoop() {
-	logf(4, "listenToEffectsLoop STARTED for entity '%v'", ent.name)
-	defer logf(4, "listenToEffectsLoop STOPPED for entity '%v'", ent.name)
+	logf(4, "entity '%v': effects loop STARTED", ent.name)
+	defer logf(4, "entity '%v': effects loop STOPPED", ent.name)
 
 	res := make(Trits, ent.outSize)
 

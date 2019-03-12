@@ -167,5 +167,6 @@ func (ec *execEvalCallable) Call(_ Trits, res Trits) bool {
 }
 
 func (ex *QuplaExecStmt) newEvalEntity(disp *Dispatcher) *Entity {
-	return NewEntity(disp, "EVAL_"+ex.funcExpr.GetSource(), 0, ex.funcExpr.Size(), &execEvalCallable{ex})
+	name := fmt.Sprintf("#%v-EVAL_%v", ex.num, ex.funcExpr.GetSource())
+	return NewEntity(disp, name, 0, ex.funcExpr.Size(), &execEvalCallable{ex})
 }

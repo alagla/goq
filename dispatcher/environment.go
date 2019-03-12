@@ -39,10 +39,6 @@ func (env *environment) GetName() string {
 	return env.name
 }
 
-func (env *environment) stop() {
-	close(env.effectChan)
-}
-
 func (env *environment) existsEntity_(name string) bool {
 	for _, ei := range env.joins {
 		if ei.name == name {
@@ -100,8 +96,8 @@ func (env *environment) postEffect(effect Trits) {
 // loop waits for effect in the environment and then process it
 // null result mean nil
 func (env *environment) environmentListenToEffectsLoop() {
-	logf(4, "environmentListenToEffectsLoop STARTED for environment '%v'", env.name)
-	defer logf(4, "environmentListenToEffectsLoop STOPPED for environment '%v'", env.name)
+	logf(4, "environment '%v': effects loop STARTED", env.name)
+	defer logf(4, "environment '%v': effects loop STOPPED", env.name)
 
 	for effect := range env.effectChan {
 		// in wave-by-wave mode here waits
@@ -118,21 +114,6 @@ func (env *environment) environmentListenToEffectsLoop() {
 	}
 }
 
-func (env *environment) invalidate() {
-	if env.invalid {
-		return
-	}
-	env.invalid = true
-	close(env.effectChan)
-
-	for _, entity := range env.joins {
-		entity.stopListeningToEnvironment(env)
-	}
-	for _, entity := range env.affects {
-		entity.stopAffectingEnvironment(env)
-	}
-}
-
 func (env *environment) setNewValue(val Trits) Trits {
 	env.Lock()
 	defer env.Unlock()
@@ -146,4 +127,19 @@ func (env *environment) GetValue() Trits {
 	env.RLock()
 	defer env.RUnlock()
 	return env.value
+}
+
+func (env *environment) invalidate() {
+	if env.invalid {
+		return
+	}
+	env.invalid = true
+	close(env.effectChan)
+
+	for _, entity := range env.joins {
+		entity.stopListeningToEnvironment(env)
+	}
+	for _, entity := range env.affects {
+		entity.stopAffectingEnvironment(env)
+	}
 }
