@@ -7,7 +7,7 @@ import (
 	"github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/entities"
 	. "github.com/lunfardo314/goq/utils"
-	. "github.com/lunfardo314/quplayaml/go"
+	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"time"
 )
 
@@ -188,8 +188,12 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher) {
 	testsSkipped := 0
 	totalTests := 0
 	start := time.Now()
-
+	first := true
 	for _, exec := range module.execs {
+		if cfg.Config.ExecFirstOnly && !first {
+			break
+		}
+		first = false
 		logf(2, "-----------------------")
 
 		if exec.HasState() {

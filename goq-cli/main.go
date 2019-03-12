@@ -7,7 +7,7 @@ import (
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/go"
+	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"os"
 	"strconv"
 	"strings"

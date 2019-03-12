@@ -5,7 +5,7 @@ import (
 	"github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/utils"
-	. "github.com/lunfardo314/quplayaml/go"
+	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
 type QuplaFuncDef struct {

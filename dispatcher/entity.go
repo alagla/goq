@@ -1,7 +1,6 @@
 package dispatcher
 
 import (
-	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/utils"
 )
@@ -15,7 +14,8 @@ type Entity struct {
 	name           string
 	inSize         int64
 	outSize        int64
-	affects        []*environment    // list of affected environments where effects are sent
+	affecting      []*environment    // list of affected environments where effects are sent
+	joined         []*environment    // list of environments which are being listened to
 	inChan         chan Trits        // chan for incoming effects
 	effectCallable CallableWithTrits // function called for each effect
 }
@@ -26,22 +26,15 @@ func NewEntity(disp *Dispatcher, name string, inSize, outSize int64, effectCalla
 		name:           name,
 		inSize:         inSize,
 		outSize:        outSize,
-		affects:        make([]*environment, 0),
-		inChan:         make(chan Trits),
+		affecting:      make([]*environment, 0),
+		joined:         make([]*environment, 0),
 		effectCallable: effectCallable,
 	}
-	go ret.entityListenToEffectsLoop() // start listening to incoming effects
 	return ret
 }
 
 func (ent *Entity) GetName() string {
 	return ent.name
-}
-
-// after that entity becomes invalid
-// called by the environment only
-func (ent *Entity) stop() {
-	close(ent.inChan)
 }
 
 func (ent *Entity) InSize() int64 {
@@ -52,25 +45,56 @@ func (ent *Entity) OutSize() int64 {
 	return ent.outSize
 }
 
-func (ent *Entity) affectEnvironment(env *environment) error {
-	if err := env.checkNewSize_(ent.outSize); err != nil {
-		return fmt.Errorf("error while registering affect, entity '%v': %v", ent.name, err)
-	}
-	ent.affects = append(ent.affects, env)
-	return nil
+func (ent *Entity) affectEnvironment(env *environment) {
+	ent.affecting = append(ent.affecting, env)
 }
 
-func (ent *Entity) joinEnvironment(env *environment) error {
-	return env.join(ent)
+func (ent *Entity) joinEnvironment(env *environment) {
+	ent.joined = append(ent.joined, env)
+	ent.checkStart()
+}
+
+func (ent *Entity) stopAffectingEnvironment(env *environment) {
+	tmpList := make([]*environment, 0)
+	for _, e := range ent.affecting {
+		if e != env {
+			tmpList = append(tmpList, e)
+		}
+	}
+}
+
+func (ent *Entity) stopListeningToEnvironment(env *environment) {
+	tmpList := make([]*environment, 0)
+	for _, e := range ent.joined {
+		if e != env {
+			tmpList = append(tmpList, e)
+		}
+	}
+	ent.checkStop()
+}
+
+func (ent *Entity) checkStop() {
+	if ent.inChan != nil && len(ent.joined) == 0 {
+		c := ent.inChan
+		ent.inChan = nil
+		close(c)
+	}
+}
+
+func (ent *Entity) checkStart() {
+	if ent.inChan == nil && len(ent.joined) != 0 {
+		ent.inChan = make(chan Trits)
+		go ent.listenToEffectsLoop()
+	}
 }
 
 func (ent *Entity) invoke(t Trits) {
 	ent.inChan <- t
 }
 
-func (ent *Entity) entityListenToEffectsLoop() {
-	logf(4, "entityListenToEffectsLoop STARTED for entity '%v'", ent.name)
-	defer logf(4, "entityListenToEffectsLoop STOPPED for entity '%v'", ent.name)
+func (ent *Entity) listenToEffectsLoop() {
+	logf(4, "listenToEffectsLoop STARTED for entity '%v'", ent.name)
+	defer logf(4, "listenToEffectsLoop STOPPED for entity '%v'", ent.name)
 
 	res := make(Trits, ent.outSize)
 
@@ -81,7 +105,7 @@ func (ent *Entity) entityListenToEffectsLoop() {
 			// is not null
 			// mark it is done with entity
 			// distribute result to affected environments
-			for _, env := range ent.affects {
+			for _, env := range ent.affecting {
 				env.postEffect(res)
 			}
 		}

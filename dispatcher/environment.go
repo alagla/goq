@@ -11,7 +11,9 @@ type environment struct {
 	sync.RWMutex
 	dispatcher *Dispatcher
 	name       string
+	invalid    bool
 	joins      []*Entity
+	affects    []*Entity
 	size       int64
 	effectChan chan Trits
 	value      Trits // valid only between waves
@@ -22,6 +24,7 @@ func NewEnvironment(disp *Dispatcher, name string) *environment {
 		dispatcher: disp,
 		name:       name,
 		joins:      make([]*Entity, 0),
+		affects:    make([]*Entity, 0),
 		effectChan: make(chan Trits),
 	}
 	go ret.environmentListenToEffectsLoop()
@@ -49,27 +52,32 @@ func (env *environment) existsEntity_(name string) bool {
 	return false
 }
 
-func (env *environment) checkNewSize_(size int64) error {
+func (env *environment) checkNewSize(size int64) bool {
 	if env.size != 0 {
 		if env.size != size {
-			return fmt.Errorf("size mismatch in environment '%v'. Must be %v",
-				env.name, env.size)
+			return false
 		}
 	} else {
 		env.size = size
 	}
-	return nil
+	return true
 }
 
 func (env *environment) join(entity *Entity) error {
-	if env.existsEntity_(entity.name) {
-		return fmt.Errorf("duplicated entity '%v' attempt to join to '%v'", entity.name, env.name)
-	}
-	if err := env.checkNewSize_(entity.InSize()); err != nil {
-		return fmt.Errorf("error while joining entity '%v' to the environment '%v': %v",
-			entity.name, env.name, err)
+	if !env.checkNewSize(entity.InSize()) {
+		return fmt.Errorf("size mismach between joining entity '%v' and the environment '%v'",
+			entity.name, env.name)
 	}
 	env.joins = append(env.joins, entity)
+	return nil
+}
+
+func (env *environment) affect(entity *Entity) error {
+	if !env.checkNewSize(entity.OutSize()) {
+		return fmt.Errorf("size mismach between affecting entity '%v' and the environment '%v'",
+			entity.name, env.name)
+	}
+	env.affects = append(env.affects, entity)
 	return nil
 }
 
@@ -106,17 +114,27 @@ func (env *environment) environmentListenToEffectsLoop() {
 			entity.invoke(effect)
 		}
 	}
-	// if the input channel (affect) is closed,
-	// we have to close all join channels to stop listening routines
+}
+
+func (env *environment) invalidate() {
+	if env.invalid {
+		return
+	}
+	env.invalid = true
+	close(env.effectChan)
+
 	for _, entity := range env.joins {
-		entity.stop()
+		entity.stopListeningToEnvironment(env)
+	}
+	for _, entity := range env.affects {
+		entity.stopAffectingEnvironment(env)
 	}
 }
 
 func (env *environment) setNewValue(val Trits) Trits {
 	env.Lock()
 	defer env.Unlock()
-	//logf(3, "------ env '%v' set value to '%v'", env.name, TritsToString(val))
+	logf(3, "------ env '%v' set value to '%v'", env.name, TritsToString(val))
 	saveValue := env.value
 	env.value = val
 	return saveValue

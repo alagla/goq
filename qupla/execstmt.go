@@ -6,7 +6,7 @@ import (
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/utils"
-	. "github.com/lunfardo314/quplayaml/go"
+	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"time"
 )
 

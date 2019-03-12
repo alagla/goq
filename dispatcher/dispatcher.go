@@ -69,7 +69,7 @@ func (disp *Dispatcher) Attach(entity *Entity, joins, affects []string) error {
 	}
 	for _, envName := range affects {
 		env := disp.getOrCreateEnvironment_(envName)
-		if err := entity.affectEnvironment(env); err != nil {
+		if err := env.affect(entity); err != nil {
 			return err
 		}
 	}
