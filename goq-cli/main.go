@@ -8,7 +8,9 @@ import (
 	"github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
+	"math"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -37,6 +39,8 @@ func executor(in string) {
 		CmdRunExecs(words)
 	case "functions":
 		logf(0, "not implemented yet")
+	case "runtime":
+		CmdRuntime(words)
 	case "module":
 		logf(0, "not implemented yet")
 	default:
@@ -172,4 +176,12 @@ func CmdRunExecs(_ []string) {
 	module.AttachToDispatcher(disp)
 	module.Execute(disp)
 	postEffectsToDispatcher(disp)
+}
+
+func CmdRuntime(_ []string) {
+	var mem runtime.MemStats
+	runtime.ReadMemStats(&mem)
+	memAllocMB := math.Round(100*(float64(mem.Alloc/1024)/1024)) / 100
+	logf(0, "Memory allocated: %vM", memAllocMB)
+	logf(0, "Number of goroutines: %v", runtime.NumGoroutine())
 }
