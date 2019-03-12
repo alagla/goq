@@ -54,6 +54,9 @@ public class QuplaToYAMLContext extends QuplaBaseContext {
     public void eval(final QuplaModule module) {
         fileOpen(fileName);
 
+        append("module: '" + fileName + "'");
+        newline();
+
         for (final ImportStmt imp : module.imports) {
             append("# import ");
             append(imp.name);
