@@ -77,7 +77,7 @@ func completer(in prompt.Document) []prompt.Suggest {
 	//return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
 }
 
-var dispatcherInstance = dispatcher.NewDispatcher()
+var dispatcherInstance = dispatcher.NewDispatcher(1 * time.Second)
 
 func main() {
 	logf(0, "goq-cli: GOQ (Qubic Dispatcher in Go) Command Line Interface ver %v", cfg.Config.Version)
@@ -201,11 +201,17 @@ func CmdMode(words []string) {
 	}
 	switch {
 	case strings.HasPrefix(words[1], "w") || strings.HasPrefix(words[1], "W"):
-		dispatcherInstance.SetWaveMode(true)
-		logf(0, "Mode set to 'wave'")
+		if err := dispatcherInstance.SetWaveMode(true); err != nil {
+			logf(0, "%v")
+		} else {
+			logf(0, "Mode set to 'wave'")
+		}
 	case strings.HasPrefix(words[1], "q") || strings.HasPrefix(words[1], "Q"):
-		dispatcherInstance.SetWaveMode(false)
-		logf(0, "Mode set to 'quant'")
+		if err := dispatcherInstance.SetWaveMode(false); err != nil {
+			logf(0, "%v")
+		} else {
+			logf(0, "Mode set to 'quant'")
+		}
 	default:
 		logf(0, "Usage: mode quant | wave")
 	}
