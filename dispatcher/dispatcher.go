@@ -82,7 +82,7 @@ func (disp *Dispatcher) CreateEnvironment(name string) error {
 // executes 'join' and 'affect' of the entity
 func (disp *Dispatcher) Attach(entity *Entity, joins, affects []string) error {
 	if !disp.generalLock.Acquire(disp.timeout) {
-		return fmt.Errorf("request lock timeout: can't attach entity to environment")
+		return fmt.Errorf("acquire lock timeout: can't attach entity to environment")
 	}
 	defer disp.generalLock.Release()
 

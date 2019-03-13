@@ -21,9 +21,8 @@ func executor(in string) {
 	if len(words) == 0 || words[0] == "" {
 		return
 	}
-	logf(2, "----- Command '%v'", words[0])
 	start := time.Now()
-	defer logf(2, "----- Command '%v'. Duration %v", words[0], time.Since(start))
+	defer logf(2, "Duration %v", time.Since(start))
 
 	switch words[0] {
 	case "exit", "quit":
@@ -151,6 +150,7 @@ func CmdLoadModule(_ []string) {
 	module, succ = qupla.AnalyzeQuplaModule("single_module", moduleYAML, &qupla.ExpressionFactoryFromYAML{})
 	module.PrintStats()
 	if succ {
+		module.AttachToDispatcher(dispatcherInstance)
 		logf(0, "Module analyzed succesfully")
 	} else {
 		logf(0, "Failed to analyze module")
@@ -177,7 +177,6 @@ func CmdRunExecs(_ []string) {
 		logf(0, "Error: module not loaded")
 		return
 	}
-	module.AttachToDispatcher(dispatcherInstance)
 	module.Execute(dispatcherInstance)
 	postEffectsToDispatcher(dispatcherInstance)
 }
