@@ -4,11 +4,9 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/utils"
-	"sync"
 )
 
 type environment struct {
-	sync.RWMutex
 	dispatcher *Dispatcher
 	name       string
 	invalid    bool
@@ -86,7 +84,7 @@ func (env *environment) postEffect(effect Trits) {
 	} else {
 		logf(2, "environment '%v' <- 'null'", env.name)
 	}
-	env.setNewValue(effect)
+	env.setValue(effect)
 	env.dispatcher.quantWG.Add(len(env.joins))
 
 	logf(4, "---------------- ADD %v (env '%v')", len(env.joins), env.name)
@@ -112,25 +110,22 @@ func (env *environment) effectsLoop() {
 		//  here starts new wave
 		env.dispatcher.holdWaveWG.Add(len(env.joins)) // <<<< ???????????
 
-		env.setNewValue(nil) // environment value becomes invalid during wave
+		env.setValue(nil) // environment value becomes invalid during wave
 		for _, entity := range env.joins {
 			entity.inChan <- effect
 		}
 	}
 }
 
-func (env *environment) setNewValue(val Trits) Trits {
-	env.Lock()
-	defer env.Unlock()
+// value is valid only outside quant and wave
+func (env *environment) setValue(val Trits) Trits {
 	logf(3, "------ SET value env '%v' = '%v'", env.name, TritsToString(val))
 	saveValue := env.value
 	env.value = val
 	return saveValue
 }
 
-func (env *environment) GetValue() Trits {
-	env.RLock()
-	defer env.RUnlock()
+func (env *environment) getValue() Trits {
 	return env.value
 }
 

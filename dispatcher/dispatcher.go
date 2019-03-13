@@ -150,7 +150,7 @@ func (disp *Dispatcher) Value(envName string) (Trits, error) {
 	if !ok {
 		return nil, fmt.Errorf("can't find environment '%v'", envName)
 	}
-	return env.GetValue(), nil
+	return env.getValue(), nil
 }
 
 func (disp *Dispatcher) Values() map[string]Trits {
