@@ -10,8 +10,8 @@ import (
 
 type Dispatcher struct {
 	environments  map[string]*environment
-	generalLock   *AsyncLock // controls environments, join, affect, modes
-	waveLock      *AsyncLock // waves are locked
+	generalLock   *LockWithTimeout // controls environments, join, affect, modes
+	waveLock      *LockWithTimeout // waves are locked
 	timeout       time.Duration
 	quantWG       sync.WaitGroup
 	holdWaveWG    sync.WaitGroup
