@@ -30,7 +30,7 @@ func postEffectsToDispatcher(disp *dispatcher.Dispatcher) {
 		}
 		t := trinary.IntToTrits(int64(val))
 		start := time.Now()
-		err = disp.PostEffect(s.env, t, false, nil)
+		err = disp.StartQuant(s.env, t, nil)
 		if err != nil {
 			logf(0, "error while starting quant with value '%v' and the environment '%v': %v",
 				s.decString, s.env, err)

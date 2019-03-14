@@ -15,6 +15,7 @@ type Dispatcher struct {
 	quantWG       sync.WaitGroup
 	holdWaveWG    sync.WaitGroup
 	releaseWaveWG sync.WaitGroup
+	waveMode      bool // TODO
 }
 
 func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
@@ -93,10 +94,32 @@ func (disp *Dispatcher) DeleteEnvironment(envName string) error {
 	return nil
 }
 
-func (disp *Dispatcher) PostEffect(envName string, effect Trits, byWave bool, onStop func(bool)) error {
+func (disp *Dispatcher) StartWave(envName string, effect Trits, onStop func()) error {
+	if err := disp.startWave(envName, true, effect); err != nil {
+		return err
+	}
+	disp.holdWaveWG.Wait()
+	if onStop != nil {
+		onStop()
+	}
+	return nil
+}
+
+func (disp *Dispatcher) StartQuant(envName string, effect Trits, onStop func()) error {
+	if err := disp.startWave(envName, false, effect); err != nil {
+		return err
+	}
+	disp.quantWG.Wait()
+	if onStop != nil {
+		onStop()
+	}
+	return nil
+}
+
+func (disp *Dispatcher) startWave(envName string, waveMode bool, effect Trits) error {
 	env := disp.getEnvironment_(envName)
 	if env == nil {
-		return fmt.Errorf("PostEffect: can't find environment '%v'", envName)
+		return fmt.Errorf("startWave: can't find environment '%v'", envName)
 	}
 	if env.size == 0 {
 		effect = Trits{0}
@@ -104,26 +127,31 @@ func (disp *Dispatcher) PostEffect(envName string, effect Trits, byWave bool, on
 		if int64(len(effect)) != env.size {
 			if int64(len(effect)) > env.size {
 				disp.generalLock.Release()
-				return fmt.Errorf("PostEffect: trit vector '%v' is too long for the environment '%v', size = %v",
+				return fmt.Errorf("startWave: trit vector '%v' is too long for the environment '%v', size = %v",
 					utils.TritsToString(effect), envName, env.size)
 			}
 			effect = PadTrits(effect, int(env.size))
 		}
 	}
 
-	if byWave {
+	disp.waveMode = waveMode
+	if waveMode {
+		disp.holdWaveWG.Add(1)
 		disp.releaseWaveWG.Add(1)
-	}
-	env.postEffect(effect)
-
-	if byWave {
-		disp.releaseWaveWG.Wait()
 	} else {
-		disp.quantWG.Wait()
+		disp.quantWG.Add(1)
 	}
-	if onStop != nil {
-		onStop(byWave)
+	env.effectChan <- effect
+	return nil
+}
+
+func (disp *Dispatcher) Wave() error {
+	if !disp.waveMode {
+		return fmt.Errorf("not in wave mode")
 	}
+	disp.holdWaveWG.Wait()
+	disp.releaseWaveWG.Done()
+	disp.releaseWaveWG.Add(1)
 	return nil
 }
 
@@ -145,9 +173,4 @@ func (disp *Dispatcher) Values() map[string]Trits {
 		}
 	}
 	return ret
-}
-
-func (disp *Dispatcher) Wave() error {
-	disp.releaseWaveWG.Done()
-	return nil
 }

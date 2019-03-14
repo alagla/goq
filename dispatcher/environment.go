@@ -25,7 +25,7 @@ func NewEnvironment(disp *Dispatcher, name string) *environment {
 		affects:    make([]*Entity, 0),
 		effectChan: make(chan Trits),
 	}
-	go ret.effectsLoop()
+	go ret.environmentLoop()
 	return ret
 }
 
@@ -77,52 +77,48 @@ func (env *environment) affect(entity *Entity) error {
 	return nil
 }
 
-func (env *environment) postEffect(effect Trits) {
-	if effect != nil {
-		dec, _ := TritsToBigInt(effect)
-		logf(2, "environment '%v' <- '%v' (%v)", env.name, TritsToString(effect), dec)
-	} else {
-		logf(2, "environment '%v' <- 'null'", env.name)
-	}
-	env.setValue(effect)
-	env.dispatcher.quantWG.Add(len(env.joins))
+func (env *environment) environmentLoop() {
+	logf(4, "environment '%v': loop START", env.name)
+	defer logf(4, "environment '%v': loop STOP", env.name)
 
-	logf(4, "---------------- ADD %v (env '%v')", len(env.joins), env.name)
-
-	env.effectChan <- effect
-}
-
-// loop waits for effect in the environment and then process it
-func (env *environment) effectsLoop() {
-	logf(4, "environment '%v': effects loop STARTED", env.name)
-	defer logf(4, "environment '%v': effects loop STOPPED", env.name)
-
+	var wasSent bool
 	for effect := range env.effectChan {
-		// only passes when wave ends.
-		env.dispatcher.holdWaveWG.Wait()
-
-		// released externally.
-		env.dispatcher.releaseWaveWG.Wait()
-
-		if len(env.joins) == 0 {
-			continue
+		dec, _ := TritsToBigInt(effect)
+		logf(2, "Environment '%v' <- '%v' (%v)", env.name, TritsToString(effect), dec)
+		if env.dispatcher.waveMode {
+			env.setValue(effect)
+			env.dispatcher.holdWaveWG.Wait()
+			env.dispatcher.releaseWaveWG.Wait()
+			env.setValue(nil) // environment value becomes invalid during wave
+			env.dispatcher.holdWaveWG.Add(len(env.joins))
 		}
-		//  here starts new wave
-		env.dispatcher.holdWaveWG.Add(len(env.joins)) // <<<< ???????????
-
-		env.setValue(nil) // environment value becomes invalid during wave
-		for _, entity := range env.joins {
-			entity.inChan <- effect
+		wasSent = false
+		if effect != nil {
+			if !env.dispatcher.waveMode {
+				env.dispatcher.quantWG.Add(len(env.joins)) // len(env.joins) new waves starts
+			}
+			// TODO change to dynamic select
+			for _, entity := range env.joins {
+				entity.inChan <- effect
+				wasSent = true
+			}
+		}
+		if !wasSent {
+			// wave ends here
+			env.setValue(effect)
+		}
+		if env.dispatcher.waveMode {
+			env.dispatcher.holdWaveWG.Done()
+		} else {
+			env.dispatcher.quantWG.Done()
 		}
 	}
 }
 
 // value is valid only outside quant and wave
-func (env *environment) setValue(val Trits) Trits {
+func (env *environment) setValue(val Trits) {
 	logf(3, "------ SET value env '%v' = '%v'", env.name, TritsToString(val))
-	saveValue := env.value
 	env.value = val
-	return saveValue
 }
 
 func (env *environment) getValue() Trits {

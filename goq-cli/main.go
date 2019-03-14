@@ -77,29 +77,6 @@ func completer(in prompt.Document) []prompt.Suggest {
 
 var dispatcherInstance = dispatcher.NewDispatcher(1 * time.Second)
 
-func main() {
-	logf(0, "goq-cli: GOQ (Qubic Dispatcher in Go) Command Line Interface ver %v", cfg.Config.Version)
-	logf(0, "Now is %v", time.Now())
-	logf(0, "Verbosity is %v", cfg.Config.Verbosity)
-	logf(0, "Use TAB to select suggestion")
-
-	pnocli := flag.Bool("nocli", false, "bypass CLI")
-	flag.Parse()
-	if *pnocli {
-		logf(0, "Bypass CLI. Load module and run it.")
-		CmdLoadModule(nil)
-		CmdRun(nil)
-	} else {
-		p := prompt.New(
-			executor,
-			completer,
-			prompt.OptionPrefixTextColor(prompt.LightGray),
-			prompt.OptionPrefix(">>> "),
-		)
-		p.Run()
-	}
-}
-
 func logf(minVerbosity int, format string, args ...interface{}) {
 	if cfg.Config.Verbosity < minVerbosity {
 		return
@@ -245,4 +222,27 @@ func CmdRuntime(_ []string) {
 	memAllocMB := math.Round(100*(float64(mem.Alloc/1024)/1024)) / 100
 	logf(0, "Memory allocated: %vM", memAllocMB)
 	logf(0, "Number of goroutines: %v", runtime.NumGoroutine())
+}
+
+func main() {
+	logf(0, "goq-cli: GOQ (Qubic Dispatcher in Go) Command Line Interface ver %v", cfg.Config.Version)
+	logf(0, "Now is %v", time.Now())
+	logf(0, "Verbosity is %v", cfg.Config.Verbosity)
+	logf(0, "Use TAB to select suggestion")
+
+	pnocli := flag.Bool("nocli", false, "bypass CLI")
+	flag.Parse()
+	if *pnocli {
+		logf(0, "Bypass CLI. Load module and run it.")
+		CmdLoadModule(nil)
+		CmdRun([]string{"run", "0"})
+	} else {
+		p := prompt.New(
+			executor,
+			completer,
+			prompt.OptionPrefixTextColor(prompt.LightGray),
+			prompt.OptionPrefix(">>> "),
+		)
+		p.Run()
+	}
 }

@@ -85,29 +85,35 @@ func (ent *Entity) checkStop() {
 func (ent *Entity) checkStart() {
 	if ent.inChan == nil && len(ent.joined) != 0 {
 		ent.inChan = make(chan Trits)
-		go ent.effectsLoop()
+		go ent.entityLoop()
 	}
 }
 
-func (ent *Entity) effectsLoop() {
-	logf(4, "entity '%v': effects loop STARTED", ent.name)
-	defer logf(4, "entity '%v': effects loop STOPPED", ent.name)
+func (ent *Entity) entityLoop() {
+	logf(4, "entity '%v' loop STARTED", ent.name)
+	defer logf(4, "entity '%v'loop STOPPED", ent.name)
 
 	res := make(Trits, ent.outSize)
-
+	var null bool
+	var tosend Trits
 	for effect := range ent.inChan {
 		logf(2, "Entity '%v' <- '%v'", ent.name, utils.TritsToString(effect))
 		// calculate result
-		if !ent.entityCore.Call(effect, res) {
-			// is not null
-			// mark it is done with entity
-			// distribute result to affected environments
-			for _, env := range ent.affecting {
-				env.postEffect(res)
-			}
+		null = ent.entityCore.Call(effect, res)
+		tosend = res
+		if null {
+			tosend = nil
 		}
-		ent.dispatcher.holdWaveWG.Done()
-		ent.dispatcher.quantWG.Done()
-		logf(4, "---------------- DONE (entity '%v')", ent.name)
+		if !ent.dispatcher.waveMode {
+			ent.dispatcher.quantWG.Add(len(ent.affecting))
+		}
+		for _, env := range ent.affecting {
+			env.effectChan <- tosend
+		}
+		if ent.dispatcher.waveMode {
+			ent.dispatcher.holdWaveWG.Done()
+		} else {
+			ent.dispatcher.quantWG.Done()
+		}
 	}
 }

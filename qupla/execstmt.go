@@ -96,7 +96,7 @@ func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 	var t = Trits{0}
 	var result Trits
 
-	err = disp.PostEffect(envInName, t, false, nil)
+	err = disp.StartQuant(envInName, t, func() { fmt.Printf("++++++++++ Done with %v\n", envInName) })
 	if err != nil {
 		return false, err
 	}
