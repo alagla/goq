@@ -35,16 +35,15 @@ func executor(in string) {
 	case "save":
 		CmdSaveModule(words)
 	case "run":
-		CmdRunExecs(words)
+		CmdRun(words)
+	case "wave":
+		CmdWave(words)
+	case "list":
+		CmdList(words)
 	case "functions":
 		logf(0, "not implemented yet")
 	case "runtime":
 		CmdRuntime(words)
-	case "mode":
-		CmdMode(words)
-	case "wave":
-	case "module":
-		logf(0, "not implemented yet")
 	default:
 		logf(0, "unknown command")
 	}
@@ -89,7 +88,7 @@ func main() {
 	if *pnocli {
 		logf(0, "Bypass CLI. Load module and run it.")
 		CmdLoadModule(nil)
-		CmdRunExecs(nil)
+		CmdRun(nil)
 	} else {
 		p := prompt.New(
 			executor,
@@ -172,13 +171,72 @@ func CmdSaveModule(_ []string) {
 	}
 }
 
-func CmdRunExecs(_ []string) {
+func logExecs(list []*qupla.QuplaExecStmt) {
+	logf(0, "Found %v executables:", len(list))
+	for _, ex := range list {
+		logf(0, "   #%v:  %v", ex.GetIdx(), ex.GetSource())
+	}
+}
+
+func CmdList(words []string) {
+	if moduleYAML == nil {
+		logf(0, "Error: module was not loaded")
+		return
+	}
+	target := "execs"
+	if len(words) >= 2 {
+		target = words[1]
+	}
+	substr := ""
+	if len(words) >= 3 {
+		substr = words[2]
+	}
+	switch target {
+	case "execs":
+		execs := module.FindExecs(substr)
+		logExecs(execs)
+		return
+	}
+}
+
+func stringIsInt(s string) bool {
+	_, err := strconv.Atoi(s)
+	return err == nil
+}
+
+func CmdRun(words []string) {
 	if module == nil {
 		logf(0, "Error: module not loaded")
 		return
 	}
-	module.Execute(dispatcherInstance)
-	postEffectsToDispatcher(dispatcherInstance)
+	switch {
+	case len(words) == 1:
+		// run all executables
+		module.Execute(dispatcherInstance)
+		postEffectsToDispatcher(dispatcherInstance)
+		return
+	case stringIsInt(words[1]) && len(words) == 2:
+		// run specific executable in quant mode
+		idx, _ := strconv.Atoi(words[1])
+		exec := module.ExecByIdx(idx)
+		if exec == nil {
+			logf(0, "Can't find executable #%v", idx)
+			return
+		}
+		_, err := exec.Execute(dispatcherInstance)
+		if err != nil {
+			logf(0, "Error: %v", err)
+		}
+		return
+
+	case stringIsInt(words[1]) && len(words) == 3 && words[2] == "wave":
+		// run specific executable in wave mode
+
+	}
+}
+
+func CmdWave(words []string) {
+
 }
 
 func CmdRuntime(_ []string) {
@@ -187,37 +245,4 @@ func CmdRuntime(_ []string) {
 	memAllocMB := math.Round(100*(float64(mem.Alloc/1024)/1024)) / 100
 	logf(0, "Memory allocated: %vM", memAllocMB)
 	logf(0, "Number of goroutines: %v", runtime.NumGoroutine())
-}
-
-func CmdMode(words []string) {
-	if len(words) == 1 {
-		if dispatcherInstance.IsWaveMode() {
-			logf(0, "Mode is 'wave'")
-		} else {
-			logf(0, "Mode is 'quant'")
-		}
-		return
-	}
-	switch {
-	case strings.HasPrefix(words[1], "w") || strings.HasPrefix(words[1], "W"):
-		if err := dispatcherInstance.SetWaveMode(true); err != nil {
-			logf(0, "%v")
-		} else {
-			logf(0, "Mode set to 'wave'")
-		}
-	case strings.HasPrefix(words[1], "q") || strings.HasPrefix(words[1], "Q"):
-		if err := dispatcherInstance.SetWaveMode(false); err != nil {
-			logf(0, "%v")
-		} else {
-			logf(0, "Mode set to 'quant'")
-		}
-	default:
-		logf(0, "Usage: mode quant | wave")
-	}
-}
-
-func CmdWave(words []string) {
-	if !dispatcherInstance.IsWaveMode() {
-		logf(0, "Not in 'wave' mode. Use 'mode wave' commend first")
-	}
 }

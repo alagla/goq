@@ -71,6 +71,10 @@ func (ex *QuplaExecStmt) GetName() string {
 	return fmt.Sprintf("#%v-'%v'", ex.num, ex.GetSource())
 }
 
+func (ex *QuplaExecStmt) GetIdx() int {
+	return ex.num
+}
+
 func (ex *QuplaExecStmt) HasState() bool {
 	return ex.funcExpr.funcDef.hasState
 }
@@ -84,13 +88,6 @@ func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 	envInName := "ENV_IN$$" + ex.GetName() + "$$"
 	envOutName := "ENV_OUT$$" + ex.GetName() + "$$"
 	var err error
-	//if err = disp.CreateEnvironment(envInName); err != nil {
-	//	return false, err
-	//}
-	//if err = disp.CreateEnvironment(envOutName); err != nil {
-	//	return false, err
-	//}
-	//
 	exprEntity := ex.newEvalEntity(disp)
 	if err = disp.Attach(exprEntity, []string{envInName}, []string{envOutName}); err != nil {
 		return false, nil
@@ -99,9 +96,11 @@ func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 	var t = Trits{0}
 	var result Trits
 
-	if err = disp.RunQuant(envInName, t, false); err != nil {
+	err = disp.PostEffect(envInName, t, false, nil)
+	if err != nil {
 		return false, err
 	}
+
 	if result, err = disp.Value(envOutName); err != nil {
 		return false, err
 	}
@@ -117,9 +116,6 @@ func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 			logf(0, "    test FAILED")
 		}
 	}
-
-	//logf(0, "environment values after quant:")
-	//printTritMap(disp.Values())
 
 	_ = disp.DeleteEnvironment(envInName)
 	_ = disp.DeleteEnvironment(envOutName)

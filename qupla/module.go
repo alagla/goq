@@ -8,6 +8,7 @@ import (
 	"github.com/lunfardo314/goq/entities"
 	. "github.com/lunfardo314/goq/utils"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
+	"strings"
 	"time"
 )
 
@@ -232,6 +233,22 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher) {
 	logf(0, "Total duration: %v ", time.Since(start))
 }
 
+func (module *QuplaModule) ExecByIdx(idx int) *QuplaExecStmt {
+	if idx < 0 || idx >= len(module.execs) {
+		return nil
+	}
+	return module.execs[idx]
+}
+
+func (module *QuplaModule) FindExecs(substr string) []*QuplaExecStmt {
+	ret := make([]*QuplaExecStmt, 0)
+	for _, ex := range module.execs {
+		if strings.Contains(ex.GetName(), substr) {
+			ret = append(ret, ex)
+		}
+	}
+	return ret
+}
 func (module *QuplaModule) IncStat(key string) {
 	if _, ok := module.stats[key]; !ok {
 		module.stats[key] = 0
