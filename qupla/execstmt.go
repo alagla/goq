@@ -79,12 +79,19 @@ func (ex *QuplaExecStmt) HasState() bool {
 	return ex.funcExpr.funcDef.hasState
 }
 
+func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
+	return ex.ExecuteMulti(disp, 1)
+}
+
 // create temporary environment
 // create two temporary entities
 //   - one for the eval function expression itself, affect the environment
 //   - another for the reaction of the function result: in case of eval ir prints result, in case of test it checks test
 //   - post effect to the environment
-func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
+func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error) {
+	if repeat < 1 {
+		return false, fmt.Errorf("'repeat' parameter must be >1")
+	}
 	envInName := "ENV_IN$$" + ex.GetName() + "$$"
 	envOutName := "ENV_OUT$$" + ex.GetName() + "$$"
 	var err error
@@ -96,16 +103,22 @@ func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 	var t = Trits{0}
 	var result Trits
 
-	err = disp.StartQuant(envInName, t, func() { fmt.Printf("++++++++++ Done with %v\n", envInName) })
-	if err != nil {
-		return false, err
+	start := time.Now()
+	for i := 0; i < repeat; i++ {
+		err = disp.StartQuant(envInName, t, func() { logf(3, "%v ++++++++++ Done with %v\n", i, envInName) })
+		if err != nil {
+			return false, err
+		}
 	}
 
 	if result, err = disp.Value(envOutName); err != nil {
 		return false, err
 	}
-	logf(0, "Executing %v", ex.GetName())
-	logf(0, "    eval result:     '%v'. Duration %v", utils.TritsToString(result), ex.duration)
+	logf(0, "Executing %v. Repeat %v times", ex.GetName(), repeat)
+	dur := time.Since(start)
+	avgdur := int64(dur/time.Millisecond) / int64(repeat)
+	logf(0, "    eval result:     '%v'. Total duration %v, Average duration %v msec/run",
+		utils.TritsToString(result), dur, avgdur)
 
 	var passed bool
 	if ex.isTest {
@@ -116,7 +129,6 @@ func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 			logf(0, "    test FAILED")
 		}
 	}
-
 	_ = disp.DeleteEnvironment(envInName)
 	_ = disp.DeleteEnvironment(envOutName)
 

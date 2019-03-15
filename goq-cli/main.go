@@ -206,7 +206,22 @@ func CmdRun(words []string) {
 		}
 		return
 
-	case stringIsInt(words[1]) && len(words) == 3 && words[2] == "wave":
+	case len(words) == 3 && stringIsInt(words[1]) && stringIsInt(words[2]):
+		// run specific executable in quant mode
+		idx, _ := strconv.Atoi(words[1])
+		exec := module.ExecByIdx(idx)
+		if exec == nil {
+			logf(0, "Can't find executable #%v", idx)
+			return
+		}
+		num, _ := strconv.Atoi(words[2])
+		_, err := exec.ExecuteMulti(dispatcherInstance, num)
+		if err != nil {
+			logf(0, "Error: %v", err)
+		}
+		return
+
+	case len(words) == 3 && words[1] == "wave" && stringIsInt(words[2]):
 		// run specific executable in wave mode
 
 	}
