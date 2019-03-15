@@ -118,7 +118,7 @@ func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error
 	start := time.Now()
 	envInName := ex.InEnvironmentName()
 	for i := 0; i < repeat; i++ {
-		err = disp.StartQuant(envInName, t, func() { logf(3, "%v ++++++++++ Done with %v\n", i, envInName) })
+		err = disp.RunWave(envInName, false, t)
 		if err != nil {
 			return false, err
 		}
@@ -180,7 +180,7 @@ func (ex *QuplaExecStmt) StartWave(disp *Dispatcher) error {
 	var t = Trits{0}
 
 	envInName := ex.InEnvironmentName()
-	err = disp.StartWave(envInName, t, nil)
+	err = disp.RunWave(envInName, true, t)
 	return nil
 }
 

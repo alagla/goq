@@ -93,29 +93,21 @@ func (ent *Entity) entityLoop() {
 	logf(4, "entity '%v' loop STARTED", ent.name)
 	defer logf(4, "entity '%v'loop STOPPED", ent.name)
 
-	res := make(Trits, ent.outSize)
 	var null bool
-	var tosend Trits
 	for effect := range ent.inChan {
+		if effect == nil {
+			panic("nil effect")
+		}
 		logf(2, "Entity '%v' <- '%v'", ent.name, utils.TritsToString(effect))
 		// calculate result
+		res := make(Trits, ent.outSize)
 		null = ent.entityCore.Call(effect, res)
-		tosend = res
-		if null {
-			tosend = nil
+		if !null {
+			ent.dispatcher.waveWG.Add(len(ent.affecting))
+			for _, env := range ent.affecting {
+				env.effectChan <- res
+			}
 		}
-		if ent.dispatcher.waveMode {
-			ent.dispatcher.holdWaveWGAdd(len(ent.affecting), "entityLoop")
-		} else {
-			ent.dispatcher.quantWGAdd(len(ent.affecting), "entityLoop")
-		}
-		for _, env := range ent.affecting {
-			env.effectChan <- tosend
-		}
-		if ent.dispatcher.waveMode {
-			ent.dispatcher.holdWaveWGDone("entityLoop")
-		} else {
-			ent.dispatcher.quantWGDone("entityLoop")
-		}
+		ent.dispatcher.waveWG.Done()
 	}
 }

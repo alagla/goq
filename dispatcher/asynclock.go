@@ -1,6 +1,9 @@
 package dispatcher
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type LockWithTimeout struct {
 	ch chan struct{}
@@ -37,4 +40,35 @@ func (cl *LockWithTimeout) Release() bool {
 	default:
 		return false
 	}
+}
+
+type ShooterWG struct {
+	hold    sync.WaitGroup
+	release sync.WaitGroup
+}
+
+func NewShooterWG() *ShooterWG {
+	return &ShooterWG{}
+}
+
+func (sh *ShooterWG) Arm() {
+	sh.hold.Add(1)
+	sh.release.Add(1)
+}
+
+func (sh *ShooterWG) Disarm() {
+	sh.hold.Done()
+	sh.release.Done()
+}
+
+func (sh *ShooterWG) Wait() {
+	sh.hold.Wait()
+	sh.release.Wait()
+}
+
+func (sh *ShooterWG) Shoot() {
+	sh.hold.Done()
+	sh.hold.Add(1)
+	sh.release.Done()
+	sh.release.Add(1)
 }

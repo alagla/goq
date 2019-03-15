@@ -57,6 +57,21 @@ func (env *environment) checkNewSize(size int64) bool {
 	return true
 }
 
+func (env *environment) adjustEffect(effect Trits) (Trits, error) {
+	if env.size == 0 {
+		effect = Trits{0}
+	} else {
+		if int64(len(effect)) != env.size {
+			if int64(len(effect)) > env.size {
+				return nil, fmt.Errorf("trit vector '%v' is too long for the environment '%v', size = %v",
+					TritsToString(effect), env.name, env.size)
+			}
+			effect = PadTrits(effect, int(env.size))
+		}
+	}
+	return effect, nil
+}
+
 func (env *environment) join(entity *Entity) error {
 	if !env.checkNewSize(entity.InSize()) {
 		return fmt.Errorf("size mismach between joining entity '%v' and the environment '%v'",
@@ -81,35 +96,25 @@ func (env *environment) environmentLoop() {
 	logf(4, "environment '%v': loop START", env.name)
 	defer logf(4, "environment '%v': loop STOP", env.name)
 
-	var wasSent bool
 	for effect := range env.effectChan {
+		if effect == nil {
+			panic("nil effect")
+		}
 		dec, _ := TritsToBigInt(effect)
 		logf(2, "Environment '%v' <- '%v' (%v)", env.name, TritsToString(effect), dec)
-		if env.dispatcher.waveMode {
+		waveStops := env.dispatcher.waveMode || len(env.joins) == 0
+		if waveStops {
 			env.setValue(effect)
-			env.dispatcher.holdWaveWGDone("environmentLoop")
-			env.dispatcher.releaseWaveWGWait("environmentLoop")
-			env.setValue(nil) // environment value becomes invalid during wave
-			env.dispatcher.holdWaveWGAdd(len(env.joins), "environmentLoop")
+			env.dispatcher.waveWG.Done()
+			env.dispatcher.releaseWaveWG.Wait() // <<<<<
+			continue
 		}
-		wasSent = false
-		if effect != nil {
-			if !env.dispatcher.waveMode {
-				env.dispatcher.quantWGAdd(len(env.joins), "environmentLoop") // len(env.joins) new waves starts
-			}
-			// TODO change to dynamic select
-			for _, entity := range env.joins {
-				entity.inChan <- effect
-				wasSent = true
-			}
+		env.setValue(nil)
+		env.dispatcher.waveWG.Add(len(env.joins))
+		for _, entity := range env.joins {
+			entity.inChan <- effect
 		}
-		if !wasSent {
-			// wave ends here
-			env.setValue(effect)
-		}
-		if !env.dispatcher.waveMode {
-			env.dispatcher.quantWGDone("environmentLoop")
-		}
+		env.dispatcher.waveWG.Done()
 	}
 }
 
