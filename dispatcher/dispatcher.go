@@ -98,7 +98,8 @@ func (disp *Dispatcher) StartWave(envName string, effect Trits, onStop func()) e
 	if err := disp.startWave(envName, true, effect); err != nil {
 		return err
 	}
-	disp.holdWaveWG.Wait()
+	disp.holdWaveWGWait("StartWave::" + envName)
+
 	if onStop != nil {
 		onStop()
 	}
@@ -109,7 +110,7 @@ func (disp *Dispatcher) StartQuant(envName string, effect Trits, onStop func()) 
 	if err := disp.startWave(envName, false, effect); err != nil {
 		return err
 	}
-	disp.quantWG.Wait()
+	disp.quantWGWait("StartQuant::" + envName)
 	if onStop != nil {
 		onStop()
 	}
@@ -136,10 +137,10 @@ func (disp *Dispatcher) startWave(envName string, waveMode bool, effect Trits) e
 
 	disp.waveMode = waveMode
 	if waveMode {
-		disp.holdWaveWG.Add(1)
-		disp.releaseWaveWG.Add(1)
+		disp.holdWaveWGAdd(1, "startWave::"+envName)
+		disp.releaseWaveWGAdd(1, "startWave::"+envName)
 	} else {
-		disp.quantWG.Add(1)
+		disp.quantWGAdd(1, "startWave::"+envName)
 	}
 	env.effectChan <- effect
 	return nil
@@ -149,9 +150,11 @@ func (disp *Dispatcher) Wave() error {
 	if !disp.waveMode {
 		return fmt.Errorf("not in wave mode")
 	}
-	disp.holdWaveWG.Wait()
-	disp.releaseWaveWG.Done()
-	disp.releaseWaveWG.Add(1)
+	disp.holdWaveWGWait("Wave")
+
+	disp.holdWaveWGAdd(1, "Wave")
+	disp.releaseWaveWGDone("Wave")
+	disp.releaseWaveWGAdd(1, "Wave")
 	return nil
 }
 
@@ -173,4 +176,54 @@ func (disp *Dispatcher) Values() map[string]Trits {
 		}
 	}
 	return ret
+}
+
+func (disp *Dispatcher) IsWaveMode() bool {
+	return disp.waveMode
+}
+
+//-----------------------------------------------------
+func (disp *Dispatcher) quantWGAdd(n int, name string) {
+	disp.quantWG.Add(n)
+	logf(4, "....... after quantWG.Add(%v) in '%v'", n, name)
+}
+
+func (disp *Dispatcher) quantWGWait(name string) {
+	disp.quantWG.Wait()
+	logf(4, "....... after quantWG.Wait() in '%v'", name)
+}
+
+func (disp *Dispatcher) quantWGDone(name string) {
+	disp.quantWG.Done()
+	logf(4, "....... after quantWG.Done() in '%v'", name)
+}
+
+func (disp *Dispatcher) holdWaveWGAdd(n int, name string) {
+	disp.holdWaveWG.Add(n)
+	logf(4, "....... after holdWaveWG.Add(%v) in '%v'", n, name)
+}
+
+func (disp *Dispatcher) holdWaveWGWait(name string) {
+	disp.holdWaveWG.Wait()
+	logf(4, "....... after holdWaveWG.Wait() in '%v'", name)
+}
+
+func (disp *Dispatcher) holdWaveWGDone(name string) {
+	disp.holdWaveWG.Done()
+	logf(4, "....... after holdWaveWG.Done() in '%v'", name)
+}
+
+func (disp *Dispatcher) releaseWaveWGAdd(n int, name string) {
+	disp.releaseWaveWG.Add(n)
+	logf(4, "....... after releaseWaveWG.Add(%v) in '%v'", n, name)
+}
+
+func (disp *Dispatcher) releaseWaveWGWait(name string) {
+	disp.releaseWaveWG.Wait()
+	logf(4, "....... after releaseWaveWG.Wait() in '%v'", name)
+}
+
+func (disp *Dispatcher) releaseWaveWGDone(name string) {
+	disp.releaseWaveWG.Done()
+	logf(4, "....... after releaseWaveWG.Done() in '%v'", name)
 }

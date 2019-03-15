@@ -104,16 +104,18 @@ func (ent *Entity) entityLoop() {
 		if null {
 			tosend = nil
 		}
-		if !ent.dispatcher.waveMode {
-			ent.dispatcher.quantWG.Add(len(ent.affecting))
+		if ent.dispatcher.waveMode {
+			ent.dispatcher.holdWaveWGAdd(len(ent.affecting), "entityLoop")
+		} else {
+			ent.dispatcher.quantWGAdd(len(ent.affecting), "entityLoop")
 		}
 		for _, env := range ent.affecting {
 			env.effectChan <- tosend
 		}
 		if ent.dispatcher.waveMode {
-			ent.dispatcher.holdWaveWG.Done()
+			ent.dispatcher.holdWaveWGDone("entityLoop")
 		} else {
-			ent.dispatcher.quantWG.Done()
+			ent.dispatcher.quantWGDone("entityLoop")
 		}
 	}
 }

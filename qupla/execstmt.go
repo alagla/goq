@@ -79,31 +79,44 @@ func (ex *QuplaExecStmt) HasState() bool {
 	return ex.funcExpr.funcDef.hasState
 }
 
+func (ex *QuplaExecStmt) InEnvironmentName() string {
+	return "ENV_IN$$" + ex.GetName() + "$$"
+}
+
+func (ex *QuplaExecStmt) OutEnvironmentName() string {
+	return "ENV_OUT$$" + ex.GetName() + "$$"
+}
+
+func (ex *QuplaExecStmt) createEnvironments(disp *Dispatcher) error {
+	exprEntity := ex.newEvalEntity(disp)
+	if err := disp.Attach(exprEntity, []string{ex.InEnvironmentName()}, []string{ex.OutEnvironmentName()}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ex *QuplaExecStmt) deleteEnvironments(disp *Dispatcher) {
+	_ = disp.DeleteEnvironment(ex.InEnvironmentName())
+	_ = disp.DeleteEnvironment(ex.OutEnvironmentName())
+}
+
 func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
 	return ex.ExecuteMulti(disp, 1)
 }
 
-// create temporary environment
-// create two temporary entities
-//   - one for the eval function expression itself, affect the environment
-//   - another for the reaction of the function result: in case of eval ir prints result, in case of test it checks test
-//   - post effect to the environment
 func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error) {
 	if repeat < 1 {
 		return false, fmt.Errorf("'repeat' parameter must be >1")
 	}
-	envInName := "ENV_IN$$" + ex.GetName() + "$$"
-	envOutName := "ENV_OUT$$" + ex.GetName() + "$$"
 	var err error
-	exprEntity := ex.newEvalEntity(disp)
-	if err = disp.Attach(exprEntity, []string{envInName}, []string{envOutName}); err != nil {
-		return false, nil
+	if err = ex.createEnvironments(disp); err != nil {
+		return false, err
 	}
-
 	var t = Trits{0}
 	var result Trits
 
 	start := time.Now()
+	envInName := ex.InEnvironmentName()
 	for i := 0; i < repeat; i++ {
 		err = disp.StartQuant(envInName, t, func() { logf(3, "%v ++++++++++ Done with %v\n", i, envInName) })
 		if err != nil {
@@ -111,7 +124,7 @@ func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error
 		}
 	}
 
-	if result, err = disp.Value(envOutName); err != nil {
+	if result, err = disp.Value(ex.OutEnvironmentName()); err != nil {
 		return false, err
 	}
 	logf(0, "Executing %v. Repeat %v times", ex.GetName(), repeat)
@@ -129,9 +142,7 @@ func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error
 			logf(0, "    test FAILED")
 		}
 	}
-	_ = disp.DeleteEnvironment(envInName)
-	_ = disp.DeleteEnvironment(envOutName)
-
+	ex.deleteEnvironments(disp)
 	return passed, err
 }
 
@@ -159,6 +170,18 @@ func (ex *QuplaExecStmt) ResultIsExpected(result Trits) bool {
 	passed, _ = TritsEqual(result[1:], ex.valueExpected[1:])
 	return passed
 
+}
+
+func (ex *QuplaExecStmt) StartWave(disp *Dispatcher) error {
+	var err error
+	if err = ex.createEnvironments(disp); err != nil {
+		return err
+	}
+	var t = Trits{0}
+
+	envInName := ex.InEnvironmentName()
+	err = disp.StartWave(envInName, t, nil)
+	return nil
 }
 
 // expression shouldn't have free variables

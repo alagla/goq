@@ -87,15 +87,15 @@ func (env *environment) environmentLoop() {
 		logf(2, "Environment '%v' <- '%v' (%v)", env.name, TritsToString(effect), dec)
 		if env.dispatcher.waveMode {
 			env.setValue(effect)
-			env.dispatcher.holdWaveWG.Wait()
-			env.dispatcher.releaseWaveWG.Wait()
+			env.dispatcher.holdWaveWGDone("environmentLoop")
+			env.dispatcher.releaseWaveWGWait("environmentLoop")
 			env.setValue(nil) // environment value becomes invalid during wave
-			env.dispatcher.holdWaveWG.Add(len(env.joins))
+			env.dispatcher.holdWaveWGAdd(len(env.joins), "environmentLoop")
 		}
 		wasSent = false
 		if effect != nil {
 			if !env.dispatcher.waveMode {
-				env.dispatcher.quantWG.Add(len(env.joins)) // len(env.joins) new waves starts
+				env.dispatcher.quantWGAdd(len(env.joins), "environmentLoop") // len(env.joins) new waves starts
 			}
 			// TODO change to dynamic select
 			for _, entity := range env.joins {
@@ -107,10 +107,8 @@ func (env *environment) environmentLoop() {
 			// wave ends here
 			env.setValue(effect)
 		}
-		if env.dispatcher.waveMode {
-			env.dispatcher.holdWaveWG.Done()
-		} else {
-			env.dispatcher.quantWG.Done()
+		if !env.dispatcher.waveMode {
+			env.dispatcher.quantWGDone("environmentLoop")
 		}
 	}
 }

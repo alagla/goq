@@ -172,16 +172,34 @@ func (module *QuplaModule) FindLUTDef(name string) (LUTInterface, error) {
 	return ret, nil
 }
 
-func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher) {
+func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toIdx int) {
+	if len(module.execs) == 0 {
+		logf(0, "No executables to execute")
+		return
+	}
+	if fromIdx < 0 && toIdx < 0 {
+		fromIdx = 0
+		toIdx = len(module.execs) - 1
+	} else {
+		if fromIdx < 0 || fromIdx > toIdx {
+			logf(0, "Wrong range of indices of executables")
+			return
+		}
+	}
 	switch {
 	case cfg.Config.ExecEvals && cfg.Config.ExecTests:
-		logf(0, "Executing evals and tests (total %v)", len(module.execs))
+		logf(0, "Executing evals and tests")
 	case cfg.Config.ExecEvals && !cfg.Config.ExecTests:
 		logf(0, "Executing evals only")
 	case !cfg.Config.ExecEvals && cfg.Config.ExecTests:
 		logf(0, "Executing tests only")
 	case !cfg.Config.ExecEvals && !cfg.Config.ExecTests:
 		logf(0, "Wrong config values. Assume: executing tests only")
+	}
+	if fromIdx < 0 && toIdx < 0 {
+		logf(0, "Index range: ALL (total %v)", len(module.execs))
+	} else {
+		logf(0, "Index range: %v - %v", fromIdx, toIdx)
 	}
 
 	testsPassed := 0
@@ -190,7 +208,9 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher) {
 	totalTests := 0
 	start := time.Now()
 	first := true
-	for _, exec := range module.execs {
+	var exec *QuplaExecStmt
+	for idx := fromIdx; idx <= toIdx; idx++ {
+		exec = module.execs[idx]
 		if cfg.Config.ExecFirstOnly && !first {
 			break
 		}

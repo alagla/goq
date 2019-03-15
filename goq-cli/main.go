@@ -8,74 +8,12 @@ import (
 	"github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
-	"math"
-	"os"
-	"runtime"
-	"strconv"
-	"strings"
 	"time"
 )
 
-func executor(in string) {
-	words := strings.Split(in, " ")
-	if len(words) == 0 || words[0] == "" {
-		return
-	}
-	start := time.Now()
-	defer logf(2, "Duration %v", time.Since(start))
-
-	switch words[0] {
-	case "exit", "quit":
-		logf(0, "Bye!")
-		os.Exit(0)
-	case "verb":
-		CmdVerbosity(words)
-	case "load":
-		CmdLoadModule(words)
-	case "save":
-		CmdSaveModule(words)
-	case "run":
-		CmdRun(words)
-	case "wave":
-		CmdWave(words)
-	case "list":
-		CmdList(words)
-	case "functions":
-		logf(0, "not implemented yet")
-	case "runtime":
-		CmdRuntime(words)
-	default:
-		logf(0, "unknown command")
-	}
-}
-
-func completer(in prompt.Document) []prompt.Suggest {
-	return []prompt.Suggest{}
-	//if in.GetWordBeforeCursor() == ""{
-	//	return []prompt.Suggest{}
-	//}
-	//
-	//switch strings.Trim(in.GetWordBeforeCursorWithSpace(), " "){
-	//case "verb":
-	//	return []prompt.Suggest{
-	//		{Text: "0", Description: "normal"},
-	//		{Text: "1", Description: "verbose"},
-	//		{Text: "2", Description: "debug"},
-	//		{Text: "3", Description: "trace"},
-	//	}
-	//}
-	//s := []prompt.Suggest{
-	//	{Text: "exit", Description: "Exit goq-cli"},
-	//	{Text: "verb", Description: "Change verbosity level to 0,1,2,3"},
-	//	{Text: "load", Description: "Load Qupla module"},
-	//	{Text: "module", Description: "Current module info"},
-	//	{Text: "functions", Description: "list functions of the current module"},
-	//	{Text: "help", Description: "list goq dispatcher commands"},
-	//}
-	//return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
-}
-
 var dispatcherInstance = dispatcher.NewDispatcher(1 * time.Second)
+var moduleYAML *QuplaModuleYAML
+var module *qupla.QuplaModule
 
 func logf(minVerbosity int, format string, args ...interface{}) {
 	if cfg.Config.Verbosity < minVerbosity {
@@ -83,160 +21,19 @@ func logf(minVerbosity int, format string, args ...interface{}) {
 	}
 	fmt.Printf(format+"\n", args...)
 }
-
-func CmdVerbosity(words []string) {
-	if len(words) == 1 {
-		logf(0, "current verbosity level is %v", cfg.Config.Verbosity)
-		return
-	}
-	if len(words) != 2 {
-		logf(0, "usage: verb [0|1|2|3]")
-	}
-	var v int
-	v, err := strconv.Atoi(words[1])
-	if err != nil || v < 0 || v > 2 {
-		logf(0, "usage: verb [0|1|2|3]")
-		return
-	}
-	cfg.Config.Verbosity = v
-	logf(0, "verbosity was set to %v", cfg.Config.Verbosity)
-
-}
-
-const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
-const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
-
-var moduleYAML *QuplaModuleYAML
-var module *qupla.QuplaModule
-
-func CmdLoadModule(_ []string) {
-	var err error
-
-	logf(0, "Loading module form file %v", fname)
-	moduleYAML, err = NewQuplaModuleFromYAML(fname)
-	if err != nil {
-		logf(0, "Error while parsing YAML file: %v", err)
-		moduleYAML = nil
-		return
-	}
-	logf(0, "Module '%v' loaded successfully", moduleYAML.Name)
-	logf(0, "Analyzing module")
-
-	var succ bool
-	module, succ = qupla.AnalyzeQuplaModule("single_module", moduleYAML, &qupla.ExpressionFactoryFromYAML{})
-	module.PrintStats()
-	if succ {
-		module.AttachToDispatcher(dispatcherInstance)
-		logf(0, "Module analyzed succesfully")
-	} else {
-		logf(0, "Failed to analyze module")
-		module = nil
+func execBatch(cmdlist []string) {
+	logf(0, "Executing batch of commands:")
+	for _, cmdline := range cmdlist {
+		logf(0, "-------- Command line '%v'", cmdline)
+		executor(cmdline)
 	}
 }
 
-func CmdSaveModule(_ []string) {
-	if moduleYAML == nil {
-		logf(0, "Error: module was not loaded")
-		return
-	}
-	logf(0, "Writing Qupla module to YAML file %v", testout)
-
-	if err := moduleYAML.WriteToFile(testout); err != nil {
-		logf(0, "Error occured: %v", err)
-	} else {
-		logf(0, "Succesfully saved Qupla module")
-	}
-}
-
-func logExecs(list []*qupla.QuplaExecStmt) {
-	logf(0, "Found %v executables:", len(list))
-	for _, ex := range list {
-		logf(0, "   #%v:  %v", ex.GetIdx(), ex.GetSource())
-	}
-}
-
-func CmdList(words []string) {
-	if moduleYAML == nil {
-		logf(0, "Error: module was not loaded")
-		return
-	}
-	target := "execs"
-	if len(words) >= 2 {
-		target = words[1]
-	}
-	substr := ""
-	if len(words) >= 3 {
-		substr = words[2]
-	}
-	switch target {
-	case "execs":
-		execs := module.FindExecs(substr)
-		logExecs(execs)
-		return
-	}
-}
-
-func stringIsInt(s string) bool {
-	_, err := strconv.Atoi(s)
-	return err == nil
-}
-
-func CmdRun(words []string) {
-	if module == nil {
-		logf(0, "Error: module not loaded")
-		return
-	}
-	switch {
-	case len(words) == 1:
-		// run all executables
-		module.Execute(dispatcherInstance)
-		postEffectsToDispatcher(dispatcherInstance)
-		return
-	case stringIsInt(words[1]) && len(words) == 2:
-		// run specific executable in quant mode
-		idx, _ := strconv.Atoi(words[1])
-		exec := module.ExecByIdx(idx)
-		if exec == nil {
-			logf(0, "Can't find executable #%v", idx)
-			return
-		}
-		_, err := exec.Execute(dispatcherInstance)
-		if err != nil {
-			logf(0, "Error: %v", err)
-		}
-		return
-
-	case len(words) == 3 && stringIsInt(words[1]) && stringIsInt(words[2]):
-		// run specific executable in quant mode
-		idx, _ := strconv.Atoi(words[1])
-		exec := module.ExecByIdx(idx)
-		if exec == nil {
-			logf(0, "Can't find executable #%v", idx)
-			return
-		}
-		num, _ := strconv.Atoi(words[2])
-		_, err := exec.ExecuteMulti(dispatcherInstance, num)
-		if err != nil {
-			logf(0, "Error: %v", err)
-		}
-		return
-
-	case len(words) == 3 && words[1] == "wave" && stringIsInt(words[2]):
-		// run specific executable in wave mode
-
-	}
-}
-
-func CmdWave(words []string) {
-
-}
-
-func CmdRuntime(_ []string) {
-	var mem runtime.MemStats
-	runtime.ReadMemStats(&mem)
-	memAllocMB := math.Round(100*(float64(mem.Alloc/1024)/1024)) / 100
-	logf(0, "Memory allocated: %vM", memAllocMB)
-	logf(0, "Number of goroutines: %v", runtime.NumGoroutine())
+var startupCmd = []string{
+	"load",
+	"run 0",
+	"wave 0",
+	//"wave 17",
 }
 
 func main() {
@@ -249,8 +46,7 @@ func main() {
 	flag.Parse()
 	if *pnocli {
 		logf(0, "Bypass CLI. Load module and run it.")
-		CmdLoadModule(nil)
-		CmdRun([]string{"run", "0"})
+		execBatch(startupCmd)
 	} else {
 		p := prompt.New(
 			executor,
