@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/utils"
+	"sync"
 )
 
 type environment struct {
@@ -14,7 +15,6 @@ type environment struct {
 	affects    []*Entity
 	size       int64
 	effectChan chan Trits
-	value      Trits // valid only between waves
 }
 
 func NewEnvironment(disp *Dispatcher, name string) *environment {
@@ -92,6 +92,7 @@ func (env *environment) affect(entity *Entity) error {
 	return nil
 }
 
+// main loop of the environment
 func (env *environment) environmentLoop() {
 	logf(4, "environment '%v': loop START", env.name)
 	defer logf(4, "environment '%v': loop STOP", env.name)
@@ -102,30 +103,17 @@ func (env *environment) environmentLoop() {
 		}
 		dec, _ := TritsToBigInt(effect)
 		logf(2, "Environment '%v' <- '%v' (%v)", env.name, TritsToString(effect), dec)
+		env.dispatcher.quantWG.Add(len(env.joins))
 		waveStops := env.dispatcher.waveMode || len(env.joins) == 0
 		if waveStops {
-			env.setValue(effect)
-			env.dispatcher.waveWG.Done()
-			env.dispatcher.releaseWaveWG.Wait() // <<<<<
+			env.waitWave(effect)
 			continue
 		}
-		env.setValue(nil)
-		env.dispatcher.waveWG.Add(len(env.joins))
 		for _, entity := range env.joins {
 			entity.inChan <- effect
 		}
-		env.dispatcher.waveWG.Done()
+		env.dispatcher.quantWG.Done()
 	}
-}
-
-// value is valid only outside quant and wave
-func (env *environment) setValue(val Trits) {
-	logf(3, "------ SET value env '%v' = '%v'", env.name, TritsToString(val))
-	env.value = val
-}
-
-func (env *environment) getValue() Trits {
-	return env.value
 }
 
 func (env *environment) invalidate() {
@@ -141,4 +129,18 @@ func (env *environment) invalidate() {
 	for _, entity := range env.affects {
 		entity.stopAffectingEnvironment(env)
 	}
+}
+
+func (env *environment) waitWave(value Trits) {
+	if env.dispatcher.waveCoo == nil {
+		return
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	env.dispatcher.waveCoo.chIn <- &waveResult{
+		environment: env,
+		value:       value,
+		wg:          &wg,
+	}
+	wg.Wait()
 }

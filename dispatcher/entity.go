@@ -103,11 +103,11 @@ func (ent *Entity) entityLoop() {
 		res := make(Trits, ent.outSize)
 		null = ent.entityCore.Call(effect, res)
 		if !null {
-			ent.dispatcher.waveWG.Add(len(ent.affecting))
+			ent.dispatcher.quantWG.Add(len(ent.affecting))
 			for _, env := range ent.affecting {
 				env.effectChan <- res
 			}
 		}
-		ent.dispatcher.waveWG.Done()
+		ent.dispatcher.quantWG.Done()
 	}
 }

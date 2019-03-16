@@ -211,7 +211,7 @@ func CmdWave(words []string) {
 
 func listValues() {
 	logf(0, "Not nil values:")
-	vDict := dispatcherInstance.Values()
+	vDict := dispatcherInstance.WaveValues()
 	for name, val := range vDict {
 		logf(0, "%v: '%v'", name, utils.TritsToString(val))
 	}

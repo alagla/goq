@@ -31,9 +31,9 @@ func execBatch(cmdlist []string) {
 
 var startupCmd = []string{
 	"load",
-	"run 0",
+	//"run 0-10",
 	"wave 0",
-	//"wave 17",
+	"wave",
 }
 
 func main() {

@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+// lock with timeout
+
 type LockWithTimeout struct {
 	ch chan struct{}
 }
@@ -42,6 +44,8 @@ func (cl *LockWithTimeout) Release() bool {
 	}
 }
 
+// modified wait group: after Shoot (equivalent to Done) it is released and armed (Add(1))
+// again atomically
 type ShooterWG struct {
 	hold    sync.WaitGroup
 	release sync.WaitGroup

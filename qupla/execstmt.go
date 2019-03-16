@@ -18,8 +18,8 @@ type QuplaExecStmt struct {
 	funcExpr      *QuplaFuncExpr
 	valueExpected Trits
 	module        *QuplaModule
-	num           int
-	duration      time.Duration
+	idx           int
+	runResult     *execResultCallable
 }
 
 func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error {
@@ -68,36 +68,15 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 }
 
 func (ex *QuplaExecStmt) GetName() string {
-	return fmt.Sprintf("#%v-'%v'", ex.num, ex.GetSource())
+	return fmt.Sprintf("#%v-'%v'", ex.idx, ex.GetSource())
 }
 
 func (ex *QuplaExecStmt) GetIdx() int {
-	return ex.num
+	return ex.idx
 }
 
 func (ex *QuplaExecStmt) HasState() bool {
 	return ex.funcExpr.funcDef.hasState
-}
-
-func (ex *QuplaExecStmt) InEnvironmentName() string {
-	return "ENV_IN$$" + ex.GetName() + "$$"
-}
-
-func (ex *QuplaExecStmt) OutEnvironmentName() string {
-	return "ENV_OUT$$" + ex.GetName() + "$$"
-}
-
-func (ex *QuplaExecStmt) createEnvironments(disp *Dispatcher) error {
-	exprEntity := ex.newEvalEntity(disp)
-	if err := disp.Attach(exprEntity, []string{ex.InEnvironmentName()}, []string{ex.OutEnvironmentName()}); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (ex *QuplaExecStmt) deleteEnvironments(disp *Dispatcher) {
-	_ = disp.DeleteEnvironment(ex.InEnvironmentName())
-	_ = disp.DeleteEnvironment(ex.OutEnvironmentName())
 }
 
 func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
@@ -109,44 +88,22 @@ func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error
 		return false, fmt.Errorf("'repeat' parameter must be >1")
 	}
 	var err error
-	if err = ex.createEnvironments(disp); err != nil {
+	if err = ex.prepareRun(disp); err != nil {
 		return false, err
 	}
 	var t = Trits{0}
-	var result Trits
-
-	start := time.Now()
-	envInName := ex.InEnvironmentName()
+	envInName := ex.inEnvironmentName()
 	for i := 0; i < repeat; i++ {
 		err = disp.RunWave(envInName, false, t)
 		if err != nil {
 			return false, err
 		}
 	}
-
-	if result, err = disp.Value(ex.OutEnvironmentName()); err != nil {
-		return false, err
-	}
-	logf(0, "Executing %v. Repeat %v times", ex.GetName(), repeat)
-	dur := time.Since(start)
-	avgdur := int64(dur/time.Millisecond) / int64(repeat)
-	logf(0, "    eval result:     '%v'. Total duration %v, Average duration %v msec/run",
-		utils.TritsToString(result), dur, avgdur)
-
-	var passed bool
-	if ex.isTest {
-		logf(0, "    expected result: '%v'", utils.TritsToString(ex.valueExpected))
-		if passed = ex.ResultIsExpected(result); passed {
-			logf(0, "    test PASSED")
-		} else {
-			logf(0, "    test FAILED")
-		}
-	}
-	ex.deleteEnvironments(disp)
+	passed := ex.wrapUpRun(disp)
 	return passed, err
 }
 
-func (ex *QuplaExecStmt) ResultIsExpected(result Trits) bool {
+func (ex *QuplaExecStmt) resultIsExpected(result Trits) bool {
 	passed, _ := TritsEqual(result, ex.valueExpected)
 	if passed {
 		return true
@@ -174,12 +131,12 @@ func (ex *QuplaExecStmt) ResultIsExpected(result Trits) bool {
 
 func (ex *QuplaExecStmt) StartWave(disp *Dispatcher) error {
 	var err error
-	if err = ex.createEnvironments(disp); err != nil {
+	if err = ex.prepareRun(disp); err != nil {
 		return err
 	}
 	var t = Trits{0}
 
-	envInName := ex.InEnvironmentName()
+	envInName := ex.inEnvironmentName()
 	err = disp.RunWave(envInName, true, t)
 	return nil
 }
@@ -191,13 +148,82 @@ type execEvalCallable struct {
 }
 
 func (ec *execEvalCallable) Call(_ Trits, res Trits) bool {
-	start := time.Now()
 	null := ec.exec.module.processor.Eval(ec.exec.funcExpr, res)
-	ec.exec.duration = time.Since(start)
 	return null
 }
 
 func (ex *QuplaExecStmt) newEvalEntity(disp *Dispatcher) *Entity {
-	name := fmt.Sprintf("#%v-EVAL_%v", ex.num, ex.funcExpr.GetSource())
+	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.funcExpr.GetSource())
 	return NewEntity(disp, name, 0, ex.funcExpr.Size(), &execEvalCallable{ex})
+}
+
+type execResultCallable struct {
+	entity     *Entity
+	start      time.Time
+	lastRun    time.Time
+	lastResult Trits
+	called     int
+	exec       *QuplaExecStmt
+}
+
+func (ec *execResultCallable) Call(effect Trits, _ Trits) bool {
+	ec.lastRun = time.Now()
+	ec.called++
+	ec.lastResult = effect
+	return false
+}
+
+func (ex *QuplaExecStmt) newResultEntity(disp *Dispatcher) (*Entity, *execResultCallable) {
+	name := fmt.Sprintf("#%v-RESULT_%v", ex.idx, ex.funcExpr.GetSource())
+	nowis := time.Now()
+	core := &execResultCallable{
+		start:   nowis,
+		lastRun: nowis,
+		exec:    ex,
+	}
+	ret := NewEntity(disp, name, ex.funcExpr.Size(), 0, core)
+	core.entity = ret
+	return ret, core
+}
+
+func (ex *QuplaExecStmt) inEnvironmentName() string {
+	return "ENV_IN$$" + ex.GetName() + "$$"
+}
+
+func (ex *QuplaExecStmt) outEnvironmentName() string {
+	return "ENV_OUT$$" + ex.GetName() + "$$"
+}
+
+func (ex *QuplaExecStmt) prepareRun(disp *Dispatcher) error {
+	evalEntity := ex.newEvalEntity(disp)
+	if err := disp.Attach(evalEntity, []string{ex.inEnvironmentName()}, []string{ex.outEnvironmentName()}); err != nil {
+		return err
+	}
+	var resultEntity *Entity
+	resultEntity, ex.runResult = ex.newResultEntity(disp)
+	if err := disp.Attach(resultEntity, []string{ex.outEnvironmentName()}, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ex *QuplaExecStmt) wrapUpRun(disp *Dispatcher) bool {
+	logf(0, "Executed '%v' %v times", ex.GetName(), ex.runResult.called)
+	dur := ex.runResult.lastRun.Sub(ex.runResult.start)
+	avgdur := int64(dur/time.Millisecond) / int64(ex.runResult.called)
+	logf(0, "    eval result:     '%v'. Total duration %v, Average duration %v msec/run",
+		utils.TritsToString(ex.runResult.lastResult), dur, avgdur)
+
+	var passed bool
+	if ex.isTest {
+		logf(0, "    expected result: '%v'", utils.TritsToString(ex.valueExpected))
+		if passed = ex.resultIsExpected(ex.runResult.lastResult); passed {
+			logf(0, "    test PASSED")
+		} else {
+			logf(0, "    test FAILED")
+		}
+	}
+	_ = disp.DeleteEnvironment(ex.inEnvironmentName())
+	_ = disp.DeleteEnvironment(ex.outEnvironmentName())
+	return passed
 }

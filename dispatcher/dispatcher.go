@@ -8,20 +8,20 @@ import (
 )
 
 type Dispatcher struct {
-	environments  map[string]*environment
-	generalLock   *LockWithTimeout // controls environments, join, affect, modes
-	timeout       time.Duration
-	waveWG        sync.WaitGroup
-	releaseWaveWG *ShooterWG
-	waveMode      bool // TODO
+	environments map[string]*environment
+	generalLock  *LockWithTimeout // controls environments, join, affect, modes
+	timeout      time.Duration
+	waveCoo      *WaveCoordinator
+	quantWG      sync.WaitGroup // released when quant ends
+	waveMode     bool
 }
 
 func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
 	return &Dispatcher{
-		environments:  make(map[string]*environment),
-		generalLock:   NewAsyncLock(),
-		timeout:       lockTimeout,
-		releaseWaveWG: NewShooterWG(),
+		environments: make(map[string]*environment),
+		generalLock:  NewAsyncLock(),
+		timeout:      lockTimeout,
+		waveCoo:      NewWaveCoordinator(),
 	}
 }
 
@@ -103,15 +103,13 @@ func (disp *Dispatcher) RunWave(envName string, waveMode bool, effect Trits) err
 		return err
 	}
 
-	disp.waveWG.Add(1)
-	disp.waveMode = waveMode
-	if waveMode {
-		disp.releaseWaveWG.Arm()
-	}
-
+	disp.quantWG.Add(1)
+	//logf(0, "quantWG + 1")
 	env.effectChan <- effect
 
-	disp.waveWG.Wait()
+	if !waveMode {
+		env.dispatcher.quantWG.Wait()
+	}
 	return nil
 }
 
@@ -119,28 +117,12 @@ func (disp *Dispatcher) Wave() error {
 	if !disp.waveMode {
 		return fmt.Errorf("not in wave mode")
 	}
-	disp.releaseWaveWG.Shoot()
+	disp.waveCoo.nextWave()
 	return nil
 }
 
-func (disp *Dispatcher) Value(envName string) (Trits, error) {
-
-	env, ok := disp.environments[envName]
-	if !ok {
-		return nil, fmt.Errorf("can't find environment '%v'", envName)
-	}
-	return env.getValue(), nil
-}
-
-func (disp *Dispatcher) Values() map[string]Trits {
-
-	ret := make(map[string]Trits)
-	for name, env := range disp.environments {
-		if env.value != nil {
-			ret[name] = env.value
-		}
-	}
-	return ret
+func (disp *Dispatcher) WaveValues() map[string]Trits {
+	return disp.waveCoo.values()
 }
 
 func (disp *Dispatcher) IsWaveMode() bool {
