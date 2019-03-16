@@ -177,15 +177,17 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toI
 		logf(0, "No executables to execute")
 		return
 	}
-	if fromIdx < 0 && toIdx < 0 {
+	if fromIdx < 0 {
 		fromIdx = 0
-		toIdx = len(module.execs) - 1
-	} else {
-		if fromIdx < 0 || fromIdx > toIdx {
-			logf(0, "Wrong range of indices of executables")
-			return
-		}
 	}
+	if toIdx < 0 {
+		toIdx = len(module.execs) - 1
+	}
+	if fromIdx < 0 || fromIdx > toIdx {
+		logf(0, "Wrong range of indices: from %v to %v", fromIdx, toIdx)
+		return
+	}
+
 	switch {
 	case cfg.Config.ExecEvals && cfg.Config.ExecTests:
 		logf(0, "Executing evals and tests")

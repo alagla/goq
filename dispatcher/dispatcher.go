@@ -13,7 +13,6 @@ type Dispatcher struct {
 	timeout      time.Duration
 	waveCoo      *WaveCoordinator
 	quantWG      sync.WaitGroup // released when quant ends
-	waveMode     bool
 }
 
 func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
@@ -93,7 +92,10 @@ func (disp *Dispatcher) DeleteEnvironment(envName string) error {
 	return nil
 }
 
-func (disp *Dispatcher) RunWave(envName string, waveMode bool, effect Trits) error {
+func (disp *Dispatcher) WaveStart(envName string, waveMode bool, effect Trits) error {
+	if disp.waveCoo.isWaveMode() {
+		return fmt.Errorf("wave is already running")
+	}
 	env := disp.getEnvironment_(envName)
 	if env == nil {
 		return fmt.Errorf("startWave: can't find environment '%v'", envName)
@@ -103,8 +105,9 @@ func (disp *Dispatcher) RunWave(envName string, waveMode bool, effect Trits) err
 		return err
 	}
 
+	disp.waveCoo.setWaveMode(waveMode)
 	disp.quantWG.Add(1)
-	//logf(0, "quantWG + 1")
+
 	env.effectChan <- effect
 
 	if !waveMode {
@@ -113,11 +116,20 @@ func (disp *Dispatcher) RunWave(envName string, waveMode bool, effect Trits) err
 	return nil
 }
 
-func (disp *Dispatcher) Wave() error {
-	if !disp.waveMode {
+func (disp *Dispatcher) WaveNext() error {
+	if !disp.waveCoo.isWaveMode() {
 		return fmt.Errorf("not in wave mode")
 	}
-	disp.waveCoo.nextWave()
+	disp.waveCoo.runWave()
+	return nil
+}
+
+func (disp *Dispatcher) WaveRun() error {
+	if !disp.waveCoo.isWaveMode() {
+		return fmt.Errorf("not in wave mode")
+	}
+	disp.waveCoo.setWaveMode(false)
+	disp.waveCoo.runWave()
 	return nil
 }
 
@@ -126,5 +138,5 @@ func (disp *Dispatcher) WaveValues() map[string]Trits {
 }
 
 func (disp *Dispatcher) IsWaveMode() bool {
-	return disp.waveMode
+	return disp.waveCoo.isWaveMode()
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/c-bata/go-prompt"
 	"os"
 	"strings"
-	"time"
 )
 
 func executor(in string) {
@@ -12,9 +11,6 @@ func executor(in string) {
 	if len(words) == 0 || words[0] == "" {
 		return
 	}
-	start := time.Now()
-	defer logf(2, "Duration %v", time.Since(start))
-
 	switch words[0] {
 	case "exit", "quit":
 		logf(0, "Bye!")

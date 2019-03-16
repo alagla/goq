@@ -7,11 +7,12 @@ import (
 
 type WaveCoordinator struct {
 	sync.RWMutex
-	waves map[*environment]*waveResult
-	chIn  chan *waveResult
+	waves    map[*environment]*waveCmd
+	chIn     chan *waveCmd
+	waveMode bool
 }
 
-type waveResult struct {
+type waveCmd struct {
 	environment *environment
 	value       Trits
 	wg          *sync.WaitGroup
@@ -19,8 +20,8 @@ type waveResult struct {
 
 func NewWaveCoordinator() *WaveCoordinator {
 	ret := &WaveCoordinator{
-		waves: make(map[*environment]*waveResult),
-		chIn:  make(chan *waveResult),
+		waves: make(map[*environment]*waveCmd),
+		chIn:  make(chan *waveCmd),
 	}
 	go ret.loop()
 	return ret
@@ -29,13 +30,15 @@ func NewWaveCoordinator() *WaveCoordinator {
 func (wcoo *WaveCoordinator) loop() {
 	for wr := range wcoo.chIn {
 		wcoo.Lock()
-		if wr == nil {
-			for _, r := range wcoo.waves {
-				r.wg.Done()
+		if wcoo.waveMode {
+			if wr == nil {
+				for _, r := range wcoo.waves {
+					r.wg.Done()
+				}
+				wcoo.waves = make(map[*environment]*waveCmd)
+			} else {
+				wcoo.waves[wr.environment] = wr
 			}
-			wcoo.waves = make(map[*environment]*waveResult)
-		} else {
-			wcoo.waves[wr.environment] = wr
 		}
 		wcoo.Unlock()
 	}
@@ -54,6 +57,27 @@ func (wcoo *WaveCoordinator) values() map[string]Trits {
 	return ret
 }
 
-func (wcoo *WaveCoordinator) nextWave() {
+func (wcoo *WaveCoordinator) runWave() {
+	if wcoo == nil {
+		return
+	}
 	wcoo.chIn <- nil
+}
+
+func (wcoo *WaveCoordinator) setWaveMode(mode bool) {
+	if wcoo == nil {
+		return
+	}
+	wcoo.Lock()
+	defer wcoo.Unlock()
+	wcoo.waveMode = mode
+}
+
+func (wcoo *WaveCoordinator) isWaveMode() bool {
+	if wcoo == nil {
+		return false
+	}
+	wcoo.RLock()
+	defer wcoo.RUnlock()
+	return wcoo.waveMode
 }

@@ -104,11 +104,7 @@ func (env *environment) environmentLoop() {
 		dec, _ := TritsToBigInt(effect)
 		logf(2, "Environment '%v' <- '%v' (%v)", env.name, TritsToString(effect), dec)
 		env.dispatcher.quantWG.Add(len(env.joins))
-		waveStops := env.dispatcher.waveMode || len(env.joins) == 0
-		if waveStops {
-			env.waitWave(effect)
-			continue
-		}
+		env.waitWave(effect)
 		for _, entity := range env.joins {
 			entity.inChan <- effect
 		}
@@ -132,15 +128,16 @@ func (env *environment) invalidate() {
 }
 
 func (env *environment) waitWave(value Trits) {
-	if env.dispatcher.waveCoo == nil {
+	if !env.dispatcher.waveCoo.isWaveMode() {
 		return
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)
-	env.dispatcher.waveCoo.chIn <- &waveResult{
+	env.dispatcher.waveCoo.chIn <- &waveCmd{
 		environment: env,
 		value:       value,
 		wg:          &wg,
 	}
 	wg.Wait()
+	return
 }

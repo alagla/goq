@@ -94,7 +94,7 @@ func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error
 	var t = Trits{0}
 	envInName := ex.inEnvironmentName()
 	for i := 0; i < repeat; i++ {
-		err = disp.RunWave(envInName, false, t)
+		err = disp.WaveStart(envInName, false, t)
 		if err != nil {
 			return false, err
 		}
@@ -137,7 +137,7 @@ func (ex *QuplaExecStmt) StartWave(disp *Dispatcher) error {
 	var t = Trits{0}
 
 	envInName := ex.inEnvironmentName()
-	err = disp.RunWave(envInName, true, t)
+	err = disp.WaveStart(envInName, true, t)
 	return nil
 }
 
@@ -187,11 +187,11 @@ func (ex *QuplaExecStmt) newResultEntity(disp *Dispatcher) (*Entity, *execResult
 }
 
 func (ex *QuplaExecStmt) inEnvironmentName() string {
-	return "ENV_IN$$" + ex.GetName() + "$$"
+	return "IN_EXE"
 }
 
 func (ex *QuplaExecStmt) outEnvironmentName() string {
-	return "ENV_OUT$$" + ex.GetName() + "$$"
+	return "OUT_EXE"
 }
 
 func (ex *QuplaExecStmt) prepareRun(disp *Dispatcher) error {

@@ -105,6 +105,8 @@ func stringIsInt(s string) bool {
 	return err == nil
 }
 
+var currentExecIdx = 0
+
 func CmdRun(words []string) {
 	if module == nil {
 		logf(0, "Error: module not loaded")
@@ -112,25 +114,39 @@ func CmdRun(words []string) {
 	}
 	switch {
 	case len(words) == 1:
-		// run all executables
-		module.Execute(dispatcherInstance, -1, -1)
-		//postEffectsToDispatcher(dispatcherInstance)
-		return
-	case len(words) == 2 && stringIsInt(words[1]):
-		// run specific executable in quant mode
-		idx, _ := strconv.Atoi(words[1])
-		exec := module.ExecByIdx(idx)
-		if exec == nil {
-			logf(0, "Can't find executable #%v", idx)
+		if dispatcherInstance.IsWaveMode() {
+			if err := dispatcherInstance.WaveRun(); err != nil {
+				logf(0, "%v", err)
+			}
+		} else {
+			module.Execute(dispatcherInstance, currentExecIdx, currentExecIdx)
+		}
+		currentExecIdx++
+
+	case len(words) == 2 && words[1] == "all":
+		if dispatcherInstance.IsWaveMode() {
+			logf(0, "Already running #%v", currentExecIdx)
 			return
 		}
-		_, err := exec.Execute(dispatcherInstance)
-		if err != nil {
-			logf(0, "Error: %v", err)
+		// run all executables
+		module.Execute(dispatcherInstance, currentExecIdx, -1)
+
+	case len(words) == 2 && stringIsInt(words[1]):
+		// run specific executable in quant mode
+		if dispatcherInstance.IsWaveMode() {
+			logf(0, "Already running #%v", currentExecIdx)
+			return
 		}
+		idx, _ := strconv.Atoi(words[1])
+		module.Execute(dispatcherInstance, idx, idx)
+		currentExecIdx = idx + 1
 		return
 
 	case len(words) >= 2 && !stringIsInt(words[1]):
+		if dispatcherInstance.IsWaveMode() {
+			logf(0, "Already running #%v", currentExecIdx)
+			return
+		}
 		nn := strings.Split(words[1], "-")
 		if len(nn) != 2 {
 			return
@@ -153,6 +169,7 @@ func CmdRun(words []string) {
 		}
 
 		module.Execute(dispatcherInstance, nfrom, nto)
+		currentExecIdx = nto + 1
 		return
 
 	case len(words) == 3 && stringIsInt(words[1]) && stringIsInt(words[2]):
@@ -169,10 +186,6 @@ func CmdRun(words []string) {
 			logf(0, "Error: %v", err)
 		}
 		return
-
-	case len(words) == 3 && words[1] == "wave" && stringIsInt(words[2]):
-		// run specific executable in wave mode
-
 	}
 }
 
@@ -181,31 +194,47 @@ func CmdWave(words []string) {
 		logf(0, "Error: module not loaded")
 		return
 	}
-	switch len(words) {
-	case 1:
+	if len(words) != 2 {
+		logf(0, "Wrong commend")
+		return
+
+	}
+	switch words[1] {
+	case "next":
 		if !dispatcherInstance.IsWaveMode() {
 			logf(0, "quant wasn't started: can't continue with the wave")
 		}
-		if err := dispatcherInstance.Wave(); err != nil {
+		if err := dispatcherInstance.WaveNext(); err != nil {
 			logf(0, "%v", err)
 			return
 		}
+	case "status":
+		logf(0, "Wave mode = %v", dispatcherInstance.IsWaveMode())
 		listValues()
-	case 2:
-		if dispatcherInstance.IsWaveMode() {
-			logf(0, "use 'wave' command to continue")
+
+	case "run":
+		if err := dispatcherInstance.WaveRun(); err != nil {
+			logf(0, "%v", err)
+		}
+
+	default:
+		idx, err := strconv.Atoi(words[1])
+		if err != nil {
+			logf(0, "Wrong command: %v", err)
 			return
 		}
-		idx, _ := strconv.Atoi(words[1])
 		exec := module.ExecByIdx(idx)
 		if exec == nil {
 			logf(0, "Can't find executable #%v", idx)
 			return
 		}
+		if dispatcherInstance.IsWaveMode() {
+			logf(0, "use 'wave next' or 'wave cancel' commands to continue")
+			return
+		}
 		if err := exec.StartWave(dispatcherInstance); err != nil {
 			logf(0, "%v", err)
 		}
-		listValues()
 	}
 }
 

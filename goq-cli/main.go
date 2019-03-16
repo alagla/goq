@@ -33,7 +33,9 @@ var startupCmd = []string{
 	"load",
 	//"run 0-10",
 	"wave 0",
-	"wave",
+	"wave status",
+	"run",
+	"wave status",
 }
 
 func main() {
