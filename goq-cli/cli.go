@@ -32,6 +32,9 @@ func executor(in string) {
 		logf(0, "not implemented yet")
 	case "runtime":
 		CmdRuntime(words)
+	case "status":
+		CmdStatus(words)
+
 	default:
 		logf(0, "unknown command")
 	}

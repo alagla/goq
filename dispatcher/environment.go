@@ -74,8 +74,8 @@ func (env *environment) adjustEffect(effect Trits) (Trits, error) {
 
 func (env *environment) join(entity *Entity) error {
 	if !env.checkNewSize(entity.InSize()) {
-		return fmt.Errorf("size mismach between joining entity '%v' and the environment '%v'",
-			entity.name, env.name)
+		return fmt.Errorf("size mismach between joining entity '%v' (in size=%v) and the environment '%v' (size=%v)",
+			entity.name, entity.InSize(), env.name, env.size)
 	}
 	env.joins = append(env.joins, entity)
 	entity.joinEnvironment(env)
@@ -84,8 +84,8 @@ func (env *environment) join(entity *Entity) error {
 
 func (env *environment) affect(entity *Entity) error {
 	if !env.checkNewSize(entity.OutSize()) {
-		return fmt.Errorf("size mismach between affecting entity '%v' and the environment '%v'",
-			entity.name, env.name)
+		return fmt.Errorf("size mismach between affecting entity '%v' (out size=%v) and the environment '%v' (size=%v)",
+			entity.name, entity.OutSize(), env.name, env.size)
 	}
 	env.affects = append(env.affects, entity)
 	entity.affectEnvironment(env)

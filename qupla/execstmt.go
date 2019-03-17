@@ -97,7 +97,7 @@ func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error
 	var wgQuant sync.WaitGroup
 	for i := 0; i < repeat; i++ {
 		wgQuant.Add(1)
-		err = disp.WaveStart(envInName, false, t, func() {
+		err = disp.QuantStart(envInName, t, false, func() {
 			logf(0, "-------------------- quant finished")
 			wgQuant.Done()
 		})
@@ -144,7 +144,7 @@ func (ex *QuplaExecStmt) ExecuteAsWave(disp *Dispatcher) error {
 	var t = Trits{0}
 
 	envInName := ex.inEnvironmentName()
-	err = disp.WaveStart(envInName, true, t, nil)
+	err = disp.QuantStart(envInName, t, true, nil)
 	return nil
 }
 

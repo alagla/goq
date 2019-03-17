@@ -323,17 +323,19 @@ func (module *QuplaModule) collectReferencingFuncs(nameSet StringSet) int {
 	return ret
 }
 
-func (module *QuplaModule) AttachToDispatcher(disp *dispatcher.Dispatcher) {
+func (module *QuplaModule) AttachToDispatcher(disp *dispatcher.Dispatcher) bool {
+	ret := true
 	for _, funcdef := range module.functions {
 		if !funcdef.HasEnvStmt() {
 			continue
 		}
 		entity := entities.NewFunctionEntity(disp, funcdef, NewStackProcessor())
 		if err := disp.Attach(entity, funcdef.joins.List(), funcdef.affects.List()); err != nil {
-			logf(0, "error while attaching entity '%v' to dispatcher: %v",
-				entity.GetName(), err)
+			logf(0, "error while attaching entity to dispatcher: %v", err)
+			ret = false
 		}
 	}
+	return ret
 }
 
 //func (module *QuplaModule) AnalyzeType(name string, src *QuplaTypeDefYAML) bool {

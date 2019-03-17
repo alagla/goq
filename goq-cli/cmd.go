@@ -6,7 +6,9 @@ import (
 	"github.com/lunfardo314/goq/utils"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"math"
+	"os"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -16,13 +18,9 @@ func CmdVerbosity(words []string) {
 		logf(0, "current verbosity level is %v", cfg.Config.Verbosity)
 		return
 	}
-	if len(words) != 2 {
-		logf(0, "usage: verb [0|1|2|3]")
-	}
-	var v int
 	v, err := strconv.Atoi(words[1])
-	if err != nil || v < 0 || v > 2 {
-		logf(0, "usage: verb [0|1|2|3]")
+	if err != nil || v < 0 {
+		logf(0, "must be non-negative integers")
 		return
 	}
 	cfg.Config.Verbosity = v
@@ -33,7 +31,7 @@ func CmdVerbosity(words []string) {
 const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
 const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
 
-func CmdLoadModule(_ []string) {
+func CmdLoadModule(words []string) {
 	var err error
 
 	logf(0, "Loading module form file %v", fname)
@@ -43,18 +41,20 @@ func CmdLoadModule(_ []string) {
 		moduleYAML = nil
 		return
 	}
-	logf(0, "Module '%v' loaded successfully", moduleYAML.Name)
-	logf(0, "Analyzing module")
-
 	var succ bool
 	module, succ = qupla.AnalyzeQuplaModule("single_module", moduleYAML, &qupla.ExpressionFactoryFromYAML{})
 	module.PrintStats()
 	if succ {
-		module.AttachToDispatcher(dispatcherInstance)
-		logf(0, "Module analyzed succesfully")
+		succ = module.AttachToDispatcher(dispatcherInstance)
+	}
+	if succ {
+		logf(0, "Module loaded successfully")
 	} else {
-		logf(0, "Failed to analyze module")
+		logf(0, "Failed to load module")
 		module = nil
+	}
+	if !succ && len(words) == 2 && words[1] == "exitonfail" {
+		os.Exit(1)
 	}
 }
 
@@ -264,4 +264,39 @@ func CmdRuntime(_ []string) {
 	memAllocMB := math.Round(100*(float64(mem.Alloc/1024)/1024)) / 100
 	logf(0, "Memory allocated: %vM", memAllocMB)
 	logf(0, "Number of goroutines: %v", runtime.NumGoroutine())
+}
+
+func CmdStatus(_ []string) {
+	eInfo := dispatcherInstance.EnvironmentInfo()
+	logf(0, "Dispatcher status:")
+	logf(1, "Found %v environments", len(eInfo))
+
+	names := make([]string, 0, len(eInfo))
+	for n := range eInfo {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+
+	for _, name := range names {
+		envStatus := eInfo[name]
+		logf(2, "%v:", name)
+		entStr := ""
+		for _, entName := range envStatus.AffectedBy {
+			if entStr != "" {
+				entStr += ", "
+			}
+			entStr += entName
+		}
+		logf(4, "Affected by %v entities: %v", len(envStatus.AffectedBy), entStr)
+
+		entStr = ""
+		for _, entName := range envStatus.JoinedEntities {
+			if entStr != "" {
+				entStr += ", "
+			}
+			entStr += entName
+		}
+		logf(4, "Joined %v entities: %v", len(envStatus.JoinedEntities), entStr)
+
+	}
 }

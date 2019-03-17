@@ -30,13 +30,13 @@ func execBatch(cmdlist []string) {
 }
 
 var startupCmd = []string{
-	"load",
-	//"run",
-	//"run 0-10",
-	"wave 0",
-	"wave status",
+	"load exitonfail",
 	"run",
-	"wave status",
+	//"run 0-10",
+	//"wave 0",
+	//"wave status",
+	//"run",
+	//"wave status",
 }
 
 func main() {

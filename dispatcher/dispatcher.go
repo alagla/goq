@@ -92,13 +92,23 @@ func (disp *Dispatcher) DeleteEnvironment(envName string) error {
 	return nil
 }
 
-func (disp *Dispatcher) WaveStart(envName string, waveMode bool, effect Trits, onQuantFinish func()) error {
+// sends effect to the environment and thus asynchronously starts first wave in the quant.
+// parameter 'waveMode' controls how the process ends:
+//    waveMode = true:
+//    	process stops after first wave is completed.
+//      All the intermediate environment values are stored in wave coordinator
+//      To continue there are two valid ways: WaveNext and WaveRun
+//  	Usually used only in the debug mode
+//    waveMode = false
+//      process stops at the end of the quant
+
+func (disp *Dispatcher) QuantStart(envName string, effect Trits, waveMode bool, onQuantFinish func()) error {
 	if disp.waveCoo.isWaveMode() {
 		return fmt.Errorf("wave is already running")
 	}
 	env := disp.getEnvironment_(envName)
 	if env == nil {
-		return fmt.Errorf("startWave: can't find environment '%v'", envName)
+		return fmt.Errorf("can't find environment '%v'", envName)
 	}
 	var err error
 	if effect, err = env.adjustEffect(effect); err != nil {
@@ -119,6 +129,8 @@ func (disp *Dispatcher) WaveStart(envName string, waveMode bool, effect Trits, o
 	return nil
 }
 
+// if in waveMode, continues to the next wave and stops
+
 func (disp *Dispatcher) WaveNext() error {
 	if !disp.waveCoo.isWaveMode() {
 		return fmt.Errorf("not in wave mode")
@@ -126,6 +138,8 @@ func (disp *Dispatcher) WaveNext() error {
 	disp.waveCoo.runWave()
 	return nil
 }
+
+// if in waveMode, continues to the next mode and stops at the end of the quant
 
 func (disp *Dispatcher) WaveRun() error {
 	if !disp.waveCoo.isWaveMode() {
@@ -142,4 +156,28 @@ func (disp *Dispatcher) WaveValues() map[string]Trits {
 
 func (disp *Dispatcher) IsWaveMode() bool {
 	return disp.waveCoo.isWaveMode()
+}
+
+type EnvironmentStatus struct {
+	JoinedEntities []string
+	AffectedBy     []string
+}
+
+func (disp *Dispatcher) EnvironmentInfo() map[string]*EnvironmentStatus {
+	ret := make(map[string]*EnvironmentStatus)
+
+	for name, env := range disp.environments {
+		envInfo := &EnvironmentStatus{
+			JoinedEntities: make([]string, 0, len(env.joins)),
+			AffectedBy:     make([]string, 0, len(env.affects)),
+		}
+		for _, ent := range env.joins {
+			envInfo.JoinedEntities = append(envInfo.JoinedEntities, ent.GetName())
+		}
+		for _, ent := range env.affects {
+			envInfo.AffectedBy = append(envInfo.AffectedBy, ent.GetName())
+		}
+		ret[name] = envInfo
+	}
+	return ret
 }
