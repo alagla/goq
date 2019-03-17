@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/op/go-logging"
+	"strings"
 )
 
 var (
@@ -61,6 +62,6 @@ func logf(minVerbosity int, format string, args ...interface{}) {
 	if localLog != nil {
 		localLog.Infof(format, args...)
 	} else {
-		fmt.Printf(logInfoPrefix+format+"\n", args...)
+		fmt.Printf(strings.Repeat(" ", minVerbosity)+format+"\n", args...)
 	}
 }

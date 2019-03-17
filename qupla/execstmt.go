@@ -7,6 +7,7 @@ import (
 	. "github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/utils"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
+	"sync"
 	"time"
 )
 
@@ -93,12 +94,18 @@ func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error
 	}
 	var t = Trits{0}
 	envInName := ex.inEnvironmentName()
+	var wgQuant sync.WaitGroup
 	for i := 0; i < repeat; i++ {
-		err = disp.WaveStart(envInName, false, t)
+		wgQuant.Add(1)
+		err = disp.WaveStart(envInName, false, t, func() {
+			logf(0, "-------------------- quant finished")
+			wgQuant.Done()
+		})
 		if err != nil {
 			return false, err
 		}
 	}
+	wgQuant.Wait()
 	passed := ex.wrapUpRun(disp)
 	return passed, err
 }
@@ -129,7 +136,7 @@ func (ex *QuplaExecStmt) resultIsExpected(result Trits) bool {
 
 }
 
-func (ex *QuplaExecStmt) StartWave(disp *Dispatcher) error {
+func (ex *QuplaExecStmt) ExecuteAsWave(disp *Dispatcher) error {
 	var err error
 	if err = ex.prepareRun(disp); err != nil {
 		return err
@@ -137,7 +144,7 @@ func (ex *QuplaExecStmt) StartWave(disp *Dispatcher) error {
 	var t = Trits{0}
 
 	envInName := ex.inEnvironmentName()
-	err = disp.WaveStart(envInName, true, t)
+	err = disp.WaveStart(envInName, true, t, nil)
 	return nil
 }
 
@@ -208,19 +215,19 @@ func (ex *QuplaExecStmt) prepareRun(disp *Dispatcher) error {
 }
 
 func (ex *QuplaExecStmt) wrapUpRun(disp *Dispatcher) bool {
-	logf(0, "Executed '%v' %v times", ex.GetName(), ex.runResult.called)
+	logf(1, "Executed '%v' %v times", ex.GetName(), ex.runResult.called)
 	dur := ex.runResult.lastRun.Sub(ex.runResult.start)
 	avgdur := int64(dur/time.Millisecond) / int64(ex.runResult.called)
-	logf(0, "    eval result:     '%v'. Total duration %v, Average duration %v msec/run",
+	logf(1, "    eval result:     '%v'. Total duration %v, Average duration %v msec/run",
 		utils.TritsToString(ex.runResult.lastResult), dur, avgdur)
 
 	var passed bool
 	if ex.isTest {
-		logf(0, "    expected result: '%v'", utils.TritsToString(ex.valueExpected))
+		logf(1, "    expected result: '%v'", utils.TritsToString(ex.valueExpected))
 		if passed = ex.resultIsExpected(ex.runResult.lastResult); passed {
-			logf(0, "    test PASSED")
+			logf(1, "    test PASSED")
 		} else {
-			logf(0, "    test FAILED")
+			logf(1, "    test FAILED")
 		}
 	}
 	_ = disp.DeleteEnvironment(ex.inEnvironmentName())

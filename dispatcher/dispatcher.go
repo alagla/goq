@@ -92,7 +92,7 @@ func (disp *Dispatcher) DeleteEnvironment(envName string) error {
 	return nil
 }
 
-func (disp *Dispatcher) WaveStart(envName string, waveMode bool, effect Trits) error {
+func (disp *Dispatcher) WaveStart(envName string, waveMode bool, effect Trits, onQuantFinish func()) error {
 	if disp.waveCoo.isWaveMode() {
 		return fmt.Errorf("wave is already running")
 	}
@@ -110,8 +110,11 @@ func (disp *Dispatcher) WaveStart(envName string, waveMode bool, effect Trits) e
 
 	env.effectChan <- effect
 
-	if !waveMode {
-		env.dispatcher.quantWG.Wait()
+	if onQuantFinish != nil {
+		go func() {
+			env.dispatcher.quantWG.Wait()
+			onQuantFinish()
+		}()
 	}
 	return nil
 }

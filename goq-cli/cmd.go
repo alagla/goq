@@ -191,25 +191,32 @@ func CmdRun(words []string) {
 
 func CmdWave(words []string) {
 	if module == nil {
-		logf(0, "Error: module not loaded")
+		logf(0, "error: module not loaded")
 		return
 	}
 	if len(words) != 2 {
-		logf(0, "Wrong commend")
+		logf(0, "error: wrong commend")
 		return
 
 	}
 	switch words[1] {
 	case "next":
 		if !dispatcherInstance.IsWaveMode() {
-			logf(0, "quant wasn't started: can't continue with the wave")
+			logf(0, "error: quant wasn't started: can't continue with the wave")
 		}
 		if err := dispatcherInstance.WaveNext(); err != nil {
-			logf(0, "%v", err)
+			logf(0, "error: %v", err)
 			return
 		}
+
 	case "status":
-		logf(0, "Wave mode = %v", dispatcherInstance.IsWaveMode())
+		m := ""
+		if dispatcherInstance.IsWaveMode() {
+			m = "ON"
+		} else {
+			m = "OFF"
+		}
+		logf(0, "   wave mode is %v", m)
 		listValues()
 
 	case "run":
@@ -220,29 +227,34 @@ func CmdWave(words []string) {
 	default:
 		idx, err := strconv.Atoi(words[1])
 		if err != nil {
-			logf(0, "Wrong command: %v", err)
+			logf(0, "   wrong command: %v", err)
 			return
 		}
 		exec := module.ExecByIdx(idx)
 		if exec == nil {
-			logf(0, "Can't find executable #%v", idx)
+			logf(0, "   can't find executable #%v", idx)
 			return
 		}
 		if dispatcherInstance.IsWaveMode() {
-			logf(0, "use 'wave next' or 'wave cancel' commands to continue")
+			logf(0, "   use 'wave next' or 'wave cancel' commands to continue")
 			return
 		}
-		if err := exec.StartWave(dispatcherInstance); err != nil {
-			logf(0, "%v", err)
+		logf(0, "   starting wave for #%v '%v'", exec.GetIdx(), exec.GetSource())
+		if err := exec.ExecuteAsWave(dispatcherInstance); err != nil {
+			logf(0, "   error: %v", err)
 		}
 	}
 }
 
 func listValues() {
-	logf(0, "Not nil values:")
 	vDict := dispatcherInstance.WaveValues()
-	for name, val := range vDict {
-		logf(0, "%v: '%v'", name, utils.TritsToString(val))
+	if len(vDict) == 0 {
+		logf(0, "   all environment values are nil")
+	} else {
+		logf(0, "   environment values:")
+		for name, val := range vDict {
+			logf(0, "    %v: '%v'", name, utils.TritsToString(val))
+		}
 	}
 }
 

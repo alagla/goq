@@ -90,15 +90,16 @@ func (ent *Entity) checkStart() {
 }
 
 func (ent *Entity) entityLoop() {
-	logf(4, "entity '%v' loop STARTED", ent.name)
-	defer logf(4, "entity '%v'loop STOPPED", ent.name)
+	logf(7, "entity '%v' loop STARTED", ent.name)
+	defer logf(7, "entity '%v'loop STOPPED", ent.name)
 
 	var null bool
 	for effect := range ent.inChan {
 		if effect == nil {
 			panic("nil effect")
 		}
-		logf(2, "Entity '%v' <- '%v'", ent.name, utils.TritsToString(effect))
+		dec, _ := utils.TritsToBigInt(effect)
+		logf(3, "effect '%v' (%v) -> entity '%v'", utils.TritsToString(effect), dec, ent.name)
 		// calculate result
 		res := make(Trits, ent.outSize)
 		null = ent.entityCore.Call(effect, res)

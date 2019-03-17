@@ -94,15 +94,15 @@ func (env *environment) affect(entity *Entity) error {
 
 // main loop of the environment
 func (env *environment) environmentLoop() {
-	logf(4, "environment '%v': loop START", env.name)
-	defer logf(4, "environment '%v': loop STOP", env.name)
+	logf(7, "environment '%v': loop START", env.name)
+	defer logf(7, "environment '%v': loop STOP", env.name)
 
 	for effect := range env.effectChan {
 		if effect == nil {
 			panic("nil effect")
 		}
 		dec, _ := TritsToBigInt(effect)
-		logf(2, "Environment '%v' <- '%v' (%v)", env.name, TritsToString(effect), dec)
+		logf(3, "effect '%v' (%v) -> environment '%v'", TritsToString(effect), dec, env.name)
 		env.dispatcher.quantWG.Add(len(env.joins))
 		env.waitWave(effect)
 		for _, entity := range env.joins {

@@ -1,7 +1,9 @@
 package dispatcher
 
 import (
+	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/utils"
 	"sync"
 )
 
@@ -27,17 +29,25 @@ func NewWaveCoordinator() *WaveCoordinator {
 	return ret
 }
 
+func fmtWaveCmd(wcmd *waveCmd) string {
+	if wcmd == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("wait %v with value '%v'", wcmd.environment.GetName(), utils.TritsToString(wcmd.value))
+}
+
 func (wcoo *WaveCoordinator) loop() {
-	for wr := range wcoo.chIn {
+	for wcmd := range wcoo.chIn {
+		logf(5, "waveCoo received: %v", fmtWaveCmd(wcmd))
 		wcoo.Lock()
-		if wcoo.waveMode {
-			if wr == nil {
-				for _, r := range wcoo.waves {
-					r.wg.Done()
-				}
-				wcoo.waves = make(map[*environment]*waveCmd)
-			} else {
-				wcoo.waves[wr.environment] = wr
+		if wcmd == nil {
+			for _, r := range wcoo.waves {
+				r.wg.Done()
+			}
+			wcoo.waves = make(map[*environment]*waveCmd)
+		} else {
+			if wcoo.waveMode {
+				wcoo.waves[wcmd.environment] = wcmd
 			}
 		}
 		wcoo.Unlock()

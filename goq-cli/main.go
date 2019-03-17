@@ -8,6 +8,7 @@ import (
 	"github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
+	"strings"
 	"time"
 )
 
@@ -19,18 +20,18 @@ func logf(minVerbosity int, format string, args ...interface{}) {
 	if cfg.Config.Verbosity < minVerbosity {
 		return
 	}
-	fmt.Printf(format+"\n", args...)
+	fmt.Printf(strings.Repeat(" ", minVerbosity)+format+"\n", args...)
 }
 func execBatch(cmdlist []string) {
-	logf(0, "Executing batch of commands:")
 	for _, cmdline := range cmdlist {
-		logf(0, "-------- Command line '%v'", cmdline)
 		executor(cmdline)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
 var startupCmd = []string{
 	"load",
+	//"run",
 	//"run 0-10",
 	"wave 0",
 	"wave status",
@@ -49,6 +50,10 @@ func main() {
 	if *pnocli {
 		logf(0, "Bypass CLI. Load module and run it.")
 		execBatch(startupCmd)
+		logf(0, "interrupt from keyboard...")
+		for {
+			time.Sleep(10 * time.Second)
+		}
 	} else {
 		p := prompt.New(
 			executor,

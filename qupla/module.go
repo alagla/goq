@@ -208,6 +208,7 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toI
 	testsFailed := 0
 	testsSkipped := 0
 	totalTests := 0
+	totalExecutables := 0
 	start := time.Now()
 	first := true
 	var exec *QuplaExecStmt
@@ -235,6 +236,7 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toI
 					testsFailed++
 				}
 			}
+			totalExecutables++
 		}
 		module.processor.Reset()
 	}
@@ -249,7 +251,7 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toI
 	}
 	logf(0, "---------------------")
 	logf(0, "---------------------")
-	logf(0, "Skipped: %v out of total %v executables", testsSkipped, len(module.execs))
+	logf(0, "Skipped: %v out of total %v executables", testsSkipped, totalExecutables)
 	logf(0, "Tests PASSED: %v out of %v (%v)", testsPassed, totalTests, p)
 	logf(0, "Tests FAILED: %v out of %v (%v)", testsFailed, totalTests, f)
 	logf(0, "Total duration: %v ", time.Since(start))
