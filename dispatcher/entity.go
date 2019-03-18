@@ -18,19 +18,7 @@ type Entity struct {
 	joined     []*environment // list of environments which are being listened to
 	inChan     chan Trits     // chan for incoming effects
 	entityCore EntityCore     // function called for each effect
-}
-
-func NewEntity(disp *Dispatcher, name string, inSize, outSize int64, effectCallable EntityCore) *Entity {
-	ret := &Entity{
-		dispatcher: disp,
-		name:       name,
-		inSize:     inSize,
-		outSize:    outSize,
-		affecting:  make([]*environment, 0),
-		joined:     make([]*environment, 0),
-		entityCore: effectCallable,
-	}
-	return ret
+	terminal   bool           // can't affect environments
 }
 
 func (ent *Entity) GetName() string {

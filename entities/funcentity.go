@@ -6,12 +6,12 @@ import (
 	. "github.com/lunfardo314/goq/dispatcher"
 )
 
-type functionCallable struct {
+type functionEntityCore struct {
 	funcDef FuncDefInterface
 	proc    ProcessorInterface
 }
 
-func (fc *functionCallable) Call(args Trits, res Trits) bool {
+func (fc *functionEntityCore) Call(args Trits, res Trits) bool {
 	expr, err := fc.funcDef.NewExpressionWithArgs(args)
 	if err != nil {
 		panic(err)
@@ -20,6 +20,10 @@ func (fc *functionCallable) Call(args Trits, res Trits) bool {
 }
 
 func NewFunctionEntity(disp *Dispatcher, funcDef FuncDefInterface, proc ProcessorInterface) *Entity {
-	return NewEntity(disp, funcDef.GetName(), funcDef.ArgSize(), funcDef.Size(),
-		&functionCallable{funcDef, proc})
+	return disp.NewEntity(EntityOpts{
+		Name:    funcDef.GetName(),
+		InSize:  funcDef.ArgSize(),
+		OutSize: funcDef.Size(),
+		Core:    &functionEntityCore{funcDef, proc},
+	})
 }

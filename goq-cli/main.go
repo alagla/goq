@@ -43,8 +43,8 @@ var startupCmd = []string{
 func main() {
 	logf(0, "goq-cli: GOQ (Qubic Dispatcher in Go) Command Line Interface ver %v", cfg.Config.Version)
 	logf(0, "Now is %v", time.Now())
-	logf(0, "Verbosity is %v", cfg.Config.Verbosity)
-	logf(0, "Use TAB to select suggestion")
+	logf(0, "Verbosity level is %v", cfg.Config.Verbosity)
+	//logf(0, "Use TAB to select suggestion")
 
 	pnocli := flag.Bool("nocli", false, "bypass CLI")
 	flag.Parse()

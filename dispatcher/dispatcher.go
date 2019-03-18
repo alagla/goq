@@ -24,6 +24,28 @@ func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
 	}
 }
 
+type EntityOpts struct {
+	Name     string
+	InSize   int64
+	OutSize  int64
+	Core     EntityCore
+	Terminal bool // can't affect environments (doesn't produce any result, always returns null
+}
+
+func (disp *Dispatcher) NewEntity(opt EntityOpts) *Entity {
+	ret := &Entity{
+		dispatcher: disp,
+		name:       opt.Name,
+		inSize:     opt.InSize,
+		outSize:    opt.OutSize,
+		affecting:  make([]*environment, 0),
+		joined:     make([]*environment, 0),
+		entityCore: opt.Core,
+		terminal:   opt.Terminal,
+	}
+	return ret
+}
+
 func (disp *Dispatcher) getEnvironment_(name string) *environment {
 	env, ok := disp.environments[name]
 	if !ok {
@@ -37,8 +59,17 @@ func (disp *Dispatcher) getOrCreateEnvironment_(name string) *environment {
 	if ret != nil {
 		return ret
 	}
-	disp.environments[name] = NewEnvironment(disp, name)
+	disp.environments[name] = newEnvironment(disp, name, false)
 	return disp.environments[name]
+}
+
+func (disp *Dispatcher) createEnvironment(name string, builtin bool) error {
+
+	if disp.getEnvironment_(name) != nil {
+		return fmt.Errorf("environment '%v' already exists", name)
+	}
+	disp.environments[name] = newEnvironment(disp, name, builtin)
+	return nil
 }
 
 func (disp *Dispatcher) CreateEnvironment(name string) error {
@@ -46,12 +77,7 @@ func (disp *Dispatcher) CreateEnvironment(name string) error {
 		return fmt.Errorf("request lock timeout: can't create environment")
 	}
 	defer disp.generalLock.Release()
-
-	if disp.getEnvironment_(name) != nil {
-		return fmt.Errorf("environment '%v' already exists", name)
-	}
-	disp.environments[name] = NewEnvironment(disp, name)
-	return nil
+	return disp.createEnvironment(name, false)
 }
 
 // executes 'join' and 'affect' of the entity

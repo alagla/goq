@@ -98,7 +98,7 @@ func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error
 	for i := 0; i < repeat; i++ {
 		wgQuant.Add(1)
 		err = disp.QuantStart(envInName, t, false, func() {
-			logf(0, "-------------------- quant finished")
+			logf(7, "-------------------- quant finished")
 			wgQuant.Done()
 		})
 		if err != nil {
@@ -164,7 +164,12 @@ func (ec *execEvalCallable) Call(_ Trits, res Trits) bool {
 
 func (ex *QuplaExecStmt) newEvalEntity(disp *Dispatcher) *Entity {
 	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.funcExpr.GetSource())
-	return NewEntity(disp, name, 0, ex.funcExpr.Size(), &execEvalCallable{ex})
+	return disp.NewEntity(EntityOpts{
+		Name:    name,
+		InSize:  0,
+		OutSize: ex.funcExpr.Size(),
+		Core:    &execEvalCallable{ex},
+	})
 }
 
 type execResultCallable struct {
@@ -191,7 +196,12 @@ func (ex *QuplaExecStmt) newResultEntity(disp *Dispatcher) (*Entity, *execResult
 		lastRun: nowis,
 		exec:    ex,
 	}
-	ret := NewEntity(disp, name, ex.funcExpr.Size(), 0, core)
+	ret := disp.NewEntity(EntityOpts{
+		Name:    name,
+		InSize:  ex.funcExpr.Size(),
+		OutSize: 0,
+		Core:    core,
+	})
 	core.entity = ret
 	return ret, core
 }

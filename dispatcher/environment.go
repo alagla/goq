@@ -15,15 +15,17 @@ type environment struct {
 	affects    []*Entity
 	size       int64
 	effectChan chan Trits
+	builtin    bool
 }
 
-func NewEnvironment(disp *Dispatcher, name string) *environment {
+func newEnvironment(disp *Dispatcher, name string, builtin bool) *environment {
 	ret := &environment{
 		dispatcher: disp,
 		name:       name,
 		joins:      make([]*Entity, 0),
 		affects:    make([]*Entity, 0),
 		effectChan: make(chan Trits),
+		builtin:    builtin,
 	}
 	go ret.environmentLoop()
 	return ret
