@@ -146,12 +146,13 @@ func (disp *Dispatcher) QuantStart(envName string, effect Trits, waveMode bool, 
 
 	env.effectChan <- effect
 
-	if onQuantFinish != nil {
-		go func() {
-			env.dispatcher.quantWG.Wait()
+	go func() {
+		env.dispatcher.quantWG.Wait()
+		disp.waveCoo.setWaveMode(false)
+		if onQuantFinish != nil {
 			onQuantFinish()
-		}()
-	}
+		}
+	}()
 	return nil
 }
 

@@ -171,20 +171,20 @@ func (module *QuplaModule) FindLUTDef(name string) (LUTInterface, error) {
 	return ret, nil
 }
 
-func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toIdx int) {
+func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toIdx int) int {
 	if len(module.execs) == 0 {
 		logf(0, "No executables to execute")
-		return
+		return 0
 	}
-	if fromIdx < 0 {
+	if fromIdx < 0 || fromIdx >= len(module.execs) {
 		fromIdx = 0
 	}
-	if toIdx < 0 {
+	if toIdx < 0 || toIdx >= len(module.execs) {
 		toIdx = len(module.execs) - 1
 	}
 	if fromIdx < 0 || fromIdx > toIdx {
 		logf(0, "Wrong range of indices: from %v to %v", fromIdx, toIdx)
-		return
+		return 0
 	}
 
 	switch {
@@ -210,6 +210,7 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toI
 	totalExecuted := 0
 	start := time.Now()
 	first := true
+	lastExecutedIdx := 0
 	var exec *QuplaExecStmt
 	for idx := fromIdx; idx <= toIdx; idx++ {
 		exec = module.execs[idx]
@@ -225,6 +226,7 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toI
 			continue
 		}
 		totalExecuted++
+		lastExecutedIdx = idx
 		if passed, err := exec.Execute(disp); err != nil {
 			logf(0, "Error: %v", err)
 		} else {
@@ -253,6 +255,7 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toI
 		logf(0, "Total tests: %v", totalTests)
 	}
 	logf(0, "Total duration: %v ", time.Since(start))
+	return lastExecutedIdx
 }
 
 func (module *QuplaModule) ExecByIdx(idx int) *QuplaExecStmt {

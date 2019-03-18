@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/qupla"
 	"github.com/lunfardo314/goq/utils"
@@ -11,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func CmdVerbosity(words []string) {
@@ -119,9 +121,8 @@ func CmdRun(words []string) {
 				logf(0, "%v", err)
 			}
 		} else {
-			module.Execute(dispatcherInstance, currentExecIdx, currentExecIdx)
+			currentExecIdx = module.Execute(dispatcherInstance, currentExecIdx, currentExecIdx)
 		}
-		currentExecIdx++
 
 	case len(words) == 2 && words[1] == "all":
 		if dispatcherInstance.IsWaveMode() {
@@ -130,6 +131,7 @@ func CmdRun(words []string) {
 		}
 		// run all executables
 		module.Execute(dispatcherInstance, currentExecIdx, -1)
+		currentExecIdx = 0
 
 	case len(words) == 2 && stringIsInt(words[1]):
 		// run specific executable in quant mode
@@ -138,8 +140,7 @@ func CmdRun(words []string) {
 			return
 		}
 		idx, _ := strconv.Atoi(words[1])
-		module.Execute(dispatcherInstance, idx, idx)
-		currentExecIdx = idx + 1
+		currentExecIdx = module.Execute(dispatcherInstance, idx, idx) + 1
 		return
 
 	case len(words) >= 2 && !stringIsInt(words[1]):
@@ -168,8 +169,7 @@ func CmdRun(words []string) {
 			return
 		}
 
-		module.Execute(dispatcherInstance, nfrom, nto)
-		currentExecIdx = nto + 1
+		currentExecIdx = module.Execute(dispatcherInstance, nfrom, nto) + 1
 		return
 
 	case len(words) == 3 && stringIsInt(words[1]) && stringIsInt(words[2]):
@@ -185,21 +185,58 @@ func CmdRun(words []string) {
 		if err != nil {
 			logf(0, "Error: %v", err)
 		}
+		currentExecIdx = idx
 		return
 	}
 }
+
+var waveModeON = false
 
 func CmdWave(words []string) {
 	if module == nil {
 		logf(0, "error: module not loaded")
 		return
 	}
-	if len(words) != 2 {
-		logf(0, "error: wrong commend")
+	if len(words) == 1 {
+		if waveModeON {
+			logf(0, "Wave mode is ON")
+		} else {
+			logf(0, "Wave mode is OFF")
+		}
 		return
-
 	}
+
 	switch words[1] {
+	case "on":
+		waveModeON = true
+		logf(0, "wave mode is ON")
+	case "off":
+		waveModeON = false
+		logf(0, "wave mode is OFF")
+
+	case "start":
+		if len(words) != 4 {
+			logf(0, "error: wrong command")
+			return
+		}
+		if dispatcherInstance.IsWaveMode() {
+			logf(0, "   quant is already running")
+			return
+		}
+		effectDec, err := strconv.Atoi(words[2])
+		if err != nil {
+			logf(0, "error: effect must be decimal integers")
+			return
+		}
+		effectTrits := trinary.IntToTrits(int64(effectDec))
+		envName := words[3]
+		err = dispatcherInstance.QuantStart(envName, effectTrits, waveModeON, func() {
+			logf(0, " -------- quant finished")
+			waveModeON = false
+		})
+		if err != nil {
+			logf(0, "%v", err)
+		}
 	case "next":
 		if !dispatcherInstance.IsWaveMode() {
 			logf(0, "error: quant wasn't started: can't continue with the wave")
@@ -208,41 +245,17 @@ func CmdWave(words []string) {
 			logf(0, "error: %v", err)
 			return
 		}
-
-	case "status":
-		m := ""
-		if dispatcherInstance.IsWaveMode() {
-			m = "ON"
-		} else {
-			m = "OFF"
-		}
-		logf(0, "   wave mode is %v", m)
-		listValues()
-
+		time.Sleep(100 * time.Millisecond)
 	case "run":
+		if !dispatcherInstance.IsWaveMode() {
+			logf(0, "   can't continue: quant not running")
+			return
+		}
 		if err := dispatcherInstance.WaveRun(); err != nil {
 			logf(0, "%v", err)
 		}
-
-	default:
-		idx, err := strconv.Atoi(words[1])
-		if err != nil {
-			logf(0, "   wrong command: %v", err)
-			return
-		}
-		exec := module.ExecByIdx(idx)
-		if exec == nil {
-			logf(0, "   can't find executable #%v", idx)
-			return
-		}
-		if dispatcherInstance.IsWaveMode() {
-			logf(0, "   use 'wave next' or 'wave cancel' commands to continue")
-			return
-		}
-		logf(0, "   starting wave for #%v '%v'", exec.GetIdx(), exec.GetSource())
-		if err := exec.ExecuteAsWave(dispatcherInstance); err != nil {
-			logf(0, "   error: %v", err)
-		}
+	case "status":
+		listValues()
 	}
 }
 

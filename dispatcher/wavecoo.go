@@ -33,7 +33,10 @@ func fmtWaveCmd(wcmd *waveCmd) string {
 	if wcmd == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("wait %v with value '%v'", wcmd.environment.GetName(), utils.TritsToString(wcmd.value))
+	return fmt.Sprintf("wait %v with value '%v' (%v)",
+		wcmd.environment.GetName(),
+		utils.TritsToString(wcmd.value),
+		TritsToInt(wcmd.value))
 }
 
 func (wcoo *WaveCoordinator) loop() {
