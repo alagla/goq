@@ -251,9 +251,14 @@ func listValues() {
 	if len(vDict) == 0 {
 		logf(0, "   all environment values are nil")
 	} else {
+		names := make([]string, 0, len(vDict))
+		for n := range vDict {
+			names = append(names, n)
+		}
+		sort.Strings(names)
 		logf(0, "   environment values:")
-		for name, val := range vDict {
-			logf(0, "    %v: '%v'", name, utils.TritsToString(val))
+		for _, name := range names {
+			logf(0, "    %v: '%v'", name, utils.TritsToString(vDict[name]))
 		}
 	}
 }
