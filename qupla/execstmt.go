@@ -110,6 +110,21 @@ func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error
 	return passed, err
 }
 
+func (ex *QuplaExecStmt) ExecuteAsWave(disp *Dispatcher) error {
+	var err error
+	if err = ex.prepareRun(disp); err != nil {
+		return err
+	}
+	var t = Trits{0}
+
+	envInName := ex.inEnvironmentName()
+	err = disp.QuantStart(envInName, t, true, func() {
+		logf(0, "-------------------- quant finished")
+		ex.wrapUpRun(disp)
+	})
+	return nil
+}
+
 func (ex *QuplaExecStmt) resultIsExpected(result Trits) bool {
 	passed, _ := TritsEqual(result, ex.valueExpected)
 	if passed {
@@ -134,18 +149,6 @@ func (ex *QuplaExecStmt) resultIsExpected(result Trits) bool {
 	passed, _ = TritsEqual(result[1:], ex.valueExpected[1:])
 	return passed
 
-}
-
-func (ex *QuplaExecStmt) ExecuteAsWave(disp *Dispatcher) error {
-	var err error
-	if err = ex.prepareRun(disp); err != nil {
-		return err
-	}
-	var t = Trits{0}
-
-	envInName := ex.inEnvironmentName()
-	err = disp.QuantStart(envInName, t, true, nil)
-	return nil
 }
 
 // expression shouldn't have free variables

@@ -88,7 +88,7 @@ func (disp *Dispatcher) DeleteEnvironment(envName string) error {
 	}
 	env.invalidate()
 	delete(disp.environments, envName)
-	logf(3, "deleted environment '%v'", envName)
+	logf(5, "deleted environment '%v'", envName)
 	return nil
 }
 
@@ -159,6 +159,7 @@ func (disp *Dispatcher) IsWaveMode() bool {
 }
 
 type EnvironmentStatus struct {
+	Size           int64
 	JoinedEntities []string
 	AffectedBy     []string
 }
@@ -168,6 +169,7 @@ func (disp *Dispatcher) EnvironmentInfo() map[string]*EnvironmentStatus {
 
 	for name, env := range disp.environments {
 		envInfo := &EnvironmentStatus{
+			Size:           env.size,
 			JoinedEntities: make([]string, 0, len(env.joins)),
 			AffectedBy:     make([]string, 0, len(env.affects)),
 		}

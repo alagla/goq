@@ -249,7 +249,7 @@ func CmdWave(words []string) {
 func listValues() {
 	vDict := dispatcherInstance.WaveValues()
 	if len(vDict) == 0 {
-		logf(0, "   all environment values are nil")
+		logf(0, "   wave is empty")
 	} else {
 		names := make([]string, 0, len(vDict))
 		for n := range vDict {
@@ -284,7 +284,7 @@ func CmdStatus(_ []string) {
 
 	for _, name := range names {
 		envStatus := eInfo[name]
-		logf(2, "%v:", name)
+		logf(2, "%v (size = %v):", name, envStatus.Size)
 		entStr := ""
 		for _, entName := range envStatus.AffectedBy {
 			if entStr != "" {

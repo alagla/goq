@@ -165,7 +165,6 @@ func (module *QuplaModule) FindLUTDef(name string) (LUTInterface, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if ret, ok = module.luts[name]; !ok {
 		return nil, fmt.Errorf("inconsistency while analyzing LUT '%v'", name)
 	}
@@ -206,9 +205,9 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toI
 
 	testsPassed := 0
 	testsFailed := 0
-	testsSkipped := 0
+	execsSkipped := 0
 	totalTests := 0
-	totalExecutables := 0
+	totalExecuted := 0
 	start := time.Now()
 	first := true
 	var exec *QuplaExecStmt
@@ -222,9 +221,10 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toI
 
 		if exec.HasState() {
 			logf(1, "SKIP stateful exec statement: '%v'", exec.GetSource())
-			testsSkipped++
+			execsSkipped++
 			continue
 		}
+		totalExecuted++
 		if passed, err := exec.Execute(disp); err != nil {
 			logf(0, "Error: %v", err)
 		} else {
@@ -236,24 +236,22 @@ func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toI
 					testsFailed++
 				}
 			}
-			totalExecutables++
 		}
 		module.processor.Reset()
 	}
-	logf(0, "Total tests and evals: %v", len(module.execs))
-	var p, f string
-	if totalTests == 0 {
-		p = "n/a"
-		f = "n/a"
+	logf(0, "---------------------")
+	logf(0, "---------------------")
+	logf(0, "Total executables: %v", len(module.execs))
+	logf(0, "Skipped executables: %v", execsSkipped)
+	logf(0, "Total executed: %v", totalExecuted)
+	if totalTests > 0 {
+		p := fmt.Sprintf("%v%%", (testsPassed*100)/totalTests)
+		f := fmt.Sprintf("%v%%", (testsFailed*100)/totalTests)
+		logf(0, "Tests PASSED: %v out of %v (%v)", testsPassed, totalTests, p)
+		logf(0, "Tests FAILED: %v out of %v (%v)", testsFailed, totalTests, f)
 	} else {
-		p = fmt.Sprintf("%v%%", (testsPassed*100)/totalTests)
-		f = fmt.Sprintf("%v%%", (testsFailed*100)/totalTests)
+		logf(0, "Total tests: %v", totalTests)
 	}
-	logf(0, "---------------------")
-	logf(0, "---------------------")
-	logf(0, "Skipped: %v out of total %v executables", testsSkipped, totalExecutables)
-	logf(0, "Tests PASSED: %v out of %v (%v)", testsPassed, totalTests, p)
-	logf(0, "Tests FAILED: %v out of %v (%v)", testsFailed, totalTests, f)
 	logf(0, "Total duration: %v ", time.Since(start))
 }
 

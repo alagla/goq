@@ -71,15 +71,20 @@ func (ent *Entity) stopListeningToEnvironment(env *environment) {
 		}
 	}
 	ent.joined = tmpList
-	ent.checkStop()
+	if ent.checkStop() {
+		logf(5, "stopped entity '%v'", ent.GetName())
+	}
 }
 
-func (ent *Entity) checkStop() {
+func (ent *Entity) checkStop() bool {
+	ret := false
 	if ent.inChan != nil && len(ent.joined) == 0 {
 		c := ent.inChan
 		ent.inChan = nil
 		close(c)
+		ret = true
 	}
+	return ret
 }
 
 func (ent *Entity) checkStart() {

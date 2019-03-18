@@ -8,6 +8,7 @@ import (
 
 func logf(minVerbosity int, format string, args ...interface{}) {
 	if cfg.Config.Verbosity >= minVerbosity {
-		fmt.Printf(strings.Repeat(" ", minVerbosity)+format+"\n", args...)
+		prefix := fmt.Sprintf("%2d  %s", minVerbosity, strings.Repeat(" ", minVerbosity))
+		fmt.Printf(prefix+format+"\n", args...)
 	}
 }

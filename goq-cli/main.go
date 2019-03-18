@@ -20,7 +20,8 @@ func logf(minVerbosity int, format string, args ...interface{}) {
 	if cfg.Config.Verbosity < minVerbosity {
 		return
 	}
-	fmt.Printf(strings.Repeat(" ", minVerbosity)+format+"\n", args...)
+	prefix := fmt.Sprintf("%2d  %s", minVerbosity, strings.Repeat(" ", minVerbosity))
+	fmt.Printf(prefix+format+"\n", args...)
 }
 func execBatch(cmdlist []string) {
 	for _, cmdline := range cmdlist {
@@ -31,7 +32,7 @@ func execBatch(cmdlist []string) {
 
 var startupCmd = []string{
 	"load exitonfail",
-	"run",
+	"run 0",
 	//"run 0-10",
 	//"wave 0",
 	//"wave status",
@@ -50,7 +51,7 @@ func main() {
 	if *pnocli {
 		logf(0, "Bypass CLI. Load module and run it.")
 		execBatch(startupCmd)
-		logf(0, "interrupt from keyboard...")
+		logf(0, "sleep loop...")
 		for {
 			time.Sleep(10 * time.Second)
 		}
