@@ -2,12 +2,17 @@ package dispatcher
 
 import (
 	"fmt"
+	"github.com/Workiva/go-datastructures/queue"
 	. "github.com/iotaledger/iota.go/trinary"
 	"sync"
 	"time"
 )
 
+// TODO size checks when join/affect. Can be with different sizes
+
 type Dispatcher struct {
+	queue        *queue.Queue
+	quantCount   uint64
 	environments map[string]*environment
 	generalLock  *LockWithTimeout // controls environments, join, affect, modes
 	timeout      time.Duration
@@ -16,12 +21,15 @@ type Dispatcher struct {
 }
 
 func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
-	return &Dispatcher{
+	ret := &Dispatcher{
+		queue:        queue.New(5),
 		environments: make(map[string]*environment),
 		generalLock:  NewAsyncLock(),
 		timeout:      lockTimeout,
 		waveCoo:      NewWaveCoordinator(),
 	}
+	go ret.dispatcherInputLoop()
+	return ret
 }
 
 type EntityOpts struct {
@@ -46,6 +54,14 @@ func (disp *Dispatcher) NewEntity(opt EntityOpts) *Entity {
 	return ret
 }
 
+func (disp *Dispatcher) getQuantCount() uint64 {
+	return disp.quantCount
+}
+
+func (disp *Dispatcher) incQuantCount() {
+	disp.quantCount++
+}
+
 func (disp *Dispatcher) getEnvironment_(name string) *environment {
 	env, ok := disp.environments[name]
 	if !ok {
@@ -64,7 +80,6 @@ func (disp *Dispatcher) getOrCreateEnvironment_(name string) *environment {
 }
 
 func (disp *Dispatcher) createEnvironment(name string, builtin bool) error {
-
 	if disp.getEnvironment_(name) != nil {
 		return fmt.Errorf("environment '%v' already exists", name)
 	}
@@ -129,12 +144,16 @@ func (disp *Dispatcher) DeleteEnvironment(envName string) error {
 //      process stops at the end of the quant
 
 func (disp *Dispatcher) QuantStart(envName string, effect Trits, waveMode bool, onQuantFinish func()) error {
+	env := disp.getEnvironment_(envName)
+	if env == nil || env.invalid {
+		return fmt.Errorf("can't find environment '%v'", envName)
+	}
+	return disp.quantStart(env, effect, waveMode, onQuantFinish)
+}
+
+func (disp *Dispatcher) quantStart(env *environment, effect Trits, waveMode bool, onQuantFinish func()) error {
 	if disp.waveCoo.isWaveMode() {
 		return fmt.Errorf("wave is already running")
-	}
-	env := disp.getEnvironment_(envName)
-	if env == nil {
-		return fmt.Errorf("can't find environment '%v'", envName)
 	}
 	var err error
 	if effect, err = env.adjustEffect(effect); err != nil {
