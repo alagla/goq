@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
-	. "github.com/lunfardo314/goq/utils"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
+	"strconv"
 )
 
 type QuplaFuncDef struct {
 	yamlSource        *QuplaFuncDefYAML // needed for analysis phase only
 	module            ModuleInterface
-	joins             StringSet
-	affects           StringSet
+	joins             map[string]int
+	affects           map[string]int
 	name              string
 	retSize           int64
 	retExpr           ExpressionInterface
@@ -63,9 +63,13 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 		yamlSource: defYAML,
 		module:     module,
 		name:       name,
+		joins:      make(map[string]int),
+		affects:    make(map[string]int),
 		argSizes:   make([]int64, 0, len(defYAML.Params)),
 	}
-	def.AnalyzeEnvironmentStatements()
+	if err = def.AnalyzeEnvironmentStatements(); err != nil {
+		return err
+	}
 	if def.HasEnvStmt() {
 		def.module.IncStat("numEnvFundef")
 	}
@@ -112,33 +116,47 @@ func (def *QuplaFuncDef) ArgSize() int64 {
 	return def.argSize
 }
 
-func (def *QuplaFuncDef) AnalyzeEnvironmentStatements() {
+func (def *QuplaFuncDef) AnalyzeEnvironmentStatements() error {
 	for _, envYAML := range def.yamlSource.Env {
-		if envYAML.Join {
-			if def.joins == nil {
-				def.joins = make(StringSet)
-				def.joins.Append(envYAML.Name)
+		switch envYAML.Type {
+		case "join":
+			p := 1
+			if envYAML.Limit != "" {
+				if val, err := strconv.Atoi(envYAML.Limit); err != nil {
+					return fmt.Errorf("join in '%v': %v", def.GetName(), err)
+				} else {
+					p = val
+				}
 			}
+			def.joins[envYAML.Name] = p
 			def.module.IncStat("numEnvJoin")
-		} else {
-			if def.affects == nil {
-				def.affects = make(StringSet)
-				def.affects.Append(envYAML.Name)
+		case "affect":
+			p := 0
+			if envYAML.Delay != "" {
+				if val, err := strconv.Atoi(envYAML.Delay); err != nil {
+					return fmt.Errorf("affect in '%v': %v", def.GetName(), err)
+				} else {
+					p = val
+				}
 			}
+			def.affects[envYAML.Name] = p
 			def.module.IncStat("numEnvAffect")
+		default:
+			return fmt.Errorf("bad typeof environment statement in '%v': %v", def.GetName(), envYAML.Type)
 		}
 	}
+	return nil
 }
 
 func (def *QuplaFuncDef) HasEnvStmt() bool {
 	return len(def.joins) > 0 || len(def.affects) > 0
 }
 
-func (def *QuplaFuncDef) GetJoinEnv() StringSet {
+func (def *QuplaFuncDef) GetJoinEnv() map[string]int {
 	return def.joins
 }
 
-func (def *QuplaFuncDef) GetAffectEnv() StringSet {
+func (def *QuplaFuncDef) GetAffectEnv() map[string]int {
 	return def.affects
 }
 

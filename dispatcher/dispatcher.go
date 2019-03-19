@@ -46,8 +46,8 @@ func (disp *Dispatcher) NewEntity(opt EntityOpts) *Entity {
 		name:       opt.Name,
 		inSize:     opt.InSize,
 		outSize:    opt.OutSize,
-		affecting:  make([]*environment, 0),
-		joined:     make([]*environment, 0),
+		affecting:  make([]*affectEntData, 0),
+		joined:     make([]*joinEntData, 0),
 		entityCore: opt.Core,
 		terminal:   opt.Terminal,
 	}
@@ -96,21 +96,21 @@ func (disp *Dispatcher) CreateEnvironment(name string) error {
 }
 
 // executes 'join' and 'affect' of the entity
-func (disp *Dispatcher) Attach(entity *Entity, joins, affects []string) error {
+func (disp *Dispatcher) Attach(entity *Entity, joins, affects map[string]int) error {
 	if !disp.generalLock.Acquire(disp.timeout) {
 		return fmt.Errorf("acquire lock timeout: can't attach entity to environment")
 	}
 	defer disp.generalLock.Release()
 
-	for _, envName := range joins {
+	for envName, limit := range joins {
 		env := disp.getOrCreateEnvironment_(envName)
-		if err := env.join(entity); err != nil {
+		if err := env.join(entity, limit); err != nil {
 			return err
 		}
 	}
-	for _, envName := range affects {
+	for envName, delay := range affects {
 		env := disp.getOrCreateEnvironment_(envName)
-		if err := env.affect(entity); err != nil {
+		if err := env.affect(entity, delay); err != nil {
 			return err
 		}
 	}
@@ -219,11 +219,13 @@ func (disp *Dispatcher) EnvironmentInfo() map[string]*EnvironmentStatus {
 			JoinedEntities: make([]string, 0, len(env.joins)),
 			AffectedBy:     make([]string, 0, len(env.affects)),
 		}
-		for _, ent := range env.joins {
-			envInfo.JoinedEntities = append(envInfo.JoinedEntities, ent.GetName())
+		for _, joinData := range env.joins {
+			envInfo.JoinedEntities = append(envInfo.JoinedEntities,
+				fmt.Sprintf("%v(%v)", joinData.entity.GetName(), joinData.limit))
 		}
-		for _, ent := range env.affects {
-			envInfo.AffectedBy = append(envInfo.AffectedBy, ent.GetName())
+		for _, affectData := range env.affects {
+			envInfo.AffectedBy = append(envInfo.AffectedBy,
+				fmt.Sprintf("%v(%v)", affectData.entity.GetName(), affectData.delay))
 		}
 		ret[name] = envInfo
 	}

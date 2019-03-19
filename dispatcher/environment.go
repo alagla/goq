@@ -7,12 +7,22 @@ import (
 	"sync"
 )
 
+type joinEnvData struct {
+	entity *Entity
+	limit  int
+}
+
+type affectEnvData struct {
+	entity *Entity
+	delay  int
+}
+
 type environment struct {
 	dispatcher *Dispatcher
 	name       string
 	invalid    bool
-	joins      []*Entity
-	affects    []*Entity
+	joins      []*joinEnvData
+	affects    []*affectEnvData
 	size       int64
 	effectChan chan Trits
 	builtin    bool
@@ -22,8 +32,8 @@ func newEnvironment(disp *Dispatcher, name string, builtin bool) *environment {
 	ret := &environment{
 		dispatcher: disp,
 		name:       name,
-		joins:      make([]*Entity, 0),
-		affects:    make([]*Entity, 0),
+		joins:      make([]*joinEnvData, 0),
+		affects:    make([]*affectEnvData, 0),
 		effectChan: make(chan Trits),
 		builtin:    builtin,
 	}
@@ -37,15 +47,6 @@ func newEnvironment(disp *Dispatcher, name string, builtin bool) *environment {
 //
 func (env *environment) GetName() string {
 	return env.name
-}
-
-func (env *environment) existsEntity_(name string) bool {
-	for _, ei := range env.joins {
-		if ei.name == name {
-			return true
-		}
-	}
-	return false
 }
 
 func (env *environment) checkNewSize(size int64) bool {
@@ -74,23 +75,29 @@ func (env *environment) adjustEffect(effect Trits) (Trits, error) {
 	return effect, nil
 }
 
-func (env *environment) join(entity *Entity) error {
+func (env *environment) join(entity *Entity, limit int) error {
 	if !env.checkNewSize(entity.InSize()) {
 		return fmt.Errorf("size mismach between joining entity '%v' (in size=%v) and the environment '%v' (size=%v)",
 			entity.name, entity.InSize(), env.name, env.size)
 	}
-	env.joins = append(env.joins, entity)
-	entity.joinEnvironment(env)
+	env.joins = append(env.joins, &joinEnvData{
+		entity: entity,
+		limit:  limit,
+	})
+	entity.joinEnvironment(env, limit)
 	return nil
 }
 
-func (env *environment) affect(entity *Entity) error {
+func (env *environment) affect(entity *Entity, delay int) error {
 	if !env.checkNewSize(entity.OutSize()) {
 		return fmt.Errorf("size mismach between affecting entity '%v' (out size=%v) and the environment '%v' (size=%v)",
 			entity.name, entity.OutSize(), env.name, env.size)
 	}
-	env.affects = append(env.affects, entity)
-	entity.affectEnvironment(env)
+	env.affects = append(env.affects, &affectEnvData{
+		entity: entity,
+		delay:  delay,
+	})
+	entity.affectEnvironment(env, delay)
 	return nil
 }
 
@@ -107,8 +114,8 @@ func (env *environment) environmentLoop() {
 		logf(3, "effect '%v' (%v) -> environment '%v'", TritsToString(effect), dec, env.name)
 		env.dispatcher.quantWG.Add(len(env.joins))
 		env.waitWave(effect)
-		for _, entity := range env.joins {
-			entity.inChan <- effect
+		for _, joinData := range env.joins {
+			joinData.entity.inChan <- effect
 		}
 		env.dispatcher.quantWG.Done()
 	}
@@ -121,11 +128,11 @@ func (env *environment) invalidate() {
 	env.invalid = true
 	close(env.effectChan)
 
-	for _, entity := range env.joins {
-		entity.stopListeningToEnvironment(env)
+	for _, joinData := range env.joins {
+		joinData.entity.stopListeningToEnvironment(env)
 	}
-	for _, entity := range env.affects {
-		entity.stopAffectingEnvironment(env)
+	for _, affectData := range env.affects {
+		affectData.entity.stopAffectingEnvironment(env)
 	}
 }
 

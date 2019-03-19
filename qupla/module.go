@@ -88,10 +88,18 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML, factory Expres
 	}
 	for funname, fundef := range ret.functions {
 		if fundef.HasEnvStmt() {
-			ret.environments.AppendAll(fundef.affects)
-			ret.environments.AppendAll(fundef.joins)
+			joins := StringSet{}
+			for e, p := range fundef.GetJoinEnv() {
+				joins.Append(fmt.Sprintf("%v(%v)", e, p))
+			}
+			affects := StringSet{}
+			for e, p := range fundef.GetAffectEnv() {
+				affects.Append(fmt.Sprintf("%v(%v)", e, p))
+			}
+			ret.environments.AppendAll(affects)
+			ret.environments.AppendAll(joins)
 			logf(1, "    Function '%v' joins: '%v', affects: '%v'",
-				funname, fundef.GetJoinEnv().Join(","), fundef.GetAffectEnv().Join(","))
+				funname, joins.Join(","), affects.Join(","))
 		}
 	}
 	if len(ret.environments) > 0 {
@@ -331,7 +339,7 @@ func (module *QuplaModule) AttachToDispatcher(disp *dispatcher.Dispatcher) bool 
 			continue
 		}
 		entity := entities.NewFunctionEntity(disp, funcdef, NewStackProcessor())
-		if err := disp.Attach(entity, funcdef.joins.List(), funcdef.affects.List()); err != nil {
+		if err := disp.Attach(entity, funcdef.GetJoinEnv(), funcdef.GetAffectEnv()); err != nil {
 			logf(0, "error while attaching entity to dispatcher: %v", err)
 			ret = false
 		}

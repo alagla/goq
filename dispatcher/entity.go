@@ -9,16 +9,26 @@ type EntityCore interface {
 	Call(Trits, Trits) bool
 }
 
+type joinEntData struct {
+	environment *environment
+	limit       int
+}
+
+type affectEntData struct {
+	environment *environment
+	delay       int
+}
+
 type Entity struct {
 	dispatcher *Dispatcher
 	name       string
 	inSize     int64
 	outSize    int64
-	affecting  []*environment // list of affected environments where effects are sent
-	joined     []*environment // list of environments which are being listened to
-	inChan     chan Trits     // chan for incoming effects
-	entityCore EntityCore     // function called for each effect
-	terminal   bool           // can't affect environments
+	affecting  []*affectEntData // list of affected environments where effects are sent
+	joined     []*joinEntData   // list of environments which are being listened to
+	inChan     chan Trits       // chan for incoming effects
+	entityCore EntityCore       // function called for each effect
+	terminal   bool             // can't affect environments
 }
 
 func (ent *Entity) GetName() string {
@@ -33,35 +43,42 @@ func (ent *Entity) OutSize() int64 {
 	return ent.outSize
 }
 
-func (ent *Entity) affectEnvironment(env *environment) {
-	ent.affecting = append(ent.affecting, env)
-}
-
-func (ent *Entity) joinEnvironment(env *environment) {
-	ent.joined = append(ent.joined, env)
+func (ent *Entity) joinEnvironment(env *environment, limit int) {
+	ent.joined = append(ent.joined, &joinEntData{
+		environment: env,
+		limit:       limit,
+	})
 	ent.checkStart()
 }
 
-func (ent *Entity) stopAffectingEnvironment(env *environment) {
-	tmpList := make([]*environment, 0)
-	for _, e := range ent.affecting {
-		if e != env {
-			tmpList = append(tmpList, e)
-		}
-	}
+func (ent *Entity) affectEnvironment(env *environment, delay int) {
+	ent.affecting = append(ent.affecting, &affectEntData{
+		environment: env,
+		delay:       delay,
+	})
 }
 
 func (ent *Entity) stopListeningToEnvironment(env *environment) {
-	tmpList := make([]*environment, 0)
+	newList := make([]*joinEntData, 0)
 	for _, e := range ent.joined {
-		if e != env {
-			tmpList = append(tmpList, e)
+		if e.environment != env {
+			newList = append(newList, e)
 		}
 	}
-	ent.joined = tmpList
+	ent.joined = newList
 	if ent.checkStop() {
 		logf(5, "stopped entity '%v'", ent.GetName())
 	}
+}
+
+func (ent *Entity) stopAffectingEnvironment(env *environment) {
+	newList := make([]*affectEntData, 0)
+	for _, e := range ent.affecting {
+		if e.environment != env {
+			newList = append(newList, e)
+		}
+	}
+	ent.affecting = newList
 }
 
 func (ent *Entity) checkStop() bool {
@@ -98,8 +115,9 @@ func (ent *Entity) entityLoop() {
 		null = ent.entityCore.Call(effect, res)
 		if !null {
 			ent.dispatcher.quantWG.Add(len(ent.affecting))
-			for _, env := range ent.affecting {
-				env.effectChan <- res
+			for _, affectInfo := range ent.affecting {
+				// TODO delay and limit
+				affectInfo.environment.effectChan <- res
 			}
 		}
 		ent.dispatcher.quantWG.Done()

@@ -216,12 +216,14 @@ func (ex *QuplaExecStmt) outEnvironmentName() string {
 
 func (ex *QuplaExecStmt) prepareRun(disp *Dispatcher) error {
 	evalEntity := ex.newEvalEntity(disp)
-	if err := disp.Attach(evalEntity, []string{ex.inEnvironmentName()}, []string{ex.outEnvironmentName()}); err != nil {
+	inMap := map[string]int{ex.inEnvironmentName(): 0}
+	outMap := map[string]int{ex.outEnvironmentName(): 1}
+	if err := disp.Attach(evalEntity, inMap, outMap); err != nil {
 		return err
 	}
 	var resultEntity *Entity
 	resultEntity, ex.runResult = ex.newResultEntity(disp)
-	if err := disp.Attach(resultEntity, []string{ex.outEnvironmentName()}, nil); err != nil {
+	if err := disp.Attach(resultEntity, outMap, nil); err != nil {
 		return err
 	}
 	return nil
