@@ -3,13 +3,11 @@ package qupla
 import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
-	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/entities"
 	. "github.com/lunfardo314/goq/utils"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"strings"
-	"time"
 )
 
 type QuplaModule struct {
@@ -179,100 +177,6 @@ func (module *QuplaModule) FindLUTDef(name string) (LUTInterface, error) {
 	return ret, nil
 }
 
-func (module *QuplaModule) Execute(disp *dispatcher.Dispatcher, fromIdx int, toIdx int) int {
-	if len(module.execs) == 0 {
-		logf(0, "No executables to execute")
-		return 0
-	}
-	if fromIdx < 0 || fromIdx >= len(module.execs) {
-		fromIdx = 0
-	}
-	if toIdx < 0 || toIdx >= len(module.execs) {
-		toIdx = len(module.execs) - 1
-	}
-	if fromIdx < 0 || fromIdx > toIdx {
-		logf(0, "Wrong range of indices: from %v to %v", fromIdx, toIdx)
-		return 0
-	}
-
-	switch {
-	case cfg.Config.ExecEvals && cfg.Config.ExecTests:
-		logf(0, "Executing evals and tests")
-	case cfg.Config.ExecEvals && !cfg.Config.ExecTests:
-		logf(0, "Executing evals only")
-	case !cfg.Config.ExecEvals && cfg.Config.ExecTests:
-		logf(0, "Executing tests only")
-	case !cfg.Config.ExecEvals && !cfg.Config.ExecTests:
-		logf(0, "Wrong config values. Assume: executing tests only")
-	}
-	if fromIdx < 0 && toIdx < 0 {
-		logf(0, "Index range: ALL (total %v)", len(module.execs))
-	} else {
-		logf(0, "Index range: %v - %v", fromIdx, toIdx)
-	}
-
-	testsPassed := 0
-	testsFailed := 0
-	execsSkipped := 0
-	totalTests := 0
-	totalExecuted := 0
-	start := time.Now()
-	first := true
-	lastExecutedIdx := 0
-	var exec *QuplaExecStmt
-	for idx := fromIdx; idx <= toIdx; idx++ {
-		exec = module.execs[idx]
-		if cfg.Config.ExecFirstOnly && !first {
-			break
-		}
-		first = false
-		logf(2, "-----------------------")
-
-		if exec.HasState() {
-			logf(1, "SKIP stateful exec statement: '%v'", exec.GetSource())
-			execsSkipped++
-			continue
-		}
-		totalExecuted++
-		lastExecutedIdx = idx
-		if passed, err := exec.Execute(disp); err != nil {
-			logf(0, "Error: %v", err)
-		} else {
-			if exec.isTest {
-				totalTests++
-				if passed {
-					testsPassed++
-				} else {
-					testsFailed++
-				}
-			}
-		}
-		module.processor.Reset()
-	}
-	logf(0, "---------------------")
-	logf(0, "---------------------")
-	logf(0, "Total executables: %v", len(module.execs))
-	logf(0, "Skipped executables: %v", execsSkipped)
-	logf(0, "Total executed: %v", totalExecuted)
-	if totalTests > 0 {
-		p := fmt.Sprintf("%v%%", (testsPassed*100)/totalTests)
-		f := fmt.Sprintf("%v%%", (testsFailed*100)/totalTests)
-		logf(0, "Tests PASSED: %v out of %v (%v)", testsPassed, totalTests, p)
-		logf(0, "Tests FAILED: %v out of %v (%v)", testsFailed, totalTests, f)
-	} else {
-		logf(0, "Total tests: %v", totalTests)
-	}
-	logf(0, "Total duration: %v ", time.Since(start))
-	return lastExecutedIdx
-}
-
-func (module *QuplaModule) ExecByIdx(idx int) *QuplaExecStmt {
-	if idx < 0 || idx >= len(module.execs) {
-		return nil
-	}
-	return module.execs[idx]
-}
-
 func (module *QuplaModule) FindExecs(substr string) []*QuplaExecStmt {
 	ret := make([]*QuplaExecStmt, 0)
 	for _, ex := range module.execs {
@@ -345,6 +249,13 @@ func (module *QuplaModule) AttachToDispatcher(disp *dispatcher.Dispatcher) bool 
 		}
 	}
 	return ret
+}
+
+func (module *QuplaModule) ExecByIdx(idx int) *QuplaExecStmt {
+	if idx < 0 || idx >= len(module.execs) {
+		return nil
+	}
+	return module.execs[idx]
 }
 
 //func (module *QuplaModule) AnalyzeType(name string, src *QuplaTypeDefYAML) bool {

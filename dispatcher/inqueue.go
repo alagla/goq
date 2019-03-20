@@ -2,7 +2,6 @@ package dispatcher
 
 import (
 	"fmt"
-	"github.com/Workiva/go-datastructures/queue"
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/utils"
 	"sync"
@@ -15,7 +14,7 @@ type quantMsg struct {
 	doNotStartBefore uint64
 }
 
-func (disp *Dispatcher) postEffect(env *environment, effect Trits, delay int) error {
+func (disp *Dispatcher) postEffect(env *environment, effect Trits, delay int, external bool) error {
 	dec, _ := utils.TritsToBigInt(effect)
 	logf(5, "posted effect '%v' (%v) to dispatcher, environment '%v', delay %v",
 		utils.TritsToString(effect), dec, env.GetName(), delay)
@@ -37,24 +36,21 @@ func (disp *Dispatcher) PostEffect(envName string, effect Trits, delay int) erro
 	if env == nil || env.invalid {
 		return fmt.Errorf("can't find environment '%v'", envName)
 	}
-	return disp.postEffect(env, effect, delay)
+	return disp.postEffect(env, effect, delay, true)
 }
 
 func (disp *Dispatcher) dispatcherInputLoop() {
 	var tmpItems []interface{}
 	var msg *quantMsg
 	var wg sync.WaitGroup
-	var err error
+
 	for {
-		tmpItems, err = disp.queue.Poll(1, 1*time.Second)
-		if err != nil {
-			if err == queue.ErrTimeout {
-				disp.setIdle(true)
-				continue
-			} else {
-				panic(err)
-			}
+		if disp.queue.Empty() {
+			disp.setIdle(true)
+			time.Sleep(1 * time.Second)
+			continue
 		}
+		tmpItems, _ = disp.queue.Get(1)
 		disp.setIdle(false)
 
 		msg = tmpItems[0].(*quantMsg)
@@ -72,5 +68,4 @@ func (disp *Dispatcher) dispatcherInputLoop() {
 		})
 		wg.Wait()
 	}
-
 }

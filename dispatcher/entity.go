@@ -27,12 +27,16 @@ type Entity struct {
 	affecting  []*affectEntData // list of affected environments where effects are sent
 	joined     []*environment   // list of environments which are being listened to
 	inChan     chan entityMsg   // chan for incoming effects
-	entityCore EntityCore       // function called for each effect
+	core       EntityCore       // function called for each effect
 	terminal   bool             // can't affect environments
 }
 
 func (ent *Entity) GetName() string {
 	return ent.name
+}
+
+func (ent *Entity) GetCore() EntityCore {
+	return ent.core
 }
 
 func (ent *Entity) InSize() int64 {
@@ -109,12 +113,12 @@ func (ent *Entity) entityLoop() {
 		logf(3, "effect '%v' (%v) -> entity '%v'", utils.TritsToString(msg.effect), dec, ent.name)
 		// calculate result
 		res := make(Trits, ent.outSize)
-		null = ent.entityCore.Call(msg.effect, res)
+		null = ent.core.Call(msg.effect, res)
 		if !null {
 			if msg.lastWithinLimit {
 				// postpone to new quant
 				for _, affectInfo := range ent.affecting {
-					_ = ent.dispatcher.postEffect(affectInfo.environment, res, 0)
+					_ = ent.dispatcher.postEffect(affectInfo.environment, res, 0, false)
 				}
 			} else {
 				for _, affectInfo := range ent.affecting {
@@ -122,7 +126,7 @@ func (ent *Entity) entityLoop() {
 						ent.dispatcher.quantWG.Add(1)
 						affectInfo.environment.effectChan <- res
 					} else {
-						_ = ent.dispatcher.postEffect(affectInfo.environment, res, affectInfo.delay)
+						_ = ent.dispatcher.postEffect(affectInfo.environment, res, affectInfo.delay, false)
 					}
 				}
 			}

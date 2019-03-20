@@ -13,6 +13,7 @@ import (
 type Dispatcher struct {
 	queue        *queue.Queue
 	idle         bool
+	idleMutex    sync.RWMutex
 	quantCount   uint64
 	environments map[string]*environment
 	generalLock  *LockWithTimeout // controls environments, join, affect, modes
@@ -49,7 +50,7 @@ func (disp *Dispatcher) NewEntity(opt EntityOpts) *Entity {
 		outSize:    opt.OutSize,
 		affecting:  make([]*affectEntData, 0),
 		joined:     make([]*environment, 0),
-		entityCore: opt.Core,
+		core:       opt.Core,
 		terminal:   opt.Terminal,
 	}
 	return ret
@@ -233,9 +234,13 @@ func (disp *Dispatcher) EnvironmentInfo() map[string]*EnvironmentStatus {
 }
 
 func (disp *Dispatcher) setIdle(idle bool) {
+	disp.idleMutex.Lock()
+	defer disp.idleMutex.Unlock()
 	disp.idle = idle
 }
 
-func (disp *Dispatcher) isIdle() bool {
+func (disp *Dispatcher) IsIdle() bool {
+	disp.idleMutex.RLock()
+	defer disp.idleMutex.RUnlock()
 	return disp.idle
 }

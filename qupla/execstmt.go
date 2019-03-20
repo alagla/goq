@@ -5,9 +5,7 @@ import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/dispatcher"
-	"github.com/lunfardo314/goq/utils"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
-	"sync"
 	"time"
 )
 
@@ -20,7 +18,7 @@ type QuplaExecStmt struct {
 	valueExpected Trits
 	module        *QuplaModule
 	idx           int
-	runResult     *execResultCallable
+	evalEntity    *Entity
 }
 
 func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error {
@@ -80,48 +78,41 @@ func (ex *QuplaExecStmt) HasState() bool {
 	return ex.funcExpr.funcDef.hasState
 }
 
-func (ex *QuplaExecStmt) Execute(disp *Dispatcher) (bool, error) {
-	return ex.ExecuteMulti(disp, 1)
+func (ex *QuplaExecStmt) evalEnvironmentName() string {
+	return fmt.Sprintf("$%v_IN", ex.GetIdx())
 }
 
-func (ex *QuplaExecStmt) ExecuteMulti(disp *Dispatcher, repeat int) (bool, error) {
-	if repeat < 1 {
-		return false, fmt.Errorf("'repeat' parameter must be >1")
-	}
-	var err error
-	if err = ex.prepareRun(disp); err != nil {
-		return false, err
-	}
-	var t = Trits{0}
-	envInName := ex.inEnvironmentName()
-	var wgQuant sync.WaitGroup
-	for i := 0; i < repeat; i++ {
-		wgQuant.Add(1)
-		err = disp.QuantStart(envInName, t, false, func() {
-			logf(7, "-------------------- quant finished")
-			wgQuant.Done()
-		})
-		if err != nil {
-			return false, err
-		}
-	}
-	wgQuant.Wait()
-	passed := ex.wrapUpRun(disp)
-	return passed, err
-}
-
-func (ex *QuplaExecStmt) ExecuteAsWave(disp *Dispatcher) error {
-	var err error
-	if err = ex.prepareRun(disp); err != nil {
+func (ex *QuplaExecStmt) attach(disp *Dispatcher, prev *QuplaExecStmt) error {
+	ex.evalEntity = ex.newEvalEntity(disp)
+	envJoin := map[string]int{ex.evalEnvironmentName(): 1}
+	if err := disp.Attach(ex.evalEntity, envJoin, nil); err != nil {
 		return err
 	}
-	var t = Trits{0}
+	if prev != nil {
+		// chain mode: result of the previous affect input of the next
+		envAffect := map[string]int{ex.evalEnvironmentName(): 0}
+		if err := disp.Attach(prev.evalEntity, nil, envAffect); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-	envInName := ex.inEnvironmentName()
-	err = disp.QuantStart(envInName, t, true, func() {
-		logf(0, "-------------------- quant finished")
-		ex.wrapUpRun(disp)
-	})
+func (ex *QuplaExecStmt) detach(disp *Dispatcher) error {
+	return disp.DeleteEnvironment(ex.evalEnvironmentName())
+}
+
+func (ex *QuplaExecStmt) Run(disp *Dispatcher, repeat int) error {
+	if repeat < 1 {
+		return fmt.Errorf("'repeat' parameter must be >1")
+	}
+	var effect = Trits{0}
+	envInName := ex.evalEnvironmentName()
+	for i := 0; i < repeat; i++ {
+		if err := disp.PostEffect(envInName, effect, 0); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -151,101 +142,62 @@ func (ex *QuplaExecStmt) resultIsExpected(result Trits) bool {
 
 }
 
-// expression shouldn't have free variables
-// only used to call from executables
-type execEvalCallable struct {
-	exec *QuplaExecStmt
+// mock entities to run executables on dispatcher
+
+type execEvalCore struct {
+	exec              *QuplaExecStmt
+	numRun            int
+	numTestPassed     int
+	totalDurationMsec uint64
+	lastResult        Trits
 }
 
-func (ec *execEvalCallable) Call(_ Trits, res Trits) bool {
+func (ec *execEvalCore) Call(_ Trits, res Trits) bool {
+	start := unixMsNow()
 	null := ec.exec.module.processor.Eval(ec.exec.funcExpr, res)
+	ec.numRun++
+	ec.totalDurationMsec += unixMsNow() - start
+	ec.lastResult = res
+	if ec.exec.isTest && ec.exec.resultIsExpected(res) {
+		ec.numTestPassed++
+	}
 	return null
 }
 
 func (ex *QuplaExecStmt) newEvalEntity(disp *Dispatcher) *Entity {
 	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.funcExpr.GetSource())
+	core := &execEvalCore{exec: ex}
 	return disp.NewEntity(EntityOpts{
 		Name:    name,
 		InSize:  0,
 		OutSize: ex.funcExpr.Size(),
-		Core:    &execEvalCallable{ex},
-	})
-}
-
-type execResultCallable struct {
-	entity     *Entity
-	start      time.Time
-	lastRun    time.Time
-	lastResult Trits
-	called     int
-	exec       *QuplaExecStmt
-}
-
-func (ec *execResultCallable) Call(effect Trits, _ Trits) bool {
-	ec.lastRun = time.Now()
-	ec.called++
-	ec.lastResult = effect
-	return false
-}
-
-func (ex *QuplaExecStmt) newResultEntity(disp *Dispatcher) (*Entity, *execResultCallable) {
-	name := fmt.Sprintf("#%v-RESULT_%v", ex.idx, ex.funcExpr.GetSource())
-	nowis := time.Now()
-	core := &execResultCallable{
-		start:   nowis,
-		lastRun: nowis,
-		exec:    ex,
-	}
-	ret := disp.NewEntity(EntityOpts{
-		Name:    name,
-		InSize:  ex.funcExpr.Size(),
-		OutSize: 0,
 		Core:    core,
 	})
-	core.entity = ret
-	return ret, core
 }
 
-func (ex *QuplaExecStmt) inEnvironmentName() string {
-	return "IN_EXE"
+type runSummary struct {
+	isTest      bool
+	testPassed  bool
+	numRun      int
+	lastResult  Trits
+	avgDuration uint64
 }
 
-func (ex *QuplaExecStmt) outEnvironmentName() string {
-	return "OUT_EXE"
-}
-
-func (ex *QuplaExecStmt) prepareRun(disp *Dispatcher) error {
-	evalEntity := ex.newEvalEntity(disp)
-	inMap := map[string]int{ex.inEnvironmentName(): 0}
-	outMap := map[string]int{ex.outEnvironmentName(): 1}
-	if err := disp.Attach(evalEntity, inMap, outMap); err != nil {
-		return err
+func (ex *QuplaExecStmt) GetRunResults() *runSummary {
+	core := ex.evalEntity.GetCore().(*execEvalCore)
+	var dur uint64
+	if core.numRun != 0 {
+		dur = core.totalDurationMsec / uint64(core.numRun)
 	}
-	var resultEntity *Entity
-	resultEntity, ex.runResult = ex.newResultEntity(disp)
-	if err := disp.Attach(resultEntity, outMap, nil); err != nil {
-		return err
+	return &runSummary{
+		isTest:      ex.isTest,
+		testPassed:  ex.isTest && core.numTestPassed == core.numRun,
+		numRun:      core.numRun,
+		lastResult:  core.lastResult,
+		avgDuration: dur,
 	}
-	return nil
 }
 
-func (ex *QuplaExecStmt) wrapUpRun(disp *Dispatcher) bool {
-	logf(1, "Executed '%v' %v times", ex.GetName(), ex.runResult.called)
-	dur := ex.runResult.lastRun.Sub(ex.runResult.start)
-	avgdur := int64(dur/time.Millisecond) / int64(ex.runResult.called)
-	logf(1, "    eval result:     '%v'. Total duration %v, Average duration %v msec/run",
-		utils.TritsToString(ex.runResult.lastResult), dur, avgdur)
-
-	var passed bool
-	if ex.isTest {
-		logf(1, "    expected result: '%v'", utils.TritsToString(ex.valueExpected))
-		if passed = ex.resultIsExpected(ex.runResult.lastResult); passed {
-			logf(1, "    test PASSED")
-		} else {
-			logf(1, "    test FAILED")
-		}
-	}
-	_ = disp.DeleteEnvironment(ex.inEnvironmentName())
-	_ = disp.DeleteEnvironment(ex.outEnvironmentName())
-	return passed
+func unixMsNow() uint64 {
+	return uint64(time.Now().UnixNano()) / uint64(time.Millisecond)
 }
