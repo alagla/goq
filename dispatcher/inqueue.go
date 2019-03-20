@@ -2,9 +2,11 @@ package dispatcher
 
 import (
 	"fmt"
+	"github.com/Workiva/go-datastructures/queue"
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/utils"
 	"sync"
+	"time"
 )
 
 type quantMsg struct {
@@ -41,26 +43,30 @@ func (disp *Dispatcher) PostEffect(envName string, effect Trits, delay int) erro
 func (disp *Dispatcher) dispatcherInputLoop() {
 	var tmpItems []interface{}
 	var msg *quantMsg
-	var err error
 	var wg sync.WaitGroup
-
+	var err error
 	for {
-		tmpItems, err = disp.queue.Get(1)
+		tmpItems, err = disp.queue.Poll(1, 1*time.Second)
 		if err != nil {
-			panic(err)
+			if err == queue.ErrTimeout {
+				disp.setIdle(true)
+				continue
+			} else {
+				panic(err)
+			}
 		}
+		disp.setIdle(false)
+
 		msg = tmpItems[0].(*quantMsg)
 		if msg.doNotStartBefore > disp.getQuantCount() {
 			// put it back to queue
-			if err = disp.queue.Put(msg); err != nil {
-				panic(err)
-			}
+			_ = disp.queue.Put(msg)
 			disp.incQuantCount()
 			continue
 		}
 
 		wg.Add(1)
-		err = disp.quantStart(msg.env, msg.effect, false, func() {
+		_ = disp.quantStart(msg.env, msg.effect, false, func() {
 			disp.incQuantCount()
 			wg.Done()
 		})

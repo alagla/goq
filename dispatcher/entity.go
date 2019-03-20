@@ -9,14 +9,14 @@ type EntityCore interface {
 	Call(Trits, Trits) bool
 }
 
-type joinEntData struct {
-	environment *environment
-	limit       int
-}
-
 type affectEntData struct {
 	environment *environment
 	delay       int
+}
+
+type entityMsg struct {
+	effect          Trits
+	lastWithinLimit bool
 }
 
 type Entity struct {
@@ -25,8 +25,8 @@ type Entity struct {
 	inSize     int64
 	outSize    int64
 	affecting  []*affectEntData // list of affected environments where effects are sent
-	joined     []*joinEntData   // list of environments which are being listened to
-	inChan     chan Trits       // chan for incoming effects
+	joined     []*environment   // list of environments which are being listened to
+	inChan     chan entityMsg   // chan for incoming effects
 	entityCore EntityCore       // function called for each effect
 	terminal   bool             // can't affect environments
 }
@@ -44,10 +44,7 @@ func (ent *Entity) OutSize() int64 {
 }
 
 func (ent *Entity) joinEnvironment(env *environment, limit int) {
-	ent.joined = append(ent.joined, &joinEntData{
-		environment: env,
-		limit:       limit,
-	})
+	ent.joined = append(ent.joined, env)
 	ent.checkStart()
 }
 
@@ -59,9 +56,9 @@ func (ent *Entity) affectEnvironment(env *environment, delay int) {
 }
 
 func (ent *Entity) stopListeningToEnvironment(env *environment) {
-	newList := make([]*joinEntData, 0)
+	newList := make([]*environment, 0)
 	for _, e := range ent.joined {
-		if e.environment != env {
+		if e != env {
 			newList = append(newList, e)
 		}
 	}
@@ -94,7 +91,7 @@ func (ent *Entity) checkStop() bool {
 
 func (ent *Entity) checkStart() {
 	if ent.inChan == nil && len(ent.joined) != 0 {
-		ent.inChan = make(chan Trits)
+		ent.inChan = make(chan entityMsg)
 		go ent.entityLoop()
 	}
 }
@@ -104,22 +101,39 @@ func (ent *Entity) entityLoop() {
 	defer logf(7, "entity '%v'loop STOPPED", ent.name)
 
 	var null bool
-	for effect := range ent.inChan {
-		if effect == nil {
+	for msg := range ent.inChan {
+		if msg.effect == nil {
 			panic("nil effect")
 		}
-		dec, _ := utils.TritsToBigInt(effect)
-		logf(3, "effect '%v' (%v) -> entity '%v'", utils.TritsToString(effect), dec, ent.name)
+		dec, _ := utils.TritsToBigInt(msg.effect)
+		logf(3, "effect '%v' (%v) -> entity '%v'", utils.TritsToString(msg.effect), dec, ent.name)
 		// calculate result
 		res := make(Trits, ent.outSize)
-		null = ent.entityCore.Call(effect, res)
+		null = ent.entityCore.Call(msg.effect, res)
 		if !null {
-			ent.dispatcher.quantWG.Add(len(ent.affecting))
-			for _, affectInfo := range ent.affecting {
-				// TODO delay and limit
-				affectInfo.environment.effectChan <- res
+			if msg.lastWithinLimit {
+				// postpone to new quant
+				for _, affectInfo := range ent.affecting {
+					_ = ent.dispatcher.postEffect(affectInfo.environment, res, 0)
+				}
+			} else {
+				for _, affectInfo := range ent.affecting {
+					if affectInfo.delay == 0 {
+						ent.dispatcher.quantWG.Add(1)
+						affectInfo.environment.effectChan <- res
+					} else {
+						_ = ent.dispatcher.postEffect(affectInfo.environment, res, affectInfo.delay)
+					}
+				}
 			}
 		}
 		ent.dispatcher.quantWG.Done()
+	}
+}
+
+func (ent *Entity) sendEffect(effect Trits, lastWithinLimit bool) {
+	ent.inChan <- entityMsg{
+		effect:          effect,
+		lastWithinLimit: lastWithinLimit,
 	}
 }

@@ -12,6 +12,7 @@ import (
 
 type Dispatcher struct {
 	queue        *queue.Queue
+	idle         bool
 	quantCount   uint64
 	environments map[string]*environment
 	generalLock  *LockWithTimeout // controls environments, join, affect, modes
@@ -47,7 +48,7 @@ func (disp *Dispatcher) NewEntity(opt EntityOpts) *Entity {
 		inSize:     opt.InSize,
 		outSize:    opt.OutSize,
 		affecting:  make([]*affectEntData, 0),
-		joined:     make([]*joinEntData, 0),
+		joined:     make([]*environment, 0),
 		entityCore: opt.Core,
 		terminal:   opt.Terminal,
 	}
@@ -223,11 +224,18 @@ func (disp *Dispatcher) EnvironmentInfo() map[string]*EnvironmentStatus {
 			envInfo.JoinedEntities = append(envInfo.JoinedEntities,
 				fmt.Sprintf("%v(%v)", joinData.entity.GetName(), joinData.limit))
 		}
-		for _, affectData := range env.affects {
-			envInfo.AffectedBy = append(envInfo.AffectedBy,
-				fmt.Sprintf("%v(%v)", affectData.entity.GetName(), affectData.delay))
+		for _, ent := range env.affects {
+			envInfo.AffectedBy = append(envInfo.AffectedBy, ent.GetName())
 		}
 		ret[name] = envInfo
 	}
 	return ret
+}
+
+func (disp *Dispatcher) setIdle(idle bool) {
+	disp.idle = idle
+}
+
+func (disp *Dispatcher) isIdle() bool {
+	return disp.idle
 }

@@ -10,11 +10,7 @@ import (
 type joinEnvData struct {
 	entity *Entity
 	limit  int
-}
-
-type affectEnvData struct {
-	entity *Entity
-	delay  int
+	count  int
 }
 
 type environment struct {
@@ -22,7 +18,7 @@ type environment struct {
 	name       string
 	invalid    bool
 	joins      []*joinEnvData
-	affects    []*affectEnvData
+	affects    []*Entity
 	size       int64
 	effectChan chan Trits
 	builtin    bool
@@ -33,7 +29,7 @@ func newEnvironment(disp *Dispatcher, name string, builtin bool) *environment {
 		dispatcher: disp,
 		name:       name,
 		joins:      make([]*joinEnvData, 0),
-		affects:    make([]*affectEnvData, 0),
+		affects:    make([]*Entity, 0),
 		effectChan: make(chan Trits),
 		builtin:    builtin,
 	}
@@ -93,10 +89,7 @@ func (env *environment) affect(entity *Entity, delay int) error {
 		return fmt.Errorf("size mismach between affecting entity '%v' (out size=%v) and the environment '%v' (size=%v)",
 			entity.name, entity.OutSize(), env.name, env.size)
 	}
-	env.affects = append(env.affects, &affectEnvData{
-		entity: entity,
-		delay:  delay,
-	})
+	env.affects = append(env.affects, entity)
 	entity.affectEnvironment(env, delay)
 	return nil
 }
@@ -115,7 +108,8 @@ func (env *environment) environmentLoop() {
 		env.dispatcher.quantWG.Add(len(env.joins))
 		env.waitWave(effect)
 		for _, joinData := range env.joins {
-			joinData.entity.inChan <- effect
+			joinData.count++
+			joinData.entity.sendEffect(effect, joinData.count == joinData.limit)
 		}
 		env.dispatcher.quantWG.Done()
 	}
@@ -131,8 +125,8 @@ func (env *environment) invalidate() {
 	for _, joinData := range env.joins {
 		joinData.entity.stopListeningToEnvironment(env)
 	}
-	for _, affectData := range env.affects {
-		affectData.entity.stopAffectingEnvironment(env)
+	for _, entity := range env.affects {
+		entity.stopAffectingEnvironment(env)
 	}
 }
 
