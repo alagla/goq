@@ -118,7 +118,7 @@ func (ent *Entity) entityLoop() {
 			if msg.lastWithinLimit {
 				// postpone to new quant
 				for _, affectInfo := range ent.affecting {
-					_ = ent.dispatcher.postEffect(affectInfo.environment, res, 0, false)
+					_ = ent.dispatcher.postEffect("", affectInfo.environment, res, 0, false)
 				}
 			} else {
 				for _, affectInfo := range ent.affecting {
@@ -126,7 +126,7 @@ func (ent *Entity) entityLoop() {
 						ent.dispatcher.quantWG.Add(1)
 						affectInfo.environment.effectChan <- res
 					} else {
-						_ = ent.dispatcher.postEffect(affectInfo.environment, res, affectInfo.delay, false)
+						_ = ent.dispatcher.postEffect("", affectInfo.environment, res, affectInfo.delay, false)
 					}
 				}
 			}

@@ -89,23 +89,28 @@ func (module *QuplaModule) runAttachedExecs(disp *dispatcher.Dispatcher, execs [
 
 func (module *QuplaModule) RunExecs(disp *dispatcher.Dispatcher, fromIdx int, toIdx int, chain bool) error {
 	attachedExecs := module.attachExecs(disp, fromIdx, toIdx, chain)
+	logf(0, "Total executables in the module: %v", len(module.execs))
+	logf(0, "Skipped: %v", len(module.execs)-len(attachedExecs))
+	logf(0, "Start running executables: %v", len(attachedExecs))
+	start := time.Now()
 	if err := module.runAttachedExecs(disp, attachedExecs, chain); err != nil {
 		return err
 	}
 
-	// TODO
-	for !disp.IsIdle() {
-		time.Sleep(100 * time.Millisecond)
+	onFinish := func() {
+		_ = module.detachExecs(disp, attachedExecs)
+		logf(0, "Finished running execs, chain mode = %v. Duration %v", chain, time.Since(start))
 	}
 
-	if err := module.detachExecs(disp, attachedExecs); err != nil {
-		return err
+	for !disp.CallIfIdle(5*time.Second, onFinish) {
 	}
+
 	reportRunResults(attachedExecs)
 	return nil
 }
 
 func reportRunResults(execs []*QuplaExecStmt) {
+	logf(0, "Run summary:")
 	logf(0, "Executed %v executables", len(execs))
 	numTest := 0
 	numEvals := 0
@@ -114,13 +119,22 @@ func reportRunResults(execs []*QuplaExecStmt) {
 	for _, ex := range execs {
 		summ = ex.GetRunResults()
 		if summ.isTest {
+			if summ.testPassed {
+				logf(2, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
+				logf(2, "     test PASSED")
+			} else {
+				logf(0, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
+				logf(0, "     test FAILED")
+			}
 			numTest++
 		} else {
+			logf(2, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
 			numEvals++
 		}
 		if summ.testPassed {
 			numTestsPassed++
 		}
+
 	}
 	logf(0, "Total evals: %v", numEvals)
 	logf(0, "Total test: %v", numTest)

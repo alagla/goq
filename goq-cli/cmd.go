@@ -1,19 +1,23 @@
 package main
 
 import (
-	"github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/qupla"
-	"github.com/lunfardo314/goq/utils"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"math"
 	"os"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
-	"time"
 )
+
+// Commands:
+// 		load [<module file>]
+//      save [<module file>]
+// 		verb [<level>]
+//      list [execs <search string>]
+//      runtime
+//      run  [idxFrom [- idxTo]]
 
 func CmdVerbosity(words []string) {
 	if len(words) == 1 {
@@ -116,165 +120,154 @@ func CmdRun(words []string) {
 	}
 	switch {
 	case len(words) == 1:
-		if dispatcherInstance.IsWaveMode() {
-			if err := dispatcherInstance.WaveRun(); err != nil {
-				logf(0, "%v", err)
-			}
-		} else {
-			currentExecIdx = module.Execute(dispatcherInstance, currentExecIdx, currentExecIdx)
-		}
-
-	case len(words) == 2 && words[1] == "all":
-		if dispatcherInstance.IsWaveMode() {
-			logf(0, "Already running #%v", currentExecIdx)
+		if err := module.RunExecs(dispatcherInstance, currentExecIdx, currentExecIdx, chainMode); err != nil {
+			logf(0, "%v", err)
+			currentExecIdx = 0
 			return
 		}
-		// run all executables
-		module.Execute(dispatcherInstance, currentExecIdx, -1)
+		currentExecIdx++
+
+	case len(words) == 2 && words[1] == "all":
+		if err := module.RunExecs(dispatcherInstance, -1, -1, chainMode); err != nil {
+			logf(0, "%v", err)
+			return
+		}
 		currentExecIdx = 0
 
 	case len(words) == 2 && stringIsInt(words[1]):
-		// run specific executable in quant mode
-		if dispatcherInstance.IsWaveMode() {
-			logf(0, "Already running #%v", currentExecIdx)
+		idx, _ := strconv.Atoi(words[1])
+		if err := module.RunExecs(dispatcherInstance, idx, idx, chainMode); err != nil {
+			logf(0, "%v", err)
+			currentExecIdx = 0
 			return
 		}
-		idx, _ := strconv.Atoi(words[1])
-		currentExecIdx = module.Execute(dispatcherInstance, idx, idx) + 1
+		currentExecIdx = idx + 1
 		return
 
-	case len(words) >= 2 && !stringIsInt(words[1]):
-		if dispatcherInstance.IsWaveMode() {
-			logf(0, "Already running #%v", currentExecIdx)
-			return
-		}
-		nn := strings.Split(words[1], "-")
-		if len(nn) != 2 {
-			return
-		}
-		var nfrom, nto int
-		var err error
-		nfrom, err = strconv.Atoi(nn[0])
-		if err != nil {
-			logf(0, "%v", err)
-			return
-		}
-		nto, err = strconv.Atoi(nn[1])
-		if err != nil {
-			logf(0, "%v", err)
-			return
-		}
-		if nfrom > nto {
-			logf(0, "wrong index range")
+	case len(words) == 2 && !stringIsInt(words[1]):
+		split := strings.Split(words[1], "-")
+		if len(split) != 2 {
+			logf(0, "wrong commend")
 			return
 		}
 
-		currentExecIdx = module.Execute(dispatcherInstance, nfrom, nto) + 1
-		return
-
-	case len(words) == 3 && stringIsInt(words[1]) && stringIsInt(words[2]):
-		// run specific executable in quant mode
-		idx, _ := strconv.Atoi(words[1])
-		exec := module.ExecByIdx(idx)
-		if exec == nil {
-			logf(0, "Can't find executable #%v", idx)
+		fromIdx, _ := strconv.Atoi(split[0])
+		toIdx, _ := strconv.Atoi(split[1])
+		if err := module.RunExecs(dispatcherInstance, fromIdx, toIdx, chainMode); err != nil {
+			logf(0, "%v", err)
+			currentExecIdx = 0
 			return
 		}
-		num, _ := strconv.Atoi(words[2])
-		_, err := exec.ExecuteMulti(dispatcherInstance, num)
-		if err != nil {
-			logf(0, "Error: %v", err)
-		}
-		currentExecIdx = idx
+		currentExecIdx = toIdx + 1
 		return
 	}
 }
 
-var waveModeON = false
+var chainMode = false
 
-func CmdWave(words []string) {
-	if module == nil {
-		logf(0, "error: module not loaded")
-		return
-	}
+func CmdMode(words []string) {
 	if len(words) == 1 {
-		if waveModeON {
-			logf(0, "Wave mode is ON")
+		if chainMode {
+			logf(0, "chain mode is ON")
 		} else {
-			logf(0, "Wave mode is OFF")
+			logf(0, "chain mode is OFF")
 		}
 		return
 	}
-
-	switch words[1] {
-	case "on":
-		waveModeON = true
-		logf(0, "wave mode is ON")
-	case "off":
-		waveModeON = false
-		logf(0, "wave mode is OFF")
-
-	case "start":
-		if len(words) != 4 {
-			logf(0, "error: wrong command")
-			return
-		}
-		if dispatcherInstance.IsWaveMode() {
-			logf(0, "   quant is already running")
-			return
-		}
-		effectDec, err := strconv.Atoi(words[2])
-		if err != nil {
-			logf(0, "error: effect must be decimal integers")
-			return
-		}
-		effectTrits := trinary.IntToTrits(int64(effectDec))
-		envName := words[3]
-		err = dispatcherInstance.QuantStart(envName, effectTrits, waveModeON, func() {
-			logf(0, " -------- quant finished")
-			waveModeON = false
-		})
-		if err != nil {
-			logf(0, "%v", err)
-		}
-	case "next":
-		if !dispatcherInstance.IsWaveMode() {
-			logf(0, "error: quant wasn't started: can't continue with the wave")
-		}
-		if err := dispatcherInstance.WaveNext(); err != nil {
-			logf(0, "error: %v", err)
-			return
-		}
-		time.Sleep(100 * time.Millisecond)
-	case "run":
-		if !dispatcherInstance.IsWaveMode() {
-			logf(0, "   can't continue: quant not running")
-			return
-		}
-		if err := dispatcherInstance.WaveRun(); err != nil {
-			logf(0, "%v", err)
-		}
-	case "status":
-		listValues()
-	}
-}
-
-func listValues() {
-	vDict := dispatcherInstance.WaveValues()
-	if len(vDict) == 0 {
-		logf(0, "   wave is empty")
+	if len(words) == 2 && words[1] == "on" {
+		chainMode = true
+		logf(0, "chain mode is ON")
 	} else {
-		names := make([]string, 0, len(vDict))
-		for n := range vDict {
-			names = append(names, n)
-		}
-		sort.Strings(names)
-		logf(0, "   environment values:")
-		for _, name := range names {
-			logf(0, "    %v: '%v'", name, utils.TritsToString(vDict[name]))
-		}
+		chainMode = false
+		logf(0, "chain mode is OFF")
 	}
 }
+
+//var waveModeON = false
+//
+//func CmdWave(words []string) {
+//	if module == nil {
+//		logf(0, "error: module not loaded")
+//		return
+//	}
+//	if len(words) == 1 {
+//		if waveModeON {
+//			logf(0, "Wave mode is ON")
+//		} else {
+//			logf(0, "Wave mode is OFF")
+//		}
+//		return
+//	}
+//
+//	switch words[1] {
+//	case "on":
+//		waveModeON = true
+//		logf(0, "wave mode is ON")
+//	case "off":
+//		waveModeON = false
+//		logf(0, "wave mode is OFF")
+//
+//	case "start":
+//		if len(words) != 4 {
+//			logf(0, "error: wrong command")
+//			return
+//		}
+//		if dispatcherInstance.IsWaveMode() {
+//			logf(0, "   quant is already running")
+//			return
+//		}
+//		effectDec, err := strconv.Atoi(words[2])
+//		if err != nil {
+//			logf(0, "error: effect must be decimal integers")
+//			return
+//		}
+//		effectTrits := trinary.IntToTrits(int64(effectDec))
+//		envName := words[3]
+//		err = dispatcherInstance.QuantStart(envName, effectTrits, waveModeON, func() {
+//			logf(0, " -------- quant finished")
+//			waveModeON = false
+//		})
+//		if err != nil {
+//			logf(0, "%v", err)
+//		}
+//	case "next":
+//		if !dispatcherInstance.IsWaveMode() {
+//			logf(0, "error: quant wasn't started: can't continue with the wave")
+//		}
+//		if err := dispatcherInstance.WaveNext(); err != nil {
+//			logf(0, "error: %v", err)
+//			return
+//		}
+//		time.Sleep(100 * time.Millisecond)
+//	case "run":
+//		if !dispatcherInstance.IsWaveMode() {
+//			logf(0, "   can't continue: quant not running")
+//			return
+//		}
+//		if err := dispatcherInstance.WaveRun(); err != nil {
+//			logf(0, "%v", err)
+//		}
+//	case "status":
+//		listValues()
+//	}
+//}
+//
+//func listValues() {
+//	vDict := dispatcherInstance.WaveValues()
+//	if len(vDict) == 0 {
+//		logf(0, "   wave is empty")
+//	} else {
+//		names := make([]string, 0, len(vDict))
+//		for n := range vDict {
+//			names = append(names, n)
+//		}
+//		sort.Strings(names)
+//		logf(0, "   environment values:")
+//		for _, name := range names {
+//			logf(0, "    %v: '%v'", name, utils.TritsToString(vDict[name]))
+//		}
+//	}
+//}
 
 func CmdRuntime(_ []string) {
 	var mem runtime.MemStats
@@ -284,37 +277,37 @@ func CmdRuntime(_ []string) {
 	logf(0, "Number of goroutines: %v", runtime.NumGoroutine())
 }
 
-func CmdStatus(_ []string) {
-	eInfo := dispatcherInstance.EnvironmentInfo()
-	logf(0, "Dispatcher status:")
-	logf(1, "Found %v environments", len(eInfo))
-
-	names := make([]string, 0, len(eInfo))
-	for n := range eInfo {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-
-	for _, name := range names {
-		envStatus := eInfo[name]
-		logf(2, "%v (size = %v):", name, envStatus.Size)
-		entStr := ""
-		for _, entName := range envStatus.AffectedBy {
-			if entStr != "" {
-				entStr += ", "
-			}
-			entStr += entName
-		}
-		logf(4, "Affected by %v entities: %v", len(envStatus.AffectedBy), entStr)
-
-		entStr = ""
-		for _, entName := range envStatus.JoinedEntities {
-			if entStr != "" {
-				entStr += ", "
-			}
-			entStr += entName
-		}
-		logf(4, "Joined %v entities: %v", len(envStatus.JoinedEntities), entStr)
-
-	}
-}
+//func CmdStatus(_ []string) {
+//	eInfo := dispatcherInstance.EnvironmentInfo()
+//	logf(0, "Dispatcher status:")
+//	logf(1, "Found %v environments", len(eInfo))
+//
+//	names := make([]string, 0, len(eInfo))
+//	for n := range eInfo {
+//		names = append(names, n)
+//	}
+//	sort.Strings(names)
+//
+//	for _, name := range names {
+//		envStatus := eInfo[name]
+//		logf(2, "%v (size = %v):", name, envStatus.Size)
+//		entStr := ""
+//		for _, entName := range envStatus.AffectedBy {
+//			if entStr != "" {
+//				entStr += ", "
+//			}
+//			entStr += entName
+//		}
+//		logf(4, "Affected by %v entities: %v", len(envStatus.AffectedBy), entStr)
+//
+//		entStr = ""
+//		for _, entName := range envStatus.JoinedEntities {
+//			if entStr != "" {
+//				entStr += ", "
+//			}
+//			entStr += entName
+//		}
+//		logf(4, "Joined %v entities: %v", len(envStatus.JoinedEntities), entStr)
+//
+//	}
+//}

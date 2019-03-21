@@ -11,24 +11,23 @@ import (
 // TODO size checks when join/affect. Can be with different sizes
 
 type Dispatcher struct {
-	queue        *queue.Queue
-	idle         bool
-	idleMutex    sync.RWMutex
-	quantCount   uint64
-	environments map[string]*environment
-	generalLock  *LockWithTimeout // controls environments, join, affect, modes
-	timeout      time.Duration
-	waveCoo      *WaveCoordinator
-	quantWG      sync.WaitGroup // released when quant ends
+	queue           *queue.Queue
+	idle            bool
+	quantCount      uint64
+	environments    map[string]*environment
+	environmentLock *Sema // controls environments, join, affect
+	timeout         time.Duration
+	waveCoo         *WaveCoordinator
+	quantWG         sync.WaitGroup // released when quant ends
 }
 
 func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
 	ret := &Dispatcher{
-		queue:        queue.New(5),
-		environments: make(map[string]*environment),
-		generalLock:  NewAsyncLock(),
-		timeout:      lockTimeout,
-		waveCoo:      NewWaveCoordinator(),
+		queue:           queue.New(5),
+		environments:    make(map[string]*environment),
+		environmentLock: NewSema(),
+		timeout:         lockTimeout,
+		waveCoo:         NewWaveCoordinator(),
 	}
 	go ret.dispatcherInputLoop()
 	return ret
@@ -90,19 +89,19 @@ func (disp *Dispatcher) createEnvironment(name string, builtin bool) error {
 }
 
 func (disp *Dispatcher) CreateEnvironment(name string) error {
-	if !disp.generalLock.Acquire(disp.timeout) {
+	if !disp.environmentLock.Acquire(disp.timeout) {
 		return fmt.Errorf("request lock timeout: can't create environment")
 	}
-	defer disp.generalLock.Release()
+	defer disp.environmentLock.Release()
 	return disp.createEnvironment(name, false)
 }
 
 // executes 'join' and 'affect' of the entity
 func (disp *Dispatcher) Attach(entity *Entity, joins, affects map[string]int) error {
-	if !disp.generalLock.Acquire(disp.timeout) {
+	if !disp.environmentLock.Acquire(disp.timeout) {
 		return fmt.Errorf("acquire lock timeout: can't attach entity to environment")
 	}
-	defer disp.generalLock.Release()
+	defer disp.environmentLock.Release()
 
 	for envName, limit := range joins {
 		env := disp.getOrCreateEnvironment_(envName)
@@ -120,10 +119,10 @@ func (disp *Dispatcher) Attach(entity *Entity, joins, affects map[string]int) er
 }
 
 func (disp *Dispatcher) DeleteEnvironment(envName string) error {
-	if !disp.generalLock.Acquire(disp.timeout) {
+	if !disp.environmentLock.Acquire(disp.timeout) {
 		return fmt.Errorf("request lock timeout: can't delete environment")
 	}
-	defer disp.generalLock.Release()
+	defer disp.environmentLock.Release()
 
 	env, ok := disp.environments[envName]
 	if !ok {
@@ -134,16 +133,6 @@ func (disp *Dispatcher) DeleteEnvironment(envName string) error {
 	logf(5, "deleted environment '%v'", envName)
 	return nil
 }
-
-// sends effect to the environment and thus asynchronously starts first wave in the quant.
-// parameter 'waveMode' controls how the process ends:
-//    waveMode = true:
-//    	process stops after first wave is completed.
-//      All the intermediate environment values are stored in wave coordinator
-//      To continue there are two valid ways: WaveNext and WaveRun
-//  	Usually used only in the debug mode
-//    waveMode = false
-//      process stops at the end of the quant
 
 func (disp *Dispatcher) QuantStart(envName string, effect Trits, waveMode bool, onQuantFinish func()) error {
 	env := disp.getEnvironment_(envName)
@@ -231,16 +220,4 @@ func (disp *Dispatcher) EnvironmentInfo() map[string]*EnvironmentStatus {
 		ret[name] = envInfo
 	}
 	return ret
-}
-
-func (disp *Dispatcher) setIdle(idle bool) {
-	disp.idleMutex.Lock()
-	defer disp.idleMutex.Unlock()
-	disp.idle = idle
-}
-
-func (disp *Dispatcher) IsIdle() bool {
-	disp.idleMutex.RLock()
-	defer disp.idleMutex.RUnlock()
-	return disp.idle
 }

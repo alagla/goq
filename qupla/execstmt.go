@@ -10,7 +10,6 @@ import (
 )
 
 type QuplaExecStmt struct {
-	Entity
 	QuplaExprBase
 	isTest        bool
 	isFloat       bool // needed for float comparison
@@ -84,7 +83,7 @@ func (ex *QuplaExecStmt) evalEnvironmentName() string {
 
 func (ex *QuplaExecStmt) attach(disp *Dispatcher, prev *QuplaExecStmt) error {
 	ex.evalEntity = ex.newEvalEntity(disp)
-	envJoin := map[string]int{ex.evalEnvironmentName(): 1}
+	envJoin := map[string]int{ex.evalEnvironmentName(): 5}
 	if err := disp.Attach(ex.evalEntity, envJoin, nil); err != nil {
 		return err
 	}

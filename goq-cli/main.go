@@ -32,12 +32,9 @@ func execBatch(cmdlist []string) {
 
 var startupCmd = []string{
 	"load exitonfail",
-	"run 0",
+	//"run 0",
+	"run all",
 	//"run 0-10",
-	//"wave 0",
-	//"wave status",
-	//"run",
-	//"wave status",
 }
 
 func main() {

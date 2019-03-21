@@ -24,16 +24,16 @@ func executor(in string) {
 		CmdSaveModule(words)
 	case "run":
 		CmdRun(words)
-	case "wave":
-		CmdWave(words)
+	case "mode":
+		CmdMode(words)
 	case "list":
 		CmdList(words)
 	case "functions":
 		logf(0, "not implemented yet")
 	case "runtime":
 		CmdRuntime(words)
-	case "status":
-		CmdStatus(words)
+	//case "status":
+	//	CmdStatus(words)
 
 	default:
 		logf(0, "unknown command")
