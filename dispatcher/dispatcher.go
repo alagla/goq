@@ -29,16 +29,16 @@ func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
 		timeout:         lockTimeout,
 		waveCoo:         NewWaveCoordinator(),
 	}
+	ret.environmentLock.Acquire(-1)
 	go ret.dispatcherInputLoop()
 	return ret
 }
 
 type EntityOpts struct {
-	Name     string
-	InSize   int64
-	OutSize  int64
-	Core     EntityCore
-	Terminal bool // can't affect environments (doesn't produce any result, always returns null
+	Name    string
+	InSize  int64
+	OutSize int64
+	Core    EntityCore
 }
 
 func (disp *Dispatcher) NewEntity(opt EntityOpts) *Entity {
@@ -50,7 +50,6 @@ func (disp *Dispatcher) NewEntity(opt EntityOpts) *Entity {
 		affecting:  make([]*affectEntData, 0),
 		joined:     make([]*environment, 0),
 		core:       opt.Core,
-		terminal:   opt.Terminal,
 	}
 	return ret
 }
@@ -202,6 +201,11 @@ type EnvironmentStatus struct {
 }
 
 func (disp *Dispatcher) EnvironmentInfo() map[string]*EnvironmentStatus {
+	if !disp.environmentLock.Acquire(disp.timeout) {
+		return nil
+	}
+	defer disp.environmentLock.Release()
+
 	ret := make(map[string]*EnvironmentStatus)
 
 	for name, env := range disp.environments {

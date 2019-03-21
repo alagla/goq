@@ -28,7 +28,6 @@ type Entity struct {
 	joined     []*environment   // list of environments which are being listened to
 	inChan     chan entityMsg   // chan for incoming effects
 	core       EntityCore       // function called for each effect
-	terminal   bool             // can't affect environments
 }
 
 func (ent *Entity) GetName() string {

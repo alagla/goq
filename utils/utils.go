@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	"math/big"
+	"time"
 )
 
 func TritsToString(trits Trits) string {
@@ -122,4 +123,8 @@ func (s StringSet) List() []string {
 		ret = append(ret, str)
 	}
 	return ret
+}
+
+func UnixMsNow() uint64 {
+	return uint64(time.Now().UnixNano()) / uint64(time.Millisecond)
 }
