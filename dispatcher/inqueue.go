@@ -107,3 +107,8 @@ func (disp *Dispatcher) CallIfIdle(timeout time.Duration, callback func()) bool 
 	callback()
 	return true
 }
+
+func (disp *Dispatcher) CallWhenIdle(callback func()) {
+	for !disp.CallIfIdle(1*time.Second, callback) {
+	}
+}
