@@ -59,7 +59,7 @@ func (disp *Dispatcher) dispatcherInputLoop() {
 		//logf(5, "dispatcherInputLoop: received %+v", msg)
 
 		if msg.doNotStartBefore > disp.getQuantCount() {
-			// delyed: put it back to queue
+			// delayed: put it back to queue
 			_ = disp.queue.Put(msg)
 			disp.incQuantCount()
 			continue

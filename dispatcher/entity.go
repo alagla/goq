@@ -46,6 +46,11 @@ func (ent *Entity) OutSize() int64 {
 	return ent.outSize
 }
 
+// not thread safe!!! Only to be be called from EntityCore::Call, for debugging purposes
+func (ent *Entity) GetQuantCount() uint64 {
+	return ent.dispatcher.getQuantCount()
+}
+
 func (ent *Entity) joinEnvironment(env *environment, limit int) {
 	ent.joined = append(ent.joined, env)
 	ent.checkStart()
@@ -117,7 +122,7 @@ func (ent *Entity) entityLoop() {
 			if msg.lastWithinLimit {
 				// postpone to new quant
 				for _, affectInfo := range ent.affecting {
-					_ = ent.dispatcher.postEffect("", affectInfo.environment, res, 0, false)
+					_ = ent.dispatcher.postEffect("", affectInfo.environment, res, affectInfo.delay, false)
 				}
 			} else {
 				for _, affectInfo := range ent.affecting {

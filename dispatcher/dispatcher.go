@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Workiva/go-datastructures/queue"
 	. "github.com/iotaledger/iota.go/trinary"
+	"math"
 	"sync"
 	"time"
 )
@@ -52,6 +53,14 @@ func (disp *Dispatcher) NewEntity(opt EntityOpts) *Entity {
 		core:       opt.Core,
 	}
 	return ret
+}
+
+func (disp *Dispatcher) GetQuantCount() uint64 {
+	if !disp.environmentLock.Acquire(disp.timeout) {
+		return math.MaxUint64
+	}
+	defer disp.environmentLock.Release()
+	return disp.quantCount
 }
 
 func (disp *Dispatcher) getQuantCount() uint64 {
@@ -117,6 +126,14 @@ func (disp *Dispatcher) Attach(entity *Entity, joins, affects map[string]int) er
 	return nil
 }
 
+func (disp *Dispatcher) Join(envName string, entity *Entity, limit int) error {
+	return disp.Attach(entity, map[string]int{envName: limit}, nil)
+}
+
+func (disp *Dispatcher) Affect(envName string, entity *Entity, delay int) error {
+	return disp.Attach(entity, nil, map[string]int{envName: delay})
+}
+
 func (disp *Dispatcher) DeleteEnvironment(envName string) error {
 	if !disp.environmentLock.Acquire(disp.timeout) {
 		return fmt.Errorf("request lock timeout: can't delete environment")
@@ -141,6 +158,14 @@ func (disp *Dispatcher) QuantStart(envName string, effect Trits, waveMode bool, 
 	return disp.quantStart(env, effect, waveMode, onQuantFinish)
 }
 
+func (disp *Dispatcher) resetCallCounters() {
+	for _, env := range disp.environments {
+		for _, joinInfo := range env.joins {
+			joinInfo.count = 0
+		}
+	}
+}
+
 func (disp *Dispatcher) quantStart(env *environment, effect Trits, waveMode bool, onQuantFinish func()) error {
 	if disp.waveCoo.isWaveMode() {
 		return fmt.Errorf("wave is already running")
@@ -149,6 +174,8 @@ func (disp *Dispatcher) quantStart(env *environment, effect Trits, waveMode bool
 	if effect, err = env.adjustEffect(effect); err != nil {
 		return err
 	}
+
+	disp.resetCallCounters()
 
 	disp.waveCoo.setWaveMode(waveMode)
 	disp.quantWG.Add(1)

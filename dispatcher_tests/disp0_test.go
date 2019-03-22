@@ -6,49 +6,9 @@ import (
 	. "github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/utils"
 	"testing"
-	"time"
 )
 
-var dispatcher = NewDispatcher(1 * time.Second)
-
-type mockEntityCore struct {
-	name       string
-	state      int64
-	maxCounter int64
-}
-
-func newMockEntityCore(name string, maxCounter int64) *mockEntityCore {
-	return &mockEntityCore{
-		name:       name,
-		maxCounter: maxCounter,
-	}
-}
-
-func newMockEntity(id int, maxCount int64) *Entity {
-	name := fmt.Sprintf("mock_%v", id)
-	return dispatcher.NewEntity(EntityOpts{
-		Name:    name,
-		InSize:  81,
-		OutSize: 81,
-		Core:    newMockEntityCore(name, maxCount),
-	})
-}
-
-func (core *mockEntityCore) Call(args Trits, res Trits) bool {
-	// + 1 to arg -> result -> state
-	core.state = TritsToInt(args) + 1
-	//if core.state % 1000 == 0{
-	//	fmt.Printf("core state '%v' set to %v\n", core.name, core.state)
-	//}
-	copy(res, IntToTrits(core.state))
-	return core.maxCounter > 0 && core.state >= core.maxCounter
-}
-
-func envName(id int) string {
-	return fmt.Sprintf("mock_environment_#%v", id)
-}
-
-const postTimes0 = 1000000
+const postTimes0 = 100000
 
 func TestPostEffect0(t *testing.T) {
 	fmt.Printf("\nTest 0: posting %v effects to one mock environment\n", postTimes0)
@@ -70,13 +30,15 @@ func TestPostEffect0(t *testing.T) {
 			return
 		}
 	}
-	durationSec := float64(utils.UnixMsNow()-start) / 1000
-	fmt.Printf("Posting %v posts per second\n", int(postTimes0/durationSec))
+	if durationSec := float64(utils.UnixMsNow()-start) / 1000; durationSec > 0.01 {
+		fmt.Printf("Posting %v posts per second\n", int(postTimes0/durationSec))
+	}
 
 	core := entity.GetCore().(*mockEntityCore)
 	dispatcher.CallWhenIdle(func() {
-		durationSec := float64(utils.UnixMsNow()-start) / 1000
-		fmt.Printf("Processing speed %v waves per second\n", int(postTimes0/durationSec))
+		if durationSec := float64(utils.UnixMsNow()-start) / 1000; durationSec > 0.01 {
+			fmt.Printf("Processing speed %v waves per second\n", int(postTimes0/durationSec))
+		}
 
 		if core.state != 1 {
 			t.Errorf("failed with wrong state %v != expected %v", core.state, postTimes0)
@@ -90,7 +52,7 @@ func TestPostEffect0(t *testing.T) {
 	})
 }
 
-const postTimes1 = 1000
+const postTimes1 = 100
 const chainLen1 = 500
 
 func TestPostEffect1(t *testing.T) {
@@ -124,13 +86,14 @@ func TestPostEffect1(t *testing.T) {
 			return
 		}
 	}
-	durationSec := float64(utils.UnixMsNow()-start) / 1000
-	fmt.Printf("Posting %v posts per second\n", int(postTimes1/durationSec))
+	if durationSec := float64(utils.UnixMsNow()-start) / 1000; durationSec > 0.01 {
+		fmt.Printf("Posting %v posts per second\n", int(postTimes1/durationSec))
+	}
 
 	dispatcher.CallWhenIdle(func() {
-		durationSec := float64(utils.UnixMsNow()-start) / 1000
-		fmt.Printf("Processing speed %v waves per second\n", int(postTimes1*chainLen1/durationSec))
-
+		if durationSec := float64(utils.UnixMsNow()-start) / 1000; durationSec > 0.01 {
+			fmt.Printf("Processing speed %v waves per second\n", int(postTimes1*chainLen1/durationSec))
+		}
 		for i, core := range cores {
 			if core.state != int64(i+1) {
 				t.Errorf("failed with wrong state %v != expected %v", core.state, postTimes1+i)
@@ -152,7 +115,7 @@ func TestPostEffect1(t *testing.T) {
 // Ten mock entity return null value
 
 const chainLen2 = 500
-const maxCount = chainLen2 + 1000000 // must be maxCount >= chainLen2 for test to be correct
+const maxCount = chainLen2 + 100000 // must be maxCount >= chainLen2 for test to be correct
 
 func TestPostEffect2(t *testing.T) {
 	fmt.Printf("\nTest 2: posting 1 effect to environment '%v'.\n%v environments connected in cycle. Max count: %v '\n",
