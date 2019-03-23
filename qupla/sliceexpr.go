@@ -16,22 +16,22 @@ type QuplaSliceExpr struct {
 }
 
 func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaSliceExpr, error) {
-	var err error
 	ret := &QuplaSliceExpr{
 		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
 		offset:        exprYAML.Offset,
 		size:          exprYAML.SliceSize,
 	}
 	module.IncStat("numSliceExpr")
-	var vi *VarInfo
-	if vi, err = scope.GetVarInfo(exprYAML.Var); err != nil {
-		return nil, err
+	ret.varScope = scope.(*QuplaFuncDef)
+	vi := ret.varScope.VarByName(exprYAML.Var)
+	if vi == nil {
+		return nil, fmt.Errorf("can't find var '%v' in '%v'", exprYAML.Var, ret.varScope.name)
 	}
 	ret.localVarIdx = vi.Idx
 	if ret.localVarIdx < 0 {
 		return nil, fmt.Errorf("can't find local variable '%v' in scope '%v'", exprYAML.Var, scope.GetName())
 	}
-	ret.varScope = scope.(*QuplaFuncDef)
+	// can't do it because in recursive situations var can be not analysed yet
 	//if ret.offset+ret.size > vi.Size {
 	//	return nil, fmt.Errorf("wrong offset/size for the slice of '%v'", exprYAML.Var)
 	//}

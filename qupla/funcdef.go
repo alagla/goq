@@ -9,7 +9,6 @@ import (
 )
 
 type QuplaFuncDef struct {
-	yamlSource        *QuplaFuncDefYAML // needed for analysis phase only
 	module            ModuleInterface
 	joins             map[string]int
 	affects           map[string]int
@@ -49,6 +48,16 @@ func (def *QuplaFuncDef) References(funName string) bool {
 	return def.retExpr.References(funName)
 }
 
+func NewQuplaFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) *QuplaFuncDef {
+	return &QuplaFuncDef{
+		module:   module,
+		name:     name,
+		joins:    make(map[string]int),
+		affects:  make(map[string]int),
+		argSizes: make([]int64, 0, len(defYAML.Params)),
+	}
+}
+
 func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) error {
 	var err error
 	defer func(perr *error) {
@@ -59,15 +68,9 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 
 	module.IncStat("numFuncDef")
 
-	def := &QuplaFuncDef{
-		yamlSource: defYAML,
-		module:     module,
-		name:       name,
-		joins:      make(map[string]int),
-		affects:    make(map[string]int),
-		argSizes:   make([]int64, 0, len(defYAML.Params)),
-	}
-	if err = def.AnalyzeEnvironmentStatements(); err != nil {
+	def := NewQuplaFuncDef(name, defYAML, module)
+
+	if err = def.AnalyzeEnvironmentStatements(defYAML); err != nil {
 		return err
 	}
 	if def.HasEnvStmt() {
@@ -89,10 +92,10 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 	module.AddFuncDef(name, def)
 
 	// build var scope
-	if err = def.createVarScope(); err != nil {
+	if err = def.createVarScope(defYAML); err != nil {
 		return err
 	}
-	if err = def.analyzeAssigns(); err != nil {
+	if err = def.analyzeAssigns(defYAML); err != nil {
 		return err
 	}
 	if err = def.finalizeLocalVars(); err != nil {
@@ -116,8 +119,8 @@ func (def *QuplaFuncDef) ArgSize() int64 {
 	return def.argSize
 }
 
-func (def *QuplaFuncDef) AnalyzeEnvironmentStatements() error {
-	for _, envYAML := range def.yamlSource.Env {
+func (def *QuplaFuncDef) AnalyzeEnvironmentStatements(defYAML *QuplaFuncDefYAML) error {
+	for _, envYAML := range defYAML.Env {
 		switch envYAML.Type {
 		case "join":
 			p := 1
@@ -180,43 +183,45 @@ func (def *QuplaFuncDef) VarByName(name string) *VarInfo {
 	return def.VarByIdx(def.GetVarIdx(name))
 }
 
-func (def *QuplaFuncDef) GetVarInfo(name string) (*VarInfo, error) {
-	ret := def.VarByName(name)
-	if ret == nil {
-		return nil, nil
+func (def *QuplaFuncDef) AnalyzeVar(vi *VarInfo, defYAML *QuplaFuncDefYAML) error {
+	if vi.Analyzed {
+		return nil
+		//panic(fmt.Errorf("attempt to analyze variable '%v' twice in '%v'", vi.Name, def.name))
 	}
-	if ret.Analyzed {
-		return ret, nil
+	vi.Analyzed = true
+
+	if vi.IsParam {
+		vi.Assign = nil
+		return nil
+	}
+	e, ok := defYAML.Assigns[vi.Name]
+	if !ok {
+		return fmt.Errorf("inconsistency with vars")
 	}
 	var err error
-	ret.Analyzed = true
-
-	if ret.IsParam {
-		// param
-		ret.Assign = nil
+	if vi.Assign, err = def.module.AnalyzeExpression(e, def); err != nil {
+		return err
+	}
+	if vi.IsState {
+		if vi.Size != vi.Assign.Size() {
+			return fmt.Errorf("expression and state variable has different sizes in the assign")
+		}
 	} else {
-		// local var (can be state)
-		realVarName := name
-		e, ok := def.yamlSource.Assigns[realVarName]
-		if !ok {
-			return nil, fmt.Errorf("inconsistency with vars")
-		}
-		if ret.Assign, err = def.module.AnalyzeExpression(e, def); err != nil {
-			return ret, err
-		}
-		if ret.IsState {
-			if ret.Size != ret.Assign.Size() {
-				return nil, fmt.Errorf("expression and state variable has different sizes in the assign")
-			}
-		} else {
-			ret.Size = ret.Assign.Size()
-		}
+		vi.Size = vi.Assign.Size()
+	}
+	return nil
+}
+
+func (def *QuplaFuncDef) GetVarInfo(name string) (*VarInfo, error) {
+	ret := def.VarByName(name)
+	if !ret.Analyzed {
+		// can only be called after analysis is completed
+		panic(fmt.Errorf("var '%v' is not analyzed in '%v'", name, def.name))
 	}
 	return ret, nil
 }
 
-func (def *QuplaFuncDef) createVarScope() error {
-	src := def.yamlSource
+func (def *QuplaFuncDef) createVarScope(src *QuplaFuncDefYAML) error {
 	def.localVars = make([]*VarInfo, 0, len(src.Params)+len(src.Assigns))
 	// function parameters (first numParams)
 	def.numParams = int64(len(src.Params))
@@ -276,11 +281,15 @@ func (def *QuplaFuncDef) createVarScope() error {
 	return nil
 }
 
-func (def *QuplaFuncDef) analyzeAssigns() error {
+func (def *QuplaFuncDef) analyzeAssigns(defYAML *QuplaFuncDefYAML) error {
 	var err error
-	for name := range def.yamlSource.Assigns {
+	for name := range defYAML.Assigns {
 		// GetVarInfo analyzes expression if necessary
-		if _, err = def.GetVarInfo(name); err != nil {
+		vi := def.VarByName(name)
+		if vi == nil {
+			panic(fmt.Errorf("analyzing assigns: can't find var '%v' in '%v'", name, def.name))
+		}
+		if err = def.AnalyzeVar(vi, defYAML); err != nil {
 			return err
 		}
 	}
