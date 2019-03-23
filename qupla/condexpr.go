@@ -1,7 +1,7 @@
 package qupla
 
 import (
-	"fmt"
+	. "fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
 )
@@ -32,5 +32,5 @@ func (e *QuplaCondExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	case -1:
 		return true
 	}
-	panic(fmt.Sprintf("trit value in cond expr '%v'", e.source))
+	panic(Sprintf("trit value in cond expr '%v'", e.source))
 }

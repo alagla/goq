@@ -4,23 +4,19 @@ import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
 	"github.com/lunfardo314/goq/dispatcher"
-	"github.com/lunfardo314/goq/entities"
 	. "github.com/lunfardo314/goq/utils"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"strings"
 )
 
 type QuplaModule struct {
-	yamlSource   *QuplaModuleYAML
 	name         string
-	factory      ExpressionFactory
 	types        map[string]*QuplaTypeDef
 	luts         map[string]*QuplaLutDef
-	functions    map[string]*QuplaFuncDef
+	Functions    map[string]*QuplaFuncDef
 	execs        []*QuplaExecStmt
 	stats        map[string]int
 	processor    ProcessorInterface
-	environments StringSet
+	Environments StringSet
 }
 
 type QuplaTypeField struct {
@@ -33,79 +29,17 @@ type QuplaTypeDef struct {
 	fields map[string]*QuplaTypeField
 }
 
-func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML, factory ExpressionFactory) (*QuplaModule, bool) {
-	ret := &QuplaModule{
-		yamlSource:   moduleYAML,
+func NewQuplaModule(name string) *QuplaModule {
+	return &QuplaModule{
 		name:         name,
-		factory:      factory,
 		types:        make(map[string]*QuplaTypeDef),
 		luts:         make(map[string]*QuplaLutDef),
-		functions:    make(map[string]*QuplaFuncDef),
-		execs:        make([]*QuplaExecStmt, 0, len(moduleYAML.Execs)),
+		Functions:    make(map[string]*QuplaFuncDef),
+		execs:        make([]*QuplaExecStmt, 0, 10),
 		stats:        make(map[string]int),
 		processor:    NewStackProcessor(),
-		environments: make(StringSet),
+		Environments: make(StringSet),
 	}
-	//infof("Analyzing types..")
-	//for name, td := range moduleYAML.Types {
-	//	_ = ret.AnalyzeType(name, td)
-	//}
-
-	retSucc := true
-	logf(0, "Analyzing execs (tests and evals)..")
-	for _, execYAML := range moduleYAML.Execs {
-		err := AnalyzeExecStmt(execYAML, ret)
-		if err != nil {
-			ret.IncStat("numErr")
-			errorf("%v", err)
-			retSucc = false
-		}
-	}
-	analyzedFunDefs := len(ret.functions)
-	logf(0, "Number of functions directly or indirectly referenced by execs: %v", analyzedFunDefs)
-
-	logf(0, "Analyzing all functions, which were not analyzed yet")
-	for funName := range moduleYAML.Functions {
-		if _, err := ret.FindFuncDef(funName); err != nil {
-			ret.IncStat("numErr")
-			errorf("%v", err)
-			retSucc = false
-		}
-	}
-	logf(0, "Additionally were analyzed %v functions", len(ret.functions)-analyzedFunDefs)
-
-	logf(0, "Determining stateful functions")
-	numWithStateVars, numStateful := ret.markStateful()
-	logf(0, "Found %v func def with state vars and %v stateful functions (which references them)",
-		numWithStateVars, numStateful)
-
-	if n, ok := ret.stats["numEnvFundef"]; ok {
-		logf(0, "Functions joins/affects environments: %v", n)
-	} else {
-		logf(0, "No function joins/affects environments")
-	}
-	for funname, fundef := range ret.functions {
-		if fundef.HasEnvStmt() {
-			joins := StringSet{}
-			for e, p := range fundef.GetJoinEnv() {
-				joins.Append(fmt.Sprintf("%v(%v)", e, p))
-			}
-			affects := StringSet{}
-			for e, p := range fundef.GetAffectEnv() {
-				affects.Append(fmt.Sprintf("%v(%v)", e, p))
-			}
-			ret.environments.AppendAll(affects)
-			ret.environments.AppendAll(joins)
-			logf(1, "    Function '%v' joins: '%v', affects: '%v'",
-				funname, joins.Join(","), affects.Join(","))
-		}
-	}
-	if len(ret.environments) > 0 {
-		logf(0, "Environments detected: '%v'", ret.environments.Join(", "))
-	} else {
-		logf(0, "Environments detected: none")
-	}
-	return ret, retSucc
 }
 
 func (module *QuplaModule) GetName() string {
@@ -123,56 +57,34 @@ func (module *QuplaModule) GetTypeFieldInfo(typeName, fldName string) (int64, in
 	return fi.offset, fi.size, nil
 }
 
-func (module *QuplaModule) AnalyzeExpression(data interface{}, scope FuncDefInterface) (ExpressionInterface, error) {
-	return module.factory.AnalyzeExpression(data, module, scope)
-}
-
 func (module *QuplaModule) AddExec(exec *QuplaExecStmt) {
 	exec.idx = len(module.execs)
 	module.execs = append(module.execs, exec)
 }
 
-func (module *QuplaModule) AddFuncDef(name string, funcDef FuncDefInterface) {
-	module.functions[name] = funcDef.(*QuplaFuncDef)
+func (module *QuplaModule) AddFuncDef(name string, funcDef *QuplaFuncDef) error {
+	if _, ok := module.Functions[name]; ok {
+		return fmt.Errorf("duplicate function degfinition '%v'", name)
+	}
+	module.Functions[name] = funcDef
+	return nil
 }
 
-func (module *QuplaModule) AddLutDef(name string, lutDef LUTInterface) {
-	module.luts[name] = lutDef.(*QuplaLutDef)
+func (module *QuplaModule) AddLutDef(name string, lutDef *QuplaLutDef) {
+	module.luts[name] = lutDef
 }
 
-func (module *QuplaModule) FindFuncDef(name string) (FuncDefInterface, error) {
-	var err error
-	ret, ok := module.functions[name]
-	if ok {
-		return ret, nil
+func (module *QuplaModule) FindFuncDef(name string) *QuplaFuncDef {
+	if ret, ok := module.Functions[name]; ok {
+		return ret
 	}
-	src, ok := module.yamlSource.Functions[name]
-	if !ok {
-		return nil, fmt.Errorf("can't find function definition '%v'", name)
-	}
-	err = AnalyzeFuncDef(name, src, module)
-	if err != nil {
-		return nil, fmt.Errorf("error while anlyzing fun def '%v': %v", name, err)
-	}
-	return module.functions[name], nil
+	return nil
 }
 
-func (module *QuplaModule) FindLUTDef(name string) (LUTInterface, error) {
-	var err error
+func (module *QuplaModule) FindLUTDef(name string) (*QuplaLutDef, error) {
 	ret, ok := module.luts[name]
-	if ok {
-		return ret, nil
-	}
-	src, ok := module.yamlSource.Luts[name]
 	if !ok {
-		return nil, fmt.Errorf("can't find LUT dfinition '%v'", name)
-	}
-	err = AnalyzeLutDef(name, src, module)
-	if err != nil {
-		return nil, err
-	}
-	if ret, ok = module.luts[name]; !ok {
-		return nil, fmt.Errorf("inconsistency while analyzing LUT '%v'", name)
+		return nil, fmt.Errorf("can't find LUT definition '%v'", name)
 	}
 	return ret, nil
 }
@@ -200,10 +112,10 @@ func (module *QuplaModule) PrintStats() {
 	}
 }
 
-func (module *QuplaModule) markStateful() (int, int) {
+func (module *QuplaModule) MarkStateful() (int, int) {
 	stateful := make(StringSet)
-	for name, fd := range module.functions {
-		if fd.hasStateVariables {
+	for name, fd := range module.Functions {
+		if fd.HasStateVariables {
 			stateful.Append(name)
 		}
 	}
@@ -213,7 +125,7 @@ func (module *QuplaModule) markStateful() (int, int) {
 	}
 
 	for name := range stateful {
-		module.functions[name].hasState = true
+		module.Functions[name].hasState = true
 	}
 	return hasStateVars, len(stateful)
 }
@@ -225,7 +137,7 @@ func (module *QuplaModule) collectReferencingFuncs(nameSet StringSet) int {
 	}
 	ret := 0
 	for _, statefulName := range tmpList {
-		for name, fd := range module.functions {
+		for name, fd := range module.Functions {
 			if fd.References(statefulName) {
 				if nameSet.Append(name) {
 					ret++
@@ -238,11 +150,11 @@ func (module *QuplaModule) collectReferencingFuncs(nameSet StringSet) int {
 
 func (module *QuplaModule) AttachToDispatcher(disp *dispatcher.Dispatcher) bool {
 	ret := true
-	for _, funcdef := range module.functions {
+	for _, funcdef := range module.Functions {
 		if !funcdef.HasEnvStmt() {
 			continue
 		}
-		entity := entities.NewFunctionEntity(disp, funcdef, NewStackProcessor())
+		entity := NewFunctionEntity(disp, funcdef, NewStackProcessor())
 		if err := disp.Attach(entity, funcdef.GetJoinEnv(), funcdef.GetAffectEnv()); err != nil {
 			logf(0, "error while attaching entity to dispatcher: %v", err)
 			ret = false
@@ -258,42 +170,42 @@ func (module *QuplaModule) ExecByIdx(idx int) *QuplaExecStmt {
 	return module.execs[idx]
 }
 
-//func (module *QuplaModule) AnalyzeType(name string, src *QuplaTypeDefYAML) bool {
-//	if _, ok := module.types[name]; ok {
-//		errorf("duplicate type name %v", name)
+//func (module *QuplaModule) AnalyzeType(Name string, src *QuplaTypeDefYAML) bool {
+//	if _, ok := module.types[Name]; ok {
+//		errorf("duplicate type Name %v", Name)
 //		module.IncStat("numErr")
 //		return false
 //	}
 //	ret := &QuplaTypeDef{
-//		fields: make(map[string]*QuplaTypeField),
+//		Fields: make(map[string]*QuplaTypeField),
 //	}
 //	if src.Size != "*" {
 //		if sz, err := strconv.Atoi(src.Size); err != nil {
-//			errorf("wrong size '%v' in type '%v'", src.Size, name)
+//			errorf("wrong Size '%v' in type '%v'", src.Size, Name)
 //			module.IncStat("numErr")
 //			return false
 //		} else {
-//			ret.size = int64(sz)
-//			module.types[name] = ret
+//			ret.Size = int64(sz)
+//			module.types[Name] = ret
 //			return true
 //		}
 //	}
 //
-//	var offset int64
+//	var Offset int64
 //	for fldname, fld := range src.Fields {
 //		if sz, err := strconv.Atoi(fld.Size); err != nil {
-//			errorf("wrong size '%v' in field '%v' of type '%v'", fld.Size, fldname, name)
+//			errorf("wrong Size '%v' in field '%v' of type '%v'", fld.Size, fldname, Name)
 //			module.IncStat("numErr")
 //			return false
 //
 //		} else {
-//			ret.fields[fldname] = &QuplaTypeField{
-//				offset: offset,
-//				size:   int64(sz),
+//			ret.Fields[fldname] = &QuplaTypeField{
+//				Offset: Offset,
+//				Size:   int64(sz),
 //			}
-//			offset += ret.size
+//			Offset += ret.Size
 //		}
 //	}
-//	module.types[name] = ret
+//	module.types[Name] = ret
 //	return true
 //}

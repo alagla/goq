@@ -3,7 +3,6 @@ package qupla
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
 type QuplaNullExpr struct {
@@ -14,11 +13,6 @@ type QuplaNullExpr struct {
 func IsNullExpr(e interface{}) bool {
 	_, ok := e.(*QuplaNullExpr)
 	return ok
-}
-
-func AnalyzeNullExpr(_ *QuplaNullExprYAML, module ModuleInterface, _ FuncDefInterface) (*QuplaNullExpr, error) {
-	module.IncStat("nullExpr")
-	return &QuplaNullExpr{}, nil
 }
 
 func (e *QuplaNullExpr) Size() int64 {

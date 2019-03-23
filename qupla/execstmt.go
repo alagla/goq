@@ -3,66 +3,31 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/dispatcher"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"time"
 )
 
 type QuplaExecStmt struct {
 	QuplaExprBase
-	isTest        bool
-	isFloat       bool // needed for float comparison
-	funcExpr      *QuplaFuncExpr
-	valueExpected Trits
-	module        *QuplaModule
-	idx           int
-	evalEntity    *Entity
+	isTest   bool
+	isFloat  bool // needed for float comparison
+	expected Trits
+
+	expr       *QuplaFuncExpr
+	module     *QuplaModule
+	idx        int
+	evalEntity *Entity
 }
 
-func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error {
-	var err error
-	var expr ExpressionInterface
-	var ok bool
-	expr, err = module.factory.AnalyzeExpression(execStmtYAML.Expr, module, nil)
-	if err != nil {
-		return err
-	}
-	var funcExpr *QuplaFuncExpr
-	if funcExpr, ok = expr.(*QuplaFuncExpr); !ok {
-		return fmt.Errorf("top expression must be call to a function: '%v'", execStmtYAML.Source)
-	}
-	res := &QuplaExecStmt{
-		QuplaExprBase: NewQuplaExprBase(execStmtYAML.Source),
+func NewQuplaExecStmt(src string, expr *QuplaFuncExpr, isTest, isFloat bool, expected Trits, module *QuplaModule) *QuplaExecStmt {
+	return &QuplaExecStmt{
+		QuplaExprBase: NewQuplaExprBase(src),
+		isTest:        isTest,
+		isFloat:       isFloat,
+		expected:      expected,
+		expr:          expr,
 		module:        module,
-		funcExpr:      funcExpr,
 	}
-
-	res.isTest = execStmtYAML.Expected != nil
-	var exprExpected ExpressionInterface
-	if res.isTest {
-		res.isFloat = execStmtYAML.IsFloat
-		exprExpected, err = module.factory.AnalyzeExpression(execStmtYAML.Expected, module, nil)
-		if err != nil {
-			return err
-		}
-		// check sizes
-		if err = MatchSizes(funcExpr, exprExpected); err != nil {
-			return err
-		}
-
-		ve, ok := exprExpected.(*QuplaValueExpr)
-		if !ok {
-			return fmt.Errorf("test '%v': left hand side must be ValueExpr", res.GetSource())
-		}
-		res.valueExpected = ve.TritValue
-		module.IncStat("numTest")
-	} else {
-		res.valueExpected = nil
-		module.IncStat("numEval")
-	}
-	module.AddExec(res)
-	return nil
 }
 
 func (ex *QuplaExecStmt) GetName() string {
@@ -74,7 +39,7 @@ func (ex *QuplaExecStmt) GetIdx() int {
 }
 
 func (ex *QuplaExecStmt) HasState() bool {
-	return ex.funcExpr.funcDef.hasState
+	return ex.expr.FuncDef.hasState
 }
 
 func (ex *QuplaExecStmt) evalEnvironmentName() string {
@@ -116,17 +81,17 @@ func (ex *QuplaExecStmt) Run(disp *Dispatcher, repeat int) error {
 }
 
 func (ex *QuplaExecStmt) resultIsExpected(result Trits) bool {
-	passed, _ := TritsEqual(result, ex.valueExpected)
+	passed, _ := TritsEqual(result, ex.expected)
 	if passed {
 		return true
 	}
-	if len(result) != len(ex.valueExpected) {
+	if len(result) != len(ex.expected) {
 		return false
 	}
 	if !ex.isFloat {
 		return false
 	}
-	dif0 := result[0] - ex.valueExpected[0]
+	dif0 := result[0] - ex.expected[0]
 	if dif0 < 0 {
 		dif0 = -dif0
 	}
@@ -136,7 +101,7 @@ func (ex *QuplaExecStmt) resultIsExpected(result Trits) bool {
 	if len(result) == 1 {
 		return true
 	}
-	passed, _ = TritsEqual(result[1:], ex.valueExpected[1:])
+	passed, _ = TritsEqual(result[1:], ex.expected[1:])
 	return passed
 
 }
@@ -153,7 +118,7 @@ type execEvalCore struct {
 
 func (ec *execEvalCore) Call(_ Trits, res Trits) bool {
 	start := unixMsNow()
-	null := ec.exec.module.processor.Eval(ec.exec.funcExpr, res)
+	null := ec.exec.module.processor.Eval(ec.exec.expr, res)
 	ec.numRun++
 	ec.totalDurationMsec += unixMsNow() - start
 	ec.lastResult = res
@@ -164,12 +129,12 @@ func (ec *execEvalCore) Call(_ Trits, res Trits) bool {
 }
 
 func (ex *QuplaExecStmt) newEvalEntity(disp *Dispatcher) *Entity {
-	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.funcExpr.GetSource())
+	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.expr.GetSource())
 	core := &execEvalCore{exec: ex}
 	return disp.NewEntity(EntityOpts{
 		Name:    name,
 		InSize:  0,
-		OutSize: ex.funcExpr.Size(),
+		OutSize: ex.expr.Size(),
 		Core:    core,
 	})
 }

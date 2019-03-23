@@ -1,4 +1,4 @@
-package entities
+package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
@@ -7,7 +7,7 @@ import (
 )
 
 type functionEntityCore struct {
-	funcDef FuncDefInterface
+	funcDef *QuplaFuncDef
 	proc    ProcessorInterface
 }
 
@@ -19,9 +19,9 @@ func (fc *functionEntityCore) Call(args Trits, res Trits) bool {
 	return fc.proc.Eval(expr, res)
 }
 
-func NewFunctionEntity(disp *Dispatcher, funcDef FuncDefInterface, proc ProcessorInterface) *Entity {
+func NewFunctionEntity(disp *Dispatcher, funcDef *QuplaFuncDef, proc ProcessorInterface) *Entity {
 	return disp.NewEntity(EntityOpts{
-		Name:    funcDef.GetName(),
+		Name:    funcDef.Name,
 		InSize:  funcDef.ArgSize(),
 		OutSize: funcDef.Size(),
 		Core:    &functionEntityCore{funcDef, proc},

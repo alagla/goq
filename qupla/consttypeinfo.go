@@ -4,19 +4,25 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
-	"strconv"
 )
 
 type ConstTypeFieldInfo struct {
-	offset int64
-	size   int64
+	Offset int64
+	Size   int64
 }
 
 type ConstTypeInfo struct {
 	name   string
 	size   int64
-	fields map[string]*ConstTypeFieldInfo
+	Fields map[string]*ConstTypeFieldInfo
+}
+
+func NewConstTypeInfo(name string, size int64) *ConstTypeInfo {
+	return &ConstTypeInfo{
+		name:   name,
+		size:   size,
+		Fields: make(map[string]*ConstTypeFieldInfo, 5),
+	}
 }
 
 func (e *ConstTypeInfo) GetConstValue() int64 {
@@ -44,38 +50,9 @@ func (e *ConstTypeInfo) References(_ string) bool {
 }
 
 func (e *ConstTypeInfo) GetFieldInfo(fldname string) (*ConstTypeFieldInfo, error) {
-	fi, ok := e.fields[fldname]
+	fi, ok := e.Fields[fldname]
 	if !ok {
 		return nil, fmt.Errorf("can;t find field '%v' in type '%v'", fldname, e.name)
 	}
 	return fi, nil
-}
-
-func AnalyzeConstTypeName(exprYAML *QuplaConstTypeNameYAML, _ ModuleInterface, funcDef FuncDefInterface) (ConstExpression, error) {
-	ret := &ConstTypeInfo{
-		name:   exprYAML.TypeName,
-		fields: make(map[string]*ConstTypeFieldInfo),
-	}
-	if sz, err := strconv.Atoi(exprYAML.SizeString); err != nil {
-		return nil, err
-	} else {
-		ret.size = int64(sz)
-	}
-	var err error
-	var size, offset int
-
-	for fldname, fld := range exprYAML.Fields {
-		if size, err = strconv.Atoi(fld.SizeString); err == nil {
-			offset, err = strconv.Atoi(fld.OffsetString)
-		}
-		if err != nil {
-			return nil, fmt.Errorf("wrong size or offset in field '%v' in type info '%v in func def '%v': %v",
-				fldname, exprYAML.TypeName, funcDef.GetName(), err)
-		}
-		ret.fields[fldname] = &ConstTypeFieldInfo{
-			offset: int64(offset),
-			size:   int64(size),
-		}
-	}
-	return ret, nil
 }

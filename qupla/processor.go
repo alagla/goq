@@ -43,7 +43,7 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 		if proc.levelFunc > proc.maxLevelFunc {
 			proc.maxLevelFunc = proc.levelFunc
 		}
-		proc.tracef("IN funExpr '%v'", funExpr.funcDef.GetName())
+		proc.tracef("IN funExpr '%v'", funExpr.FuncDef.Name)
 
 		proc.curFrame = funExpr.NewCallFrame(proc.curFrame)
 	} else {
@@ -54,7 +54,7 @@ func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
 	}
 	null := expr.Eval(proc, result)
 	if isFunction {
-		proc.tracef("OUT funExpr '%v' null = %v res = '%v'", funExpr.funcDef.GetName(), null, utils.TritsToString(result))
+		proc.tracef("OUT funExpr '%v' null = %v res = '%v'", funExpr.FuncDef.Name, null, utils.TritsToString(result))
 		proc.levelFunc--
 		proc.curFrame = proc.curFrame.parent
 	} else {
@@ -81,7 +81,7 @@ func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 	if proc.curFrame == nil {
 		panic("variable can't be evaluated in nil context")
 	}
-	vi := proc.curFrame.context.funcDef.VarByIdx(idx)
+	vi := proc.curFrame.context.FuncDef.VarByIdx(idx)
 	if vi == nil {
 		panic("wrong var idx")
 	}
@@ -91,24 +91,24 @@ func (proc *StackProcessor) EvalVar(idx int64) (Trits, bool) {
 	if proc.curFrame.valueTag[vi.Idx]&0x01 != 0 {
 		isNull := proc.curFrame.valueTag[vi.Idx]&0x02 != 0
 		proc.tracef("EvalVar %v(%v) in '%v': already evaluated to '%v' null = %v",
-			vi.Name, idx, proc.curFrame.context.funcDef.name, utils.TritsToString(ret), isNull)
+			vi.Name, idx, proc.curFrame.context.FuncDef.Name, utils.TritsToString(ret), isNull)
 		return ret, isNull
 	}
 	if vi.IsParam {
 		expr := proc.curFrame.context.subexpr[vi.Idx]
 		proc.tracef("EvalVar %v(idx=%v) in '%v' param=true expr = '%v'",
-			vi.Name, idx, proc.curFrame.context.funcDef.name, expr.GetSource())
+			vi.Name, idx, proc.curFrame.context.FuncDef.Name, expr.GetSource())
 		saveCurFrame := proc.curFrame
 		proc.curFrame = proc.curFrame.parent
 		null = proc.Eval(expr, ret)
 		proc.curFrame = saveCurFrame
 	} else {
 		proc.tracef("EvalVar %v (idx=%v) in '%v' param=false expr = '%v'",
-			vi.Name, idx, proc.curFrame.context.funcDef.name, vi.Assign.GetSource())
+			vi.Name, idx, proc.curFrame.context.FuncDef.Name, vi.Assign.GetSource())
 		null = proc.Eval(vi.Assign, ret)
 	}
 	proc.tracef("Return EvalVar %v (idx=%v) in '%v': res = '%v' null = %v",
-		vi.Name, idx, proc.curFrame.context.funcDef.name, utils.TritsToString(ret), null)
+		vi.Name, idx, proc.curFrame.context.FuncDef.Name, utils.TritsToString(ret), null)
 
 	proc.curFrame.valueTag[vi.Idx] |= 0x01 // mark evaluated
 	if null {

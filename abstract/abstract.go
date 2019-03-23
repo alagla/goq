@@ -5,19 +5,6 @@ import (
 	. "github.com/iotaledger/iota.go/trinary"
 )
 
-type ExpressionFactory interface {
-	AnalyzeExpression(interface{}, ModuleInterface, FuncDefInterface) (ExpressionInterface, error)
-}
-
-type ModuleInterface interface {
-	GetName() string
-	AnalyzeExpression(interface{}, FuncDefInterface) (ExpressionInterface, error)
-	AddFuncDef(string, FuncDefInterface)
-	FindFuncDef(string) (FuncDefInterface, error)
-	AddLutDef(string, LUTInterface)
-	FindLUTDef(string) (LUTInterface, error)
-	IncStat(string)
-}
 type VarInfo struct {
 	Name     string
 	Analyzed bool
@@ -28,20 +15,6 @@ type VarInfo struct {
 	IsParam  bool
 	Assign   ExpressionInterface
 }
-type FuncDefInterface interface {
-	GetName() string
-	Size() int64
-	ArgSize() int64
-	GetVarInfo(string) (*VarInfo, error)
-	HasState() bool
-	NewExpressionWithArgs(Trits) (ExpressionInterface, error)
-}
-
-type LUTInterface interface {
-	Size() int64
-	Lookup(Trits, Trits) bool
-}
-
 type ExpressionInterface interface {
 	GetSource() string
 	Size() int64

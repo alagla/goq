@@ -9,17 +9,17 @@ import (
 	"strings"
 )
 
-func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module ModuleInterface, scope FuncDefInterface) (ConstExpression, error) {
+func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module *QuplaModule, scope *QuplaFuncDef) (ConstExpression, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
 	if !strings.Contains("+-", exprYAML.Operator) {
 		return nil, fmt.Errorf("wrong operator symbol %v", exprYAML.Operator)
 	}
-	if lei, err = module.AnalyzeExpression(exprYAML.Lhs, scope); err != nil {
+	if lei, err = AnalyzeExpression(exprYAML.Lhs, module, scope); err != nil {
 		return nil, err
 	}
-	if rei, err = module.AnalyzeExpression(exprYAML.Rhs, scope); err != nil {
+	if rei, err = AnalyzeExpression(exprYAML.Rhs, module, scope); err != nil {
 		return nil, err
 	}
 	var rv, lv ConstExpression
@@ -39,17 +39,17 @@ func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module ModuleInterface, scop
 	return ret, nil
 }
 
-func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module ModuleInterface, scope FuncDefInterface) (ConstExpression, error) {
+func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module *QuplaModule, scope *QuplaFuncDef) (ConstExpression, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
 	if !strings.Contains("+-", exprYAML.Operator) {
 		return nil, fmt.Errorf("wrong operator symbol %v", exprYAML.Operator)
 	}
-	if lei, err = module.AnalyzeExpression(exprYAML.Lhs, scope); err != nil {
+	if lei, err = AnalyzeExpression(exprYAML.Lhs, module, scope); err != nil {
 		return nil, err
 	}
-	if rei, err = module.AnalyzeExpression(exprYAML.Rhs, scope); err != nil {
+	if rei, err = AnalyzeExpression(exprYAML.Rhs, module, scope); err != nil {
 		return nil, err
 	}
 	var rv, lv ConstExpression
@@ -79,7 +79,7 @@ func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module ModuleInterface, scop
 	return ret, nil
 }
 
-func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ ModuleInterface, _ FuncDefInterface) (ConstExpression, error) {
+func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ *QuplaModule, _ *QuplaFuncDef) (ConstExpression, error) {
 	ret, err := strconv.Atoi(exprYAML.Value)
 	if err != nil {
 		return nil, err

@@ -49,7 +49,7 @@ func CmdLoadModule(words []string) {
 		return
 	}
 	var succ bool
-	module, succ = qupla.AnalyzeQuplaModule("single_module", moduleYAML, &analyzeyaml.ExpressionFactoryFromYAML{})
+	module, succ = analyzeyaml.AnalyzeQuplaModule("single_module", moduleYAML)
 	module.PrintStats()
 	if succ {
 		succ = module.AttachToDispatcher(dispatcherInstance)
