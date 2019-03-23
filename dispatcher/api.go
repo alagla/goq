@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Dispatcher API
+// Public dispatcher API
 
 func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
 	ret := &Dispatcher{
@@ -16,7 +16,7 @@ func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
 		accessLock:   newSema(),
 		timeout:      lockTimeout,
 	}
-	ret.accessLock.acquire(-1)
+	ret.accessLock.acquire(-1) // dispatcher starts locked
 	go ret.dispatcherInputLoop()
 	return ret
 }

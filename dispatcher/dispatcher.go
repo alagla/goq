@@ -118,7 +118,7 @@ func (disp *Dispatcher) dispatcherInputLoop() {
 
 		if msg.doNotStartBefore > disp.GetQuantCount() {
 			// delayed: put it back to queue
-			_ = disp.queue.Put(msg)
+			_ = disp.queue.Put(tmpItems[0])
 			disp.incQuantCount()
 			continue
 		}
