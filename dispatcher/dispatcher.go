@@ -2,72 +2,16 @@ package dispatcher
 
 import (
 	"fmt"
-	"github.com/Workiva/go-datastructures/queue"
 	. "github.com/iotaledger/iota.go/trinary"
-	"math"
-	"sync"
-	"time"
 )
 
 // TODO size checks when join/affect. Can be with different sizes
-
-type Dispatcher struct {
-	queue           *queue.Queue
-	idle            bool
-	quantCount      uint64
-	environments    map[string]*environment
-	environmentLock *Sema // controls environments, join, affect
-	timeout         time.Duration
-	waveCoo         *WaveCoordinator
-	quantWG         sync.WaitGroup // released when quant ends
-}
-
-func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
-	ret := &Dispatcher{
-		queue:           queue.New(5),
-		environments:    make(map[string]*environment),
-		environmentLock: NewSema(),
-		timeout:         lockTimeout,
-		waveCoo:         NewWaveCoordinator(),
-	}
-	ret.environmentLock.Acquire(-1)
-	go ret.dispatcherInputLoop()
-	return ret
-}
-
-type EntityOpts struct {
-	Name    string
-	InSize  int64
-	OutSize int64
-	Core    EntityCore
-}
-
-func (disp *Dispatcher) NewEntity(opt EntityOpts) *Entity {
-	ret := &Entity{
-		dispatcher: disp,
-		name:       opt.Name,
-		inSize:     opt.InSize,
-		outSize:    opt.OutSize,
-		affecting:  make([]*affectEntData, 0),
-		joined:     make([]*environment, 0),
-		core:       opt.Core,
-	}
-	return ret
-}
-
-func (disp *Dispatcher) GetQuantCount() uint64 {
-	if !disp.environmentLock.Acquire(disp.timeout) {
-		return math.MaxUint64
-	}
-	defer disp.environmentLock.Release()
-	return disp.quantCount
-}
-
-func (disp *Dispatcher) getQuantCount() uint64 {
-	return disp.quantCount
-}
+// TODO dispose dispatcher
+// TODO rename to 'supervisor' ??
 
 func (disp *Dispatcher) incQuantCount() {
+	disp.quantCountMutex.Lock()
+	defer disp.quantCountMutex.Unlock()
 	disp.quantCount++
 }
 
@@ -79,7 +23,7 @@ func (disp *Dispatcher) getEnvironment_(name string) *environment {
 	return env
 }
 
-func (disp *Dispatcher) getOrCreateEnvironment_(name string) *environment {
+func (disp *Dispatcher) getOrCreateEnvironment(name string) *environment {
 	ret := disp.getEnvironment_(name)
 	if ret != nil {
 		return ret
@@ -94,68 +38,6 @@ func (disp *Dispatcher) createEnvironment(name string, builtin bool) error {
 	}
 	disp.environments[name] = newEnvironment(disp, name, builtin)
 	return nil
-}
-
-func (disp *Dispatcher) CreateEnvironment(name string) error {
-	if !disp.environmentLock.Acquire(disp.timeout) {
-		return fmt.Errorf("request lock timeout: can't create environment")
-	}
-	defer disp.environmentLock.Release()
-	return disp.createEnvironment(name, false)
-}
-
-// executes 'join' and 'affect' of the entity
-func (disp *Dispatcher) Attach(entity *Entity, joins, affects map[string]int) error {
-	if !disp.environmentLock.Acquire(disp.timeout) {
-		return fmt.Errorf("acquire lock timeout: can't attach entity to environment")
-	}
-	defer disp.environmentLock.Release()
-
-	for envName, limit := range joins {
-		env := disp.getOrCreateEnvironment_(envName)
-		if err := env.join(entity, limit); err != nil {
-			return err
-		}
-	}
-	for envName, delay := range affects {
-		env := disp.getOrCreateEnvironment_(envName)
-		if err := env.affect(entity, delay); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (disp *Dispatcher) Join(envName string, entity *Entity, limit int) error {
-	return disp.Attach(entity, map[string]int{envName: limit}, nil)
-}
-
-func (disp *Dispatcher) Affect(envName string, entity *Entity, delay int) error {
-	return disp.Attach(entity, nil, map[string]int{envName: delay})
-}
-
-func (disp *Dispatcher) DeleteEnvironment(envName string) error {
-	if !disp.environmentLock.Acquire(disp.timeout) {
-		return fmt.Errorf("request lock timeout: can't delete environment")
-	}
-	defer disp.environmentLock.Release()
-
-	env, ok := disp.environments[envName]
-	if !ok {
-		return fmt.Errorf("can't find environment '%v'", envName)
-	}
-	env.invalidate()
-	delete(disp.environments, envName)
-	logf(5, "deleted environment '%v'", envName)
-	return nil
-}
-
-func (disp *Dispatcher) QuantStart(envName string, effect Trits, waveMode bool, onQuantFinish func()) error {
-	env := disp.getEnvironment_(envName)
-	if env == nil || env.invalid {
-		return fmt.Errorf("can't find environment '%v'", envName)
-	}
-	return disp.quantStart(env, effect, waveMode, onQuantFinish)
 }
 
 func (disp *Dispatcher) resetCallCounters() {
@@ -219,36 +101,4 @@ func (disp *Dispatcher) WaveValues() map[string]Trits {
 
 func (disp *Dispatcher) IsWaveMode() bool {
 	return disp.waveCoo.isWaveMode()
-}
-
-type EnvironmentStatus struct {
-	Size           int64
-	JoinedEntities []string
-	AffectedBy     []string
-}
-
-func (disp *Dispatcher) EnvironmentInfo() map[string]*EnvironmentStatus {
-	if !disp.environmentLock.Acquire(disp.timeout) {
-		return nil
-	}
-	defer disp.environmentLock.Release()
-
-	ret := make(map[string]*EnvironmentStatus)
-
-	for name, env := range disp.environments {
-		envInfo := &EnvironmentStatus{
-			Size:           env.size,
-			JoinedEntities: make([]string, 0, len(env.joins)),
-			AffectedBy:     make([]string, 0, len(env.affects)),
-		}
-		for _, joinData := range env.joins {
-			envInfo.JoinedEntities = append(envInfo.JoinedEntities,
-				fmt.Sprintf("%v(%v)", joinData.entity.GetName(), joinData.limit))
-		}
-		for _, ent := range env.affects {
-			envInfo.AffectedBy = append(envInfo.AffectedBy, ent.GetName())
-		}
-		ret[name] = envInfo
-	}
-	return ret
 }

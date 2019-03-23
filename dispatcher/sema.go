@@ -6,22 +6,22 @@ import (
 
 // lock with timeout
 
-type Sema struct {
+type sema struct {
 	ch chan struct{}
 }
 
-func NewSema() *Sema {
-	ret := &Sema{
+func newSema() *sema {
+	ret := &sema{
 		ch: make(chan struct{}, 1),
 	}
 	return ret
 }
 
-func (cl *Sema) Dispose() {
+func (cl *sema) dispose() {
 	close(cl.ch)
 }
 
-func (cl *Sema) Acquire(timeout time.Duration) bool {
+func (cl *sema) acquire(timeout time.Duration) bool {
 	if timeout < 0 {
 		cl.ch <- struct{}{}
 		return true
@@ -34,7 +34,7 @@ func (cl *Sema) Acquire(timeout time.Duration) bool {
 	}
 }
 
-func (cl *Sema) Release() bool {
+func (cl *sema) release() bool {
 	select {
 	case <-cl.ch:
 		return true

@@ -5,52 +5,6 @@ import (
 	"github.com/lunfardo314/goq/utils"
 )
 
-type EntityCore interface {
-	Call(Trits, Trits) bool
-}
-
-type affectEntData struct {
-	environment *environment
-	delay       int
-}
-
-type entityMsg struct {
-	effect          Trits
-	lastWithinLimit bool
-}
-
-type Entity struct {
-	dispatcher *Dispatcher
-	name       string
-	inSize     int64
-	outSize    int64
-	affecting  []*affectEntData // list of affected environments where effects are sent
-	joined     []*environment   // list of environments which are being listened to
-	inChan     chan entityMsg   // chan for incoming effects
-	core       EntityCore       // function called for each effect
-}
-
-func (ent *Entity) GetName() string {
-	return ent.name
-}
-
-func (ent *Entity) GetCore() EntityCore {
-	return ent.core
-}
-
-func (ent *Entity) InSize() int64 {
-	return ent.inSize
-}
-
-func (ent *Entity) OutSize() int64 {
-	return ent.outSize
-}
-
-// not thread safe!!! Only to be be called from EntityCore::Call, for debugging purposes
-func (ent *Entity) GetQuantCount() uint64 {
-	return ent.dispatcher.getQuantCount()
-}
-
 func (ent *Entity) joinEnvironment(env *environment, limit int) {
 	ent.joined = append(ent.joined, env)
 	ent.checkStart()
@@ -72,7 +26,7 @@ func (ent *Entity) stopListeningToEnvironment(env *environment) {
 	}
 	ent.joined = newList
 	if ent.checkStop() {
-		logf(5, "stopped entity '%v'", ent.GetName())
+		logf(5, "stopped entity '%v'", ent.name)
 	}
 }
 

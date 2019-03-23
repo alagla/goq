@@ -4,7 +4,6 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/dispatcher"
-	"math"
 	"time"
 )
 
@@ -15,14 +14,14 @@ type mockEntityCore struct {
 	state     int64
 	maxWaves  int64
 	entity    *Entity
-	lastQuant uint64
+	lastQuant int64
 }
 
 func newMockEntityCore(name string, maxWaves int64) *mockEntityCore {
 	return &mockEntityCore{
 		name:      name,
 		maxWaves:  maxWaves,
-		lastQuant: math.MaxUint64,
+		lastQuant: -1,
 	}
 }
 

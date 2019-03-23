@@ -7,23 +7,6 @@ import (
 	"sync"
 )
 
-type joinEnvData struct {
-	entity *Entity
-	limit  int
-	count  int
-}
-
-type environment struct {
-	dispatcher *Dispatcher
-	name       string
-	invalid    bool
-	joins      []*joinEnvData
-	affects    []*Entity
-	size       int64
-	effectChan chan Trits
-	builtin    bool
-}
-
 func newEnvironment(disp *Dispatcher, name string, builtin bool) *environment {
 	ret := &environment{
 		dispatcher: disp,
@@ -35,14 +18,6 @@ func newEnvironment(disp *Dispatcher, name string, builtin bool) *environment {
 	}
 	go ret.environmentLoop()
 	return ret
-}
-
-//func (env *environment) Size() int64 {
-//	return env.size
-//}
-//
-func (env *environment) GetName() string {
-	return env.name
 }
 
 func (env *environment) checkNewSize(size int64) bool {
@@ -72,9 +47,9 @@ func (env *environment) adjustEffect(effect Trits) (Trits, error) {
 }
 
 func (env *environment) join(entity *Entity, limit int) error {
-	if !env.checkNewSize(entity.InSize()) {
+	if !env.checkNewSize(entity.inSize) {
 		return fmt.Errorf("size mismach between joining entity '%v' (in size=%v) and the environment '%v' (size=%v)",
-			entity.name, entity.InSize(), env.name, env.size)
+			entity.name, entity.inSize, env.name, env.size)
 	}
 	env.joins = append(env.joins, &joinEnvData{
 		entity: entity,
@@ -85,9 +60,9 @@ func (env *environment) join(entity *Entity, limit int) error {
 }
 
 func (env *environment) affect(entity *Entity, delay int) error {
-	if !env.checkNewSize(entity.OutSize()) {
+	if !env.checkNewSize(entity.outSize) {
 		return fmt.Errorf("size mismach between affecting entity '%v' (out size=%v) and the environment '%v' (size=%v)",
-			entity.name, entity.OutSize(), env.name, env.size)
+			entity.name, entity.outSize, env.name, env.size)
 	}
 	env.affects = append(env.affects, entity)
 	entity.affectEnvironment(env, delay)

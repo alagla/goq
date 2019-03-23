@@ -12,14 +12,14 @@ type quantMsg struct {
 	envName          string
 	environment      *environment
 	effect           Trits
-	doNotStartBefore uint64
+	doNotStartBefore int64
 }
 
 func (disp *Dispatcher) postEffect(envName string, env *environment, effect Trits, delay int, external bool) error {
 	dec, _ := utils.TritsToBigInt(effect)
 	n := envName
 	if env != nil {
-		n = env.GetName()
+		n = env.name
 	}
 	logf(5, "posted effect '%v' (%v) to dispatcher, environment '%v', delay %v",
 		utils.TritsToString(effect), dec, n, delay)
@@ -28,12 +28,8 @@ func (disp *Dispatcher) postEffect(envName string, env *environment, effect Trit
 		envName:          envName,
 		environment:      env,
 		effect:           effect,
-		doNotStartBefore: disp.getQuantCount() + uint64(delay),
+		doNotStartBefore: disp.GetQuantCount() + int64(delay),
 	})
-}
-
-func (disp *Dispatcher) PostEffect(envName string, effect Trits, delay int) error {
-	return disp.postEffect(envName, nil, effect, delay, true)
 }
 
 func (disp *Dispatcher) dispatcherInputLoop() {
@@ -58,7 +54,7 @@ func (disp *Dispatcher) dispatcherInputLoop() {
 		msg = tmpItems[0].(*quantMsg)
 		//logf(5, "dispatcherInputLoop: received %+v", msg)
 
-		if msg.doNotStartBefore > disp.getQuantCount() {
+		if msg.doNotStartBefore > disp.GetQuantCount() {
 			// delayed: put it back to queue
 			_ = disp.queue.Put(msg)
 			disp.incQuantCount()
@@ -88,27 +84,10 @@ func (disp *Dispatcher) setIdle(idle bool) {
 	case !disp.idle && idle:
 		// is locked here
 		disp.idle = true
-		disp.environmentLock.Release()
+		disp.accessLock.release()
 	case disp.idle && !idle:
 		// is released here
-		disp.environmentLock.Acquire(-1)
+		disp.accessLock.acquire(-1)
 		disp.idle = false
-	}
-}
-
-// calls callback if dispatcher becomes idle within 'timeout'
-// callback will be called after release of the semaphore.
-// the callback must take care about locking the dispatcher if needed
-func (disp *Dispatcher) CallIfIdle(timeout time.Duration, callback func()) bool {
-	if !disp.environmentLock.Acquire(timeout) {
-		return false
-	}
-	disp.environmentLock.Release()
-	callback()
-	return true
-}
-
-func (disp *Dispatcher) CallWhenIdle(callback func()) {
-	for !disp.CallIfIdle(1*time.Second, callback) {
 	}
 }

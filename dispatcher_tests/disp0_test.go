@@ -35,7 +35,7 @@ func TestPostEffect0(t *testing.T) {
 	}
 
 	core := entity.GetCore().(*mockEntityCore)
-	dispatcher.CallWhenIdle(func() {
+	dispatcher.DoOnIdle(func() {
 		if durationSec := float64(utils.UnixMsNow()-start) / 1000; durationSec > 0.01 {
 			fmt.Printf("Processing speed %v waves per second\n", int(postTimes0/durationSec))
 		}
@@ -90,7 +90,7 @@ func TestPostEffect1(t *testing.T) {
 		fmt.Printf("Posting %v posts per second\n", int(postTimes1/durationSec))
 	}
 
-	dispatcher.CallWhenIdle(func() {
+	dispatcher.DoOnIdle(func() {
 		if durationSec := float64(utils.UnixMsNow()-start) / 1000; durationSec > 0.01 {
 			fmt.Printf("Processing speed %v waves per second\n", int(postTimes1*chainLen1/durationSec))
 		}
@@ -155,7 +155,7 @@ func TestPostEffect2(t *testing.T) {
 		t.Errorf("%v", err)
 		return
 	}
-	dispatcher.CallWhenIdle(func() {
+	dispatcher.DoOnIdle(func() {
 		durationSec := float64(utils.UnixMsNow()-start) / 1000
 		fmt.Printf("Processing speed %v waves per second\n", int(maxCount/durationSec))
 

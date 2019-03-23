@@ -102,7 +102,7 @@ func (module *QuplaModule) RunExecs(disp *dispatcher.Dispatcher, fromIdx int, to
 		logf(0, "Finished running execs, chain mode = %v. Duration %v", chain, time.Since(start))
 	}
 
-	for !disp.CallIfIdle(5*time.Second, onFinish) {
+	for !disp.DoIfIdle(5*time.Second, onFinish) {
 	}
 
 	reportRunResults(attachedExecs)

@@ -34,7 +34,7 @@ func fmtWaveCmd(wcmd *waveCmd) string {
 		return "<nil>"
 	}
 	return fmt.Sprintf("wait %v with value '%v' (%v)",
-		wcmd.environment.GetName(),
+		wcmd.environment.name,
 		utils.TritsToString(wcmd.value),
 		TritsToInt(wcmd.value))
 }
@@ -65,7 +65,7 @@ func (wcoo *WaveCoordinator) values() map[string]Trits {
 	defer wcoo.RUnlock()
 	ret := make(map[string]Trits)
 	for _, wr := range wcoo.waves {
-		ret[wr.environment.GetName()] = wr.value
+		ret[wr.environment.name] = wr.value
 	}
 	return ret
 }

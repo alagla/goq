@@ -4,7 +4,6 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/dispatcher"
-	"math"
 	"testing"
 )
 
@@ -32,7 +31,7 @@ func TestAffectDelay3(t *testing.T) {
 	}
 
 	saveQuantCount := dispatcher.GetQuantCount()
-	if saveQuantCount == math.MaxUint64 {
+	if saveQuantCount < 0 {
 		t.Errorf("GetQuantCount failed")
 		return
 	}
@@ -40,7 +39,7 @@ func TestAffectDelay3(t *testing.T) {
 		t.Errorf("%v", err)
 		return
 	}
-	dispatcher.CallWhenIdle(func() {
+	dispatcher.DoOnIdle(func() {
 		expected0 := int64(1)
 		if core0.state != expected0 {
 			t.Errorf("failed with wrong state %v != expected %v", core0.state, expected0)
@@ -49,7 +48,7 @@ func TestAffectDelay3(t *testing.T) {
 		if core1.state != expected1 {
 			t.Errorf("failed with wrong state %v != expected %v", core1.state, expected1)
 		}
-		expectedLastQuant := uint64(saveQuantCount + delayOnStart + delayAffect)
+		expectedLastQuant := saveQuantCount + delayOnStart + delayAffect
 		if core1.lastQuant != expectedLastQuant {
 			fmt.Printf("failed with last quant %v != expected %v\n", core1.lastQuant, expectedLastQuant)
 		}
@@ -103,7 +102,7 @@ func TestJoinLimit4(t *testing.T) {
 		t.Errorf("%v", err)
 		return
 	}
-	dispatcher.CallWhenIdle(func() {
+	dispatcher.DoOnIdle(func() {
 		idxStop := -1
 		for i, core := range cores {
 			if core.state > maxCount {
