@@ -17,26 +17,26 @@ func newSema() *sema {
 	return ret
 }
 
-func (cl *sema) dispose() {
-	close(cl.ch)
+func (sem *sema) dispose() {
+	close(sem.ch)
 }
 
-func (cl *sema) acquire(timeout time.Duration) bool {
+func (sem *sema) acquire(timeout time.Duration) bool {
 	if timeout < 0 {
-		cl.ch <- struct{}{}
+		sem.ch <- struct{}{}
 		return true
 	}
 	select {
-	case cl.ch <- struct{}{}:
+	case sem.ch <- struct{}{}:
 		return true
 	case <-time.After(timeout):
 		return false
 	}
 }
 
-func (cl *sema) release() bool {
+func (sem *sema) release() bool {
 	select {
-	case <-cl.ch:
+	case <-sem.ch:
 		return true
 	default:
 		return false
