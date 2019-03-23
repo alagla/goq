@@ -52,7 +52,7 @@ func (disp *Dispatcher) CreateEnvironment(name string) error {
 		return fmt.Errorf("request lock timeout: can't create environment")
 	}
 	defer disp.accessLock.release()
-	return disp.createEnvironment(name, false)
+	return disp.createEnvironment(name)
 }
 
 // executes 'join' and 'affect' of the entity

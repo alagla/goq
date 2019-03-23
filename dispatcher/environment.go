@@ -6,14 +6,13 @@ import (
 	. "github.com/lunfardo314/goq/utils"
 )
 
-func newEnvironment(disp *Dispatcher, name string, builtin bool) *environment {
+func newEnvironment(disp *Dispatcher, name string) *environment {
 	ret := &environment{
 		dispatcher: disp,
 		name:       name,
 		joins:      make([]*joinEnvData, 0),
 		affects:    make([]*Entity, 0),
 		effectChan: make(chan Trits),
-		builtin:    builtin,
 	}
 	go ret.environmentLoop()
 	return ret

@@ -57,5 +57,4 @@ type environment struct {
 	affects    []*Entity
 	size       int64
 	effectChan chan Trits
-	builtin    bool
 }
