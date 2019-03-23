@@ -18,6 +18,14 @@ func (e *QuplaExprBase) GetSource() string {
 	return e.source
 }
 
+func (e *QuplaExprBase) GetSubExpr(idx int) ExpressionInterface {
+	return e.subexpr[idx]
+}
+
+func (e *QuplaExprBase) NumSubExpr() int {
+	return len(e.subexpr)
+}
+
 func (e *QuplaExprBase) AppendSubExpr(se ExpressionInterface) {
 	e.subexpr = append(e.subexpr, se)
 }

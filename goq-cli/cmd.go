@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/lunfardo314/goq/analyzeyaml"
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
@@ -48,7 +49,7 @@ func CmdLoadModule(words []string) {
 		return
 	}
 	var succ bool
-	module, succ = qupla.AnalyzeQuplaModule("single_module", moduleYAML, &qupla.ExpressionFactoryFromYAML{})
+	module, succ = qupla.AnalyzeQuplaModule("single_module", moduleYAML, &analyzeyaml.ExpressionFactoryFromYAML{})
 	module.PrintStats()
 	if succ {
 		succ = module.AttachToDispatcher(dispatcherInstance)

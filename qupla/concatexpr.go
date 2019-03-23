@@ -3,30 +3,10 @@ package qupla
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
 type QuplaConcatExpr struct {
 	QuplaExprBase
-}
-
-func AnalyzeConcatExpr(exprYAML *QuplaConcatExprYAML, module ModuleInterface, scope FuncDefInterface) (*QuplaConcatExpr, error) {
-	module.IncStat("numConcat")
-
-	ret := &QuplaConcatExpr{
-		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
-	}
-	if lhsExpr, err := module.AnalyzeExpression(exprYAML.Lhs, scope); err != nil {
-		return nil, err
-	} else {
-		ret.AppendSubExpr(lhsExpr)
-	}
-	if rhsExpr, err := module.AnalyzeExpression(exprYAML.Rhs, scope); err != nil {
-		return nil, err
-	} else {
-		ret.AppendSubExpr(rhsExpr)
-	}
-	return ret, nil
 }
 
 func (e *QuplaConcatExpr) Size() int64 {

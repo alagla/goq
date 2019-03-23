@@ -1,8 +1,9 @@
-package qupla
+package analyzeyaml
 
 import (
-	"fmt"
+	. "fmt"
 	. "github.com/lunfardo314/goq/abstract"
+	"github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
@@ -14,7 +15,7 @@ func (ef *ExpressionFactoryFromYAML) AnalyzeExpression(
 	case *QuplaConstNumberYAML:
 		return AnalyzeConstNumber(data, module, scope)
 	case *QuplaConstTypeNameYAML:
-		return AnalyzeConstTypeName(data, module, scope)
+		return qupla.AnalyzeConstTypeName(data, module, scope)
 	case *QuplaConstTermYAML:
 		return AnalyzeConstTerm(data, module, scope)
 	case *QuplaConstExprYAML:
@@ -22,15 +23,15 @@ func (ef *ExpressionFactoryFromYAML) AnalyzeExpression(
 	case *QuplaCondExprYAML:
 		return AnalyzeCondExpr(data, module, scope)
 	case *QuplaLutExprYAML:
-		return AnalyzeLutExpr(data, module, scope)
+		return qupla.AnalyzeLutExpr(data, module, scope)
 	case *QuplaSliceExprYAML:
-		return AnalyzeSliceExpr(data, module, scope)
+		return qupla.AnalyzeSliceExpr(data, module, scope)
 	case *QuplaValueExprYAML:
-		return AnalyzeValueExpr(data, module, scope)
+		return qupla.AnalyzeValueExpr(data, module, scope)
 	case *QuplaSizeofExprYAML:
-		return AnalyzeSizeofExpr(data, module, scope)
+		return qupla.AnalyzeSizeofExpr(data, module, scope)
 	case *QuplaFuncExprYAML:
-		return AnalyzeFuncExpr(data, module, scope)
+		return qupla.AnalyzeFuncExpr(data, module, scope)
 	case *QuplaFieldExprYAML:
 		return AnalyzeFieldExpr(data, module, scope)
 	case *QuplaConcatExprYAML:
@@ -38,18 +39,18 @@ func (ef *ExpressionFactoryFromYAML) AnalyzeExpression(
 	case *QuplaMergeExprYAML:
 		return AnalyzeMergeExpr(data, module, scope)
 	case *QuplaTypeExprYAML:
-		return AnalyzeTypeExpr(data, module, scope)
+		return qupla.AnalyzeTypeExpr(data, module, scope)
 	case *QuplaNullExprYAML:
-		return AnalyzeNullExpr(data, module, scope)
+		return qupla.AnalyzeNullExpr(data, module, scope)
 	case *QuplaExpressionYAML:
 		r, err := data.Unwrap()
 		if err != nil {
 			return nil, err
 		}
 		if r == nil {
-			return &QuplaNullExpr{}, nil
+			return &qupla.QuplaNullExpr{}, nil
 		}
 		return ef.AnalyzeExpression(r, module, scope)
 	}
-	return nil, fmt.Errorf("wrong QuplaYAML object type")
+	return nil, Errorf("wrong QuplaYAML object type")
 }
