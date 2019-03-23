@@ -13,7 +13,6 @@ type Dispatcher struct {
 	environments    map[string]*environment
 	accessLock      *sema // lock for quant. Locks changes in environments and entities: join, affect
 	timeout         time.Duration
-	waveCoo         *WaveCoordinator
 	quantWG         sync.WaitGroup // released when quant ends
 	quantCount      int64
 	quantCountMutex sync.RWMutex

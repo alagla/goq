@@ -38,7 +38,6 @@ func postEffectsToDispatcher(disp *dispatcher.Dispatcher) {
 			logf(3, "Quant %v <- '%v' was finished in %v",
 				s.decString, s.env, time.Since(start))
 		}
-		printTritMap(disp.WaveValues())
 	}
 }
 

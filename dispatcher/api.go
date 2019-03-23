@@ -15,7 +15,6 @@ func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
 		environments: make(map[string]*environment),
 		accessLock:   newSema(),
 		timeout:      lockTimeout,
-		waveCoo:      NewWaveCoordinator(),
 	}
 	ret.accessLock.acquire(-1)
 	go ret.dispatcherInputLoop()

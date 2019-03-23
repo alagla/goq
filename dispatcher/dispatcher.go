@@ -49,56 +49,19 @@ func (disp *Dispatcher) resetCallCounters() {
 }
 
 func (disp *Dispatcher) quantStart(env *environment, effect Trits, waveMode bool, onQuantFinish func()) error {
-	if disp.waveCoo.isWaveMode() {
-		return fmt.Errorf("wave is already running")
-	}
 	var err error
 	if effect, err = env.adjustEffect(effect); err != nil {
 		return err
 	}
 
 	disp.resetCallCounters()
-
-	disp.waveCoo.setWaveMode(waveMode)
 	disp.quantWG.Add(1)
-
 	env.effectChan <- effect
-
 	go func() {
 		env.dispatcher.quantWG.Wait()
-		disp.waveCoo.setWaveMode(false)
 		if onQuantFinish != nil {
 			onQuantFinish()
 		}
 	}()
 	return nil
-}
-
-// if in waveMode, continues to the next wave and stops
-
-func (disp *Dispatcher) WaveNext() error {
-	if !disp.waveCoo.isWaveMode() {
-		return fmt.Errorf("not in wave mode")
-	}
-	disp.waveCoo.runWave()
-	return nil
-}
-
-// if in waveMode, continues to the next mode and stops at the end of the quant
-
-func (disp *Dispatcher) WaveRun() error {
-	if !disp.waveCoo.isWaveMode() {
-		return fmt.Errorf("not in wave mode")
-	}
-	disp.waveCoo.setWaveMode(false)
-	disp.waveCoo.runWave()
-	return nil
-}
-
-func (disp *Dispatcher) WaveValues() map[string]Trits {
-	return disp.waveCoo.values()
-}
-
-func (disp *Dispatcher) IsWaveMode() bool {
-	return disp.waveCoo.isWaveMode()
 }

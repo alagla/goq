@@ -4,7 +4,6 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/utils"
-	"sync"
 )
 
 func newEnvironment(disp *Dispatcher, name string, builtin bool) *environment {
@@ -81,7 +80,6 @@ func (env *environment) environmentLoop() {
 		dec, _ := TritsToBigInt(effect)
 		logf(3, "effect '%v' (%v) -> environment '%v'", TritsToString(effect), dec, env.name)
 		env.dispatcher.quantWG.Add(len(env.joins))
-		env.waitWave(effect)
 		for _, joinData := range env.joins {
 			joinData.count++
 			joinData.entity.sendEffect(effect, joinData.count == joinData.limit)
@@ -103,19 +101,4 @@ func (env *environment) invalidate() {
 	for _, entity := range env.affects {
 		entity.stopAffectingEnvironment(env)
 	}
-}
-
-func (env *environment) waitWave(value Trits) {
-	if !env.dispatcher.waveCoo.isWaveMode() {
-		return
-	}
-	var wg sync.WaitGroup
-	wg.Add(1)
-	env.dispatcher.waveCoo.chIn <- &waveCmd{
-		environment: env,
-		value:       value,
-		wg:          &wg,
-	}
-	wg.Wait()
-	return
 }
