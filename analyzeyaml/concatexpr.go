@@ -5,11 +5,11 @@ import (
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
-func AnalyzeConcatExpr(exprYAML *QuplaConcatExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaConcatExpr, error) {
+func AnalyzeConcatExpr(exprYAML *QuplaConcatExprYAML, module *QuplaModule, scope *Function) (*ConcatExpr, error) {
 	module.IncStat("numConcat")
 
-	ret := &QuplaConcatExpr{
-		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
+	ret := &ConcatExpr{
+		ExpressionBase: NewExpressionBase(exprYAML.Source),
 	}
 	if lhsExpr, err := AnalyzeExpression(exprYAML.Lhs, module, scope); err != nil {
 		return nil, err

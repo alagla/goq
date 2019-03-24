@@ -5,20 +5,20 @@ import (
 	. "github.com/lunfardo314/goq/abstract"
 )
 
-type QuplaLutExpr struct {
-	QuplaExprBase
+type LutExpr struct {
+	ExpressionBase
 	ArgExpr []ExpressionInterface
-	LutDef  *QuplaLutDef
+	LutDef  *LutDef
 }
 
-func (e *QuplaLutExpr) Size() int64 {
+func (e *LutExpr) Size() int64 {
 	if e == nil {
 		return 0
 	}
 	return e.LutDef.Size()
 }
 
-func (e *QuplaLutExpr) Eval(proc ProcessorInterface, result Trits) bool {
+func (e *LutExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	var buf [3]int8 // no more than 3 inputs
 	for i, a := range e.ArgExpr {
 		if proc.Eval(a, buf[i:i+1]) {

@@ -6,7 +6,7 @@ import (
 	. "github.com/lunfardo314/goq/abstract"
 )
 
-type QuplaFuncDef struct {
+type Function struct {
 	Analyzed          bool // finished analysis
 	Joins             map[string]int
 	Affects           map[string]int
@@ -22,11 +22,11 @@ type QuplaFuncDef struct {
 	ParamSizes        []int64
 }
 
-func (def *QuplaFuncDef) HasState() bool {
+func (def *Function) HasState() bool {
 	return def.HasStateVariables || def.hasState
 }
 
-func (def *QuplaFuncDef) References(funName string) bool {
+func (def *Function) References(funName string) bool {
 	for _, vi := range def.LocalVars {
 		if vi.Assign != nil && vi.Assign.References(funName) {
 			return true
@@ -35,8 +35,8 @@ func (def *QuplaFuncDef) References(funName string) bool {
 	return def.RetExpr.References(funName)
 }
 
-func NewQuplaFuncDef(name string, size int64) *QuplaFuncDef {
-	return &QuplaFuncDef{
+func NewQuplaFuncDef(name string, size int64) *Function {
+	return &Function{
 		Name:       name,
 		retSize:    size,
 		LocalVars:  make([]*VarInfo, 0, 10),
@@ -46,27 +46,27 @@ func NewQuplaFuncDef(name string, size int64) *QuplaFuncDef {
 	}
 }
 
-func (def *QuplaFuncDef) Size() int64 {
+func (def *Function) Size() int64 {
 	return def.retSize
 }
 
-func (def *QuplaFuncDef) ArgSize() int64 {
+func (def *Function) ArgSize() int64 {
 	return def.InSize
 }
 
-func (def *QuplaFuncDef) HasEnvStmt() bool {
+func (def *Function) HasEnvStmt() bool {
 	return len(def.Joins) > 0 || len(def.Affects) > 0
 }
 
-func (def *QuplaFuncDef) GetJoinEnv() map[string]int {
+func (def *Function) GetJoinEnv() map[string]int {
 	return def.Joins
 }
 
-func (def *QuplaFuncDef) GetAffectEnv() map[string]int {
+func (def *Function) GetAffectEnv() map[string]int {
 	return def.Affects
 }
 
-func (def *QuplaFuncDef) GetVarIdx(name string) int64 {
+func (def *Function) GetVarIdx(name string) int64 {
 	for i, lv := range def.LocalVars {
 		if lv.Name == name {
 			return int64(i)
@@ -75,18 +75,18 @@ func (def *QuplaFuncDef) GetVarIdx(name string) int64 {
 	return -1
 }
 
-func (def *QuplaFuncDef) VarByIdx(idx int64) *VarInfo {
+func (def *Function) VarByIdx(idx int64) *VarInfo {
 	if idx < 0 || idx >= int64(len(def.LocalVars)) {
 		return nil
 	}
 	return def.LocalVars[idx]
 }
 
-func (def *QuplaFuncDef) VarByName(name string) *VarInfo {
+func (def *Function) VarByName(name string) *VarInfo {
 	return def.VarByIdx(def.GetVarIdx(name))
 }
 
-func (def *QuplaFuncDef) GetVarInfo(name string) (*VarInfo, error) {
+func (def *Function) GetVarInfo(name string) (*VarInfo, error) {
 	ret := def.VarByName(name)
 	if !ret.Analyzed {
 		// can only be called after analysis is completed
@@ -95,7 +95,7 @@ func (def *QuplaFuncDef) GetVarInfo(name string) (*VarInfo, error) {
 	return ret, nil
 }
 
-func (def *QuplaFuncDef) CheckArgSizes(args []ExpressionInterface) error {
+func (def *Function) CheckArgSizes(args []ExpressionInterface) error {
 	for i := range args {
 		if int64(i) >= def.NumParams || args[i].Size() != def.LocalVars[i].Size {
 			return fmt.Errorf("param and arg # %v mismach in %v", i, def.Name)
@@ -104,7 +104,7 @@ func (def *QuplaFuncDef) CheckArgSizes(args []ExpressionInterface) error {
 	return nil
 }
 
-func (def *QuplaFuncDef) NewExpressionWithArgs(args trinary.Trits) (ExpressionInterface, error) {
+func (def *Function) NewExpressionWithArgs(args trinary.Trits) (ExpressionInterface, error) {
 	if def.InSize != int64(len(args)) {
 		return nil, fmt.Errorf("Size mismatch: fundef '%v' has arg Size %v, trit vector's Size = %v",
 			def.Name, def.ArgSize(), len(args))

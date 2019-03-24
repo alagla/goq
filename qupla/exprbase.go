@@ -2,39 +2,39 @@ package qupla
 
 import . "github.com/lunfardo314/goq/abstract"
 
-type QuplaExprBase struct {
+type ExpressionBase struct {
 	source  string
 	subexpr []ExpressionInterface
 }
 
-func NewQuplaExprBase(source string) QuplaExprBase {
-	return QuplaExprBase{
+func NewExpressionBase(source string) ExpressionBase {
+	return ExpressionBase{
 		source:  source,
 		subexpr: make([]ExpressionInterface, 0, 5),
 	}
 }
 
-func (e *QuplaExprBase) GetSource() string {
+func (e *ExpressionBase) GetSource() string {
 	return e.source
 }
 
-func (e *QuplaExprBase) GetSubExpr(idx int) ExpressionInterface {
+func (e *ExpressionBase) GetSubExpr(idx int) ExpressionInterface {
 	return e.subexpr[idx]
 }
 
-func (e *QuplaExprBase) NumSubExpr() int {
+func (e *ExpressionBase) NumSubExpr() int {
 	return len(e.subexpr)
 }
 
-func (e *QuplaExprBase) AppendSubExpr(se ExpressionInterface) {
+func (e *ExpressionBase) AppendSubExpr(se ExpressionInterface) {
 	e.subexpr = append(e.subexpr, se)
 }
 
-func (e *QuplaExprBase) HasSubExpr() bool {
+func (e *ExpressionBase) HasSubExpr() bool {
 	return len(e.subexpr) > 0
 }
 
-func (e *QuplaExprBase) ReferencesSubExprs(funName string) bool {
+func (e *ExpressionBase) ReferencesSubExprs(funName string) bool {
 	for _, se := range e.subexpr {
 		if se.References(funName) {
 			return true
@@ -43,6 +43,6 @@ func (e *QuplaExprBase) ReferencesSubExprs(funName string) bool {
 	return false
 }
 
-func (e *QuplaExprBase) References(funName string) bool {
+func (e *ExpressionBase) References(funName string) bool {
 	return e.ReferencesSubExprs(funName)
 }

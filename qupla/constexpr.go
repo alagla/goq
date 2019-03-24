@@ -13,7 +13,7 @@ type ConstExpression interface {
 }
 
 type ConstValue struct {
-	QuplaExprBase
+	ExpressionBase
 	value int64
 	name  string
 	size  int64

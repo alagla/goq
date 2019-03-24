@@ -9,11 +9,11 @@ import (
 import . "github.com/lunfardo314/goq/abstract"
 
 type CallFrame struct {
-	context  *QuplaFuncExpr // which function called
-	parent   *CallFrame     // context where it was called
-	buffer   Trits          // buffer to place all params and variables
-	valueTag []uint8        // 0x01 bit mean 'evaluated', 0x02 bit means is not null
-	result   Trits          // slice where to put result
+	context  *FunctionExpr // which function called
+	parent   *CallFrame    // context where it was called
+	buffer   Trits         // buffer to place all params and variables
+	valueTag []uint8       // 0x01 bit mean 'evaluated', 0x02 bit means is not null
+	result   Trits         // slice where to put result
 }
 
 type StackProcessor struct {
@@ -36,7 +36,7 @@ func NewStackProcessor() *StackProcessor {
 }
 
 func (proc *StackProcessor) Eval(expr ExpressionInterface, result Trits) bool {
-	funExpr, isFunction := expr.(*QuplaFuncExpr)
+	funExpr, isFunction := expr.(*FunctionExpr)
 	if isFunction {
 		proc.numfuncall++
 		proc.levelFunc++

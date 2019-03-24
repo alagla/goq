@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func AnalyzeConstTypeName(exprYAML *QuplaConstTypeNameYAML, _ *QuplaModule, funcDef *QuplaFuncDef) (ConstExpression, error) {
+func AnalyzeConstTypeName(exprYAML *QuplaConstTypeNameYAML, _ *QuplaModule, funcDef *Function) (ConstExpression, error) {
 	sz, err := strconv.Atoi(exprYAML.SizeString)
 	if err != nil {
 		return nil, err

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module *QuplaModule, scope *QuplaFuncDef) (ConstExpression, error) {
+func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module *QuplaModule, scope *Function) (ConstExpression, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
@@ -39,7 +39,7 @@ func AnalyzeConstExpr(exprYAML *QuplaConstExprYAML, module *QuplaModule, scope *
 	return ret, nil
 }
 
-func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module *QuplaModule, scope *QuplaFuncDef) (ConstExpression, error) {
+func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module *QuplaModule, scope *Function) (ConstExpression, error) {
 	var err error
 	var lei, rei ExpressionInterface
 	var ok bool
@@ -79,7 +79,7 @@ func AnalyzeConstTerm(exprYAML *QuplaConstTermYAML, module *QuplaModule, scope *
 	return ret, nil
 }
 
-func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ *QuplaModule, _ *QuplaFuncDef) (ConstExpression, error) {
+func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ *QuplaModule, _ *Function) (ConstExpression, error) {
 	ret, err := strconv.Atoi(exprYAML.Value)
 	if err != nil {
 		return nil, err

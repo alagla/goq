@@ -5,8 +5,9 @@ import (
 	. "github.com/lunfardo314/goq/abstract"
 )
 
+// TODO with fields expressions
 type QuplaFieldExpr struct {
-	QuplaExprBase
+	ExpressionBase
 	CondExpr ExpressionInterface
 }
 

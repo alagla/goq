@@ -11,9 +11,9 @@ import (
 type QuplaModule struct {
 	name         string
 	types        map[string]*QuplaTypeDef
-	luts         map[string]*QuplaLutDef
-	Functions    map[string]*QuplaFuncDef
-	execs        []*QuplaExecStmt
+	luts         map[string]*LutDef
+	Functions    map[string]*Function
+	execs        []*ExecStmt
 	stats        map[string]int
 	processor    ProcessorInterface
 	Environments StringSet
@@ -33,9 +33,9 @@ func NewQuplaModule(name string) *QuplaModule {
 	return &QuplaModule{
 		name:         name,
 		types:        make(map[string]*QuplaTypeDef),
-		luts:         make(map[string]*QuplaLutDef),
-		Functions:    make(map[string]*QuplaFuncDef),
-		execs:        make([]*QuplaExecStmt, 0, 10),
+		luts:         make(map[string]*LutDef),
+		Functions:    make(map[string]*Function),
+		execs:        make([]*ExecStmt, 0, 10),
 		stats:        make(map[string]int),
 		processor:    NewStackProcessor(),
 		Environments: make(StringSet),
@@ -57,12 +57,12 @@ func (module *QuplaModule) GetTypeFieldInfo(typeName, fldName string) (int64, in
 	return fi.offset, fi.size, nil
 }
 
-func (module *QuplaModule) AddExec(exec *QuplaExecStmt) {
+func (module *QuplaModule) AddExec(exec *ExecStmt) {
 	exec.idx = len(module.execs)
 	module.execs = append(module.execs, exec)
 }
 
-func (module *QuplaModule) AddFuncDef(name string, funcDef *QuplaFuncDef) error {
+func (module *QuplaModule) AddFuncDef(name string, funcDef *Function) error {
 	if _, ok := module.Functions[name]; ok {
 		return fmt.Errorf("duplicate function degfinition '%v'", name)
 	}
@@ -70,18 +70,18 @@ func (module *QuplaModule) AddFuncDef(name string, funcDef *QuplaFuncDef) error 
 	return nil
 }
 
-func (module *QuplaModule) AddLutDef(name string, lutDef *QuplaLutDef) {
+func (module *QuplaModule) AddLutDef(name string, lutDef *LutDef) {
 	module.luts[name] = lutDef
 }
 
-func (module *QuplaModule) FindFuncDef(name string) *QuplaFuncDef {
+func (module *QuplaModule) FindFuncDef(name string) *Function {
 	if ret, ok := module.Functions[name]; ok {
 		return ret
 	}
 	return nil
 }
 
-func (module *QuplaModule) FindLUTDef(name string) (*QuplaLutDef, error) {
+func (module *QuplaModule) FindLUTDef(name string) (*LutDef, error) {
 	ret, ok := module.luts[name]
 	if !ok {
 		return nil, fmt.Errorf("can't find LUT definition '%v'", name)
@@ -89,8 +89,8 @@ func (module *QuplaModule) FindLUTDef(name string) (*QuplaLutDef, error) {
 	return ret, nil
 }
 
-func (module *QuplaModule) FindExecs(substr string) []*QuplaExecStmt {
-	ret := make([]*QuplaExecStmt, 0)
+func (module *QuplaModule) FindExecs(substr string) []*ExecStmt {
+	ret := make([]*ExecStmt, 0)
 	for _, ex := range module.execs {
 		if strings.Contains(ex.GetName(), substr) {
 			ret = append(ret, ex)
@@ -169,7 +169,7 @@ func (module *QuplaModule) AttachToSupervisor(disp *supervisor.Supervisor) bool 
 	return ret
 }
 
-func (module *QuplaModule) ExecByIdx(idx int) *QuplaExecStmt {
+func (module *QuplaModule) ExecByIdx(idx int) *ExecStmt {
 	if idx < 0 || idx >= len(module.execs) {
 		return nil
 	}

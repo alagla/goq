@@ -7,7 +7,7 @@ import (
 )
 
 type functionEntityCore struct {
-	funcDef *QuplaFuncDef
+	funcDef *Function
 	proc    ProcessorInterface
 }
 
@@ -19,7 +19,7 @@ func (fc *functionEntityCore) Call(args Trits, res Trits) bool {
 	return fc.proc.Eval(expr, res)
 }
 
-func NewFunctionEntity(disp *Supervisor, funcDef *QuplaFuncDef, proc ProcessorInterface) (*Entity, error) {
+func NewFunctionEntity(disp *Supervisor, funcDef *Function, proc ProcessorInterface) (*Entity, error) {
 	return disp.NewEntity(EntityOpts{
 		Name:    funcDef.Name,
 		InSize:  funcDef.ArgSize(),

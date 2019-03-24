@@ -6,7 +6,7 @@ import (
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
-func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaSliceExpr, error) {
+func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module *QuplaModule, scope *Function) (*SliceExpr, error) {
 	ret := NewQuplaSliceExpr(exprYAML.Source, exprYAML.Offset, exprYAML.SliceSize)
 	module.IncStat("numSliceExpr")
 	ret.VarScope = scope

@@ -6,18 +6,18 @@ import (
 	. "github.com/lunfardo314/goq/abstract"
 )
 
-type QuplaCondExpr struct {
-	QuplaExprBase
+type CondExpr struct {
+	ExpressionBase
 }
 
-func (e *QuplaCondExpr) Size() int64 {
+func (e *CondExpr) Size() int64 {
 	if e == nil {
 		return 0
 	}
 	return e.subexpr[1].Size()
 }
 
-func (e *QuplaCondExpr) Eval(proc ProcessorInterface, result Trits) bool {
+func (e *CondExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	var buf [1]int8
 	null := proc.Eval(e.subexpr[0], buf[:])
 	if null {

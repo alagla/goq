@@ -8,7 +8,7 @@ import (
 	"math/big"
 )
 
-func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module *QuplaModule) (*QuplaValueExpr, error) {
+func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module *QuplaModule) (*ValueExpr, error) {
 	module.IncStat("numValueExpr")
 
 	if exprYAML.Trits == "" {

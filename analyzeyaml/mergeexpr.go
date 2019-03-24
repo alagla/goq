@@ -6,11 +6,11 @@ import (
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
-func AnalyzeMergeExpr(exprYAML *QuplaMergeExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaMergeExpr, error) {
+func AnalyzeMergeExpr(exprYAML *QuplaMergeExprYAML, module *QuplaModule, scope *Function) (*MergeExpr, error) {
 	module.IncStat("numMergeExpr")
 
-	ret := &QuplaMergeExpr{
-		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
+	ret := &MergeExpr{
+		ExpressionBase: NewExpressionBase(exprYAML.Source),
 	}
 
 	if lhsExpr, err := AnalyzeExpression(exprYAML.Lhs, module, scope); err != nil {

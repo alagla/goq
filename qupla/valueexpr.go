@@ -5,24 +5,24 @@ import (
 	. "github.com/lunfardo314/goq/abstract"
 )
 
-type QuplaValueExpr struct {
-	QuplaExprBase
+type ValueExpr struct {
+	ExpressionBase
 	TritValue Trits
 }
 
-func NewQuplaValueExpr(t Trits) *QuplaValueExpr {
-	return &QuplaValueExpr{
+func NewQuplaValueExpr(t Trits) *ValueExpr {
+	return &ValueExpr{
 		TritValue: t,
 	}
 }
-func (e *QuplaValueExpr) Size() int64 {
+func (e *ValueExpr) Size() int64 {
 	if e == nil {
 		return 0
 	}
 	return int64(len(e.TritValue))
 }
 
-func (e *QuplaValueExpr) Eval(_ ProcessorInterface, result Trits) bool {
+func (e *ValueExpr) Eval(_ ProcessorInterface, result Trits) bool {
 	if e.TritValue == nil {
 		return true
 	}

@@ -5,7 +5,7 @@ import (
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
-func AnalyzeFieldExpr(exprYAML *QuplaFieldExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaFieldExpr, error) {
+func AnalyzeFieldExpr(exprYAML *QuplaFieldExprYAML, module *QuplaModule, scope *Function) (*QuplaFieldExpr, error) {
 	var err error
 	module.IncStat("numFieldExpr")
 	ret := &QuplaFieldExpr{}

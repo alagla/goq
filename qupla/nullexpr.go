@@ -5,24 +5,24 @@ import (
 	. "github.com/lunfardo314/goq/abstract"
 )
 
-type QuplaNullExpr struct {
-	QuplaExprBase
+type NullExpr struct {
+	ExpressionBase
 	size int64
 }
 
 func IsNullExpr(e interface{}) bool {
-	_, ok := e.(*QuplaNullExpr)
+	_, ok := e.(*NullExpr)
 	return ok
 }
 
-func (e *QuplaNullExpr) Size() int64 {
+func (e *NullExpr) Size() int64 {
 	return e.size
 }
 
-func (e *QuplaNullExpr) Eval(_ ProcessorInterface, _ Trits) bool {
+func (e *NullExpr) Eval(_ ProcessorInterface, _ Trits) bool {
 	return true
 }
 
-func (e *QuplaNullExpr) SetSize(size int64) {
+func (e *NullExpr) SetSize(size int64) {
 	e.size = size
 }

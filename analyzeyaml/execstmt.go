@@ -16,8 +16,8 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 	if err != nil {
 		return err
 	}
-	var funcExpr *QuplaFuncExpr
-	if funcExpr, ok = expr.(*QuplaFuncExpr); !ok {
+	var funcExpr *FunctionExpr
+	if funcExpr, ok = expr.(*FunctionExpr); !ok {
 		return fmt.Errorf("top expression must be call to a function: '%v'", execStmtYAML.Source)
 	}
 	isTest := execStmtYAML.Expected != nil
@@ -33,7 +33,7 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 		if err = MatchSizes(funcExpr, exprExpected); err != nil {
 			return err
 		}
-		ve, ok := exprExpected.(*QuplaValueExpr)
+		ve, ok := exprExpected.(*ValueExpr)
 		if !ok {
 			return fmt.Errorf("test '%v': left hand side must be ValueExpr", execStmtYAML.Source)
 		}
@@ -42,6 +42,6 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 	} else {
 		module.IncStat("numEval")
 	}
-	module.AddExec(NewQuplaExecStmt(execStmtYAML.Source, funcExpr, isTest, isFloat, expected, module))
+	module.AddExec(NewExecStmt(execStmtYAML.Source, funcExpr, isTest, isFloat, expected, module))
 	return nil
 }

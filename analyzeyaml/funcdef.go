@@ -60,7 +60,7 @@ func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule)
 	def.Analyzed = true
 	return nil
 }
-func analyzeEnvironmentStatements(defYAML *QuplaFuncDefYAML, def *QuplaFuncDef, module *QuplaModule) error {
+func analyzeEnvironmentStatements(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
 	for _, envYAML := range defYAML.Env {
 		switch envYAML.Type {
 		case "join":
@@ -92,7 +92,7 @@ func analyzeEnvironmentStatements(defYAML *QuplaFuncDefYAML, def *QuplaFuncDef, 
 	return nil
 }
 
-func AnalyzeVar(vi *VarInfo, defYAML *QuplaFuncDefYAML, def *QuplaFuncDef, module *QuplaModule) error {
+func AnalyzeVar(vi *VarInfo, defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
 	if vi.Analyzed {
 		return nil
 		//panic(fmt.Errorf("attempt to analyze variable '%v' twice in '%v'", vi.Name, def.Name))
@@ -121,7 +121,7 @@ func AnalyzeVar(vi *VarInfo, defYAML *QuplaFuncDefYAML, def *QuplaFuncDef, modul
 	return nil
 }
 
-func createVarScope(src *QuplaFuncDefYAML, def *QuplaFuncDef, module *QuplaModule) error {
+func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
 	// function parameters (first numParams)
 	def.NumParams = int64(len(src.Params))
 	for idx, arg := range src.Params {
@@ -180,7 +180,7 @@ func createVarScope(src *QuplaFuncDefYAML, def *QuplaFuncDef, module *QuplaModul
 	return nil
 }
 
-func analyzeAssigns(defYAML *QuplaFuncDefYAML, def *QuplaFuncDef, module *QuplaModule) error {
+func analyzeAssigns(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
 	var err error
 	for name := range defYAML.Assigns {
 		// GetVarInfo analyzes expression if necessary
@@ -195,7 +195,7 @@ func analyzeAssigns(defYAML *QuplaFuncDefYAML, def *QuplaFuncDef, module *QuplaM
 	return nil
 }
 
-func finalizeLocalVars(def *QuplaFuncDef, module *QuplaModule) error {
+func finalizeLocalVars(def *Function, module *QuplaModule) error {
 	var curOffset int64
 	def.InSize = 0
 	for _, v := range def.LocalVars {

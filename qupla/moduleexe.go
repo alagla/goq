@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (module *QuplaModule) AttachExecs(disp *supervisor.Supervisor, fromIdx int, toIdx int, chain bool) []*QuplaExecStmt {
+func (module *QuplaModule) AttachExecs(disp *supervisor.Supervisor, fromIdx int, toIdx int, chain bool) []*ExecStmt {
 	if len(module.execs) == 0 {
 		logf(0, "No executables to execute")
 		return nil
@@ -22,11 +22,11 @@ func (module *QuplaModule) AttachExecs(disp *supervisor.Supervisor, fromIdx int,
 		logf(0, "Wrong range of indices: from %v to %v", fromIdx, toIdx)
 		return nil
 	}
-	ret := make([]*QuplaExecStmt, 0)
+	ret := make([]*ExecStmt, 0)
 
-	var exec *QuplaExecStmt
+	var exec *ExecStmt
 	var err error
-	var prev *QuplaExecStmt
+	var prev *ExecStmt
 	for idx := fromIdx; idx <= toIdx; idx++ {
 		exec = module.execs[idx]
 		if exec.HasState() {
@@ -45,7 +45,7 @@ func (module *QuplaModule) AttachExecs(disp *supervisor.Supervisor, fromIdx int,
 	return ret
 }
 
-func (module *QuplaModule) detachExecs(disp *supervisor.Supervisor, execs []*QuplaExecStmt) error {
+func (module *QuplaModule) detachExecs(disp *supervisor.Supervisor, execs []*ExecStmt) error {
 	for _, e := range execs {
 		if err := e.detach(disp); err != nil {
 			return err
@@ -54,7 +54,7 @@ func (module *QuplaModule) detachExecs(disp *supervisor.Supervisor, execs []*Qup
 	return nil
 }
 
-func (module *QuplaModule) runAttachedExecs(disp *supervisor.Supervisor, execs []*QuplaExecStmt, chain bool) error {
+func (module *QuplaModule) runAttachedExecs(disp *supervisor.Supervisor, execs []*ExecStmt, chain bool) error {
 	if len(execs) == 0 {
 		return fmt.Errorf("No executables to execute")
 	}
@@ -131,7 +131,7 @@ func (module *QuplaModule) RunExecs(disp *supervisor.Supervisor, fromIdx int, to
 	return nil
 }
 
-func reportRunResults(execs []*QuplaExecStmt, duration time.Duration) {
+func reportRunResults(execs []*ExecStmt, duration time.Duration) {
 	logf(0, "Run summary:")
 	logf(0, "   Executed %v executable statements in %v", len(execs), duration)
 	numTest := 0

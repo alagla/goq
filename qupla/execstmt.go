@@ -7,46 +7,46 @@ import (
 	"time"
 )
 
-type QuplaExecStmt struct {
-	QuplaExprBase
+type ExecStmt struct {
+	ExpressionBase
 	isTest   bool
 	isFloat  bool // needed for float comparison
 	expected Trits
 
-	expr       *QuplaFuncExpr
+	expr       *FunctionExpr
 	module     *QuplaModule
 	idx        int
 	evalEntity *Entity
 }
 
-func NewQuplaExecStmt(src string, expr *QuplaFuncExpr, isTest, isFloat bool, expected Trits, module *QuplaModule) *QuplaExecStmt {
-	return &QuplaExecStmt{
-		QuplaExprBase: NewQuplaExprBase(src),
-		isTest:        isTest,
-		isFloat:       isFloat,
-		expected:      expected,
-		expr:          expr,
-		module:        module,
+func NewExecStmt(src string, expr *FunctionExpr, isTest, isFloat bool, expected Trits, module *QuplaModule) *ExecStmt {
+	return &ExecStmt{
+		ExpressionBase: NewExpressionBase(src),
+		isTest:         isTest,
+		isFloat:        isFloat,
+		expected:       expected,
+		expr:           expr,
+		module:         module,
 	}
 }
 
-func (ex *QuplaExecStmt) GetName() string {
+func (ex *ExecStmt) GetName() string {
 	return fmt.Sprintf("#%v-'%v'", ex.idx, ex.GetSource())
 }
 
-func (ex *QuplaExecStmt) GetIdx() int {
+func (ex *ExecStmt) GetIdx() int {
 	return ex.idx
 }
 
-func (ex *QuplaExecStmt) HasState() bool {
+func (ex *ExecStmt) HasState() bool {
 	return ex.expr.FuncDef.hasState
 }
 
-func (ex *QuplaExecStmt) evalEnvironmentName() string {
+func (ex *ExecStmt) evalEnvironmentName() string {
 	return fmt.Sprintf("$%v_IN", ex.GetIdx())
 }
 
-func (ex *QuplaExecStmt) attach(disp *Supervisor, prev *QuplaExecStmt) error {
+func (ex *ExecStmt) attach(disp *Supervisor, prev *ExecStmt) error {
 	var err error
 	if ex.evalEntity, err = ex.newEvalEntity(disp); err != nil {
 		return err
@@ -65,11 +65,11 @@ func (ex *QuplaExecStmt) attach(disp *Supervisor, prev *QuplaExecStmt) error {
 	return nil
 }
 
-func (ex *QuplaExecStmt) detach(disp *Supervisor) error {
+func (ex *ExecStmt) detach(disp *Supervisor) error {
 	return disp.DeleteEnvironment(ex.evalEnvironmentName())
 }
 
-func (ex *QuplaExecStmt) Run(disp *Supervisor, repeat int) error {
+func (ex *ExecStmt) Run(disp *Supervisor, repeat int) error {
 	if repeat < 1 {
 		return fmt.Errorf("'repeat' parameter must be >1")
 	}
@@ -83,7 +83,7 @@ func (ex *QuplaExecStmt) Run(disp *Supervisor, repeat int) error {
 	return nil
 }
 
-func (ex *QuplaExecStmt) resultIsExpected(result Trits) bool {
+func (ex *ExecStmt) resultIsExpected(result Trits) bool {
 	passed, _ := TritsEqual(result, ex.expected)
 	if passed {
 		return true
@@ -112,7 +112,7 @@ func (ex *QuplaExecStmt) resultIsExpected(result Trits) bool {
 // mock entities to run executables on dispatcher
 
 type execEvalCore struct {
-	exec              *QuplaExecStmt
+	exec              *ExecStmt
 	numRun            int
 	numTestPassed     int
 	totalDurationMsec uint64
@@ -131,7 +131,7 @@ func (ec *execEvalCore) Call(_ Trits, res Trits) bool {
 	return null
 }
 
-func (ex *QuplaExecStmt) newEvalEntity(disp *Supervisor) (*Entity, error) {
+func (ex *ExecStmt) newEvalEntity(disp *Supervisor) (*Entity, error) {
 	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.expr.GetSource())
 	core := &execEvalCore{exec: ex}
 	return disp.NewEntity(EntityOpts{
@@ -150,7 +150,7 @@ type runSummary struct {
 	avgDuration uint64
 }
 
-func (ex *QuplaExecStmt) GetRunResults() *runSummary {
+func (ex *ExecStmt) GetRunResults() *runSummary {
 	core := ex.evalEntity.GetCore().(*execEvalCore)
 	var dur uint64
 	if core.numRun != 0 {

@@ -5,30 +5,30 @@ import (
 	. "github.com/lunfardo314/goq/abstract"
 )
 
-type QuplaSliceExpr struct {
-	QuplaExprBase
+type SliceExpr struct {
+	ExpressionBase
 	LocalVarIdx int64
-	VarScope    *QuplaFuncDef
+	VarScope    *Function
 	offset      int64
 	size        int64
 }
 
-func NewQuplaSliceExpr(src string, offset, size int64) *QuplaSliceExpr {
-	return &QuplaSliceExpr{
-		QuplaExprBase: NewQuplaExprBase(src),
-		offset:        offset,
-		size:          size,
+func NewQuplaSliceExpr(src string, offset, size int64) *SliceExpr {
+	return &SliceExpr{
+		ExpressionBase: NewExpressionBase(src),
+		offset:         offset,
+		size:           size,
 	}
 }
 
-func (e *QuplaSliceExpr) Size() int64 {
+func (e *SliceExpr) Size() int64 {
 	if e == nil {
 		return 0
 	}
 	return e.size
 }
 
-func (e *QuplaSliceExpr) Eval(proc ProcessorInterface, result Trits) bool {
+func (e *SliceExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	restmp, null := proc.EvalVar(e.LocalVarIdx)
 	if null {
 		return true

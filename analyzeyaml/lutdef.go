@@ -12,7 +12,7 @@ import (
 var pow3 = []int{1, 3, 9, 27}
 
 func AnalyzeLutDef(name string, defYAML *QuplaLutDefYAML, module *QuplaModule) error {
-	ret := &QuplaLutDef{
+	ret := &LutDef{
 		Name: name,
 	}
 	module.IncStat("numLUTDef")

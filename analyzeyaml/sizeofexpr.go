@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func AnalyzeSizeofExpr(exprYAML *QuplaSizeofExprYAML, module *QuplaModule) (*QuplaSizeofExpr, error) {
+func AnalyzeSizeofExpr(exprYAML *QuplaSizeofExprYAML, module *QuplaModule) (*SizeofExpr, error) {
 	module.IncStat("numSizeofExpr")
 
 	if exprYAML.Trits == "" {

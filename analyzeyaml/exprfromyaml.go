@@ -7,7 +7,7 @@ import (
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
-func AnalyzeExpression(dataYAML interface{}, module *QuplaModule, scope *QuplaFuncDef) (ExpressionInterface, error) {
+func AnalyzeExpression(dataYAML interface{}, module *QuplaModule, scope *Function) (ExpressionInterface, error) {
 	switch data := dataYAML.(type) {
 	case *QuplaConstNumberYAML:
 		return AnalyzeConstNumber(data, module, scope)
@@ -45,7 +45,7 @@ func AnalyzeExpression(dataYAML interface{}, module *QuplaModule, scope *QuplaFu
 			return nil, err
 		}
 		if r == nil {
-			return &QuplaNullExpr{}, nil
+			return &NullExpr{}, nil
 		}
 		return AnalyzeExpression(r, module, scope)
 	}

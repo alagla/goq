@@ -7,7 +7,7 @@ import (
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
-func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaTypeExpr, error) {
+func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module *QuplaModule, scope *Function) (*TypeExpr, error) {
 	var err error
 	module.IncStat("numTypeExpr")
 

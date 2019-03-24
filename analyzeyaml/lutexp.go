@@ -7,11 +7,11 @@ import (
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
-func AnalyzeLutExpr(exprYAML *QuplaLutExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaLutExpr, error) {
+func AnalyzeLutExpr(exprYAML *QuplaLutExprYAML, module *QuplaModule, scope *Function) (*LutExpr, error) {
 	var ae ExpressionInterface
 	var err error
-	ret := &QuplaLutExpr{
-		QuplaExprBase: NewQuplaExprBase(exprYAML.Source),
+	ret := &LutExpr{
+		ExpressionBase: NewExpressionBase(exprYAML.Source),
 	}
 	ret.LutDef, err = module.FindLUTDef(exprYAML.Name)
 	if err != nil {

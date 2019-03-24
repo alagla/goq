@@ -5,27 +5,27 @@ import (
 	. "github.com/lunfardo314/goq/abstract"
 )
 
-type QuplaFuncExpr struct {
-	QuplaExprBase
+type FunctionExpr struct {
+	ExpressionBase
 	source  string
-	FuncDef *QuplaFuncDef
+	FuncDef *Function
 }
 
-func NewQuplaFuncExpr(src string, funcDef *QuplaFuncDef) *QuplaFuncExpr {
-	return &QuplaFuncExpr{
-		QuplaExprBase: NewQuplaExprBase(src),
-		FuncDef:       funcDef,
+func NewQuplaFuncExpr(src string, funcDef *Function) *FunctionExpr {
+	return &FunctionExpr{
+		ExpressionBase: NewExpressionBase(src),
+		FuncDef:        funcDef,
 	}
 }
 
-func (e *QuplaFuncExpr) Size() int64 {
+func (e *FunctionExpr) Size() int64 {
 	if e == nil {
 		return 0
 	}
 	return e.FuncDef.Size()
 }
 
-func (e *QuplaFuncExpr) NewCallFrame(parent *CallFrame) *CallFrame {
+func (e *FunctionExpr) NewCallFrame(parent *CallFrame) *CallFrame {
 	numVars := len(e.FuncDef.LocalVars)
 	return &CallFrame{
 		context:  e,
@@ -35,11 +35,11 @@ func (e *QuplaFuncExpr) NewCallFrame(parent *CallFrame) *CallFrame {
 	}
 }
 
-func (e *QuplaFuncExpr) Eval(proc ProcessorInterface, result Trits) bool {
+func (e *FunctionExpr) Eval(proc ProcessorInterface, result Trits) bool {
 	return proc.Eval(e.FuncDef.RetExpr, result)
 }
 
-func (e *QuplaFuncExpr) References(funName string) bool {
+func (e *FunctionExpr) References(funName string) bool {
 	if e.FuncDef.Name == funName {
 		return true
 	}

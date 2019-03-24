@@ -112,7 +112,7 @@ func CmdSaveModule(words []string) {
 	}
 }
 
-func logExecs(list []*qupla.QuplaExecStmt) {
+func logExecs(list []*qupla.ExecStmt) {
 	logf(0, "Found %v executable statements:", len(list))
 	for _, ex := range list {
 		logf(0, "   #%v:  %v", ex.GetIdx(), ex.GetSource())

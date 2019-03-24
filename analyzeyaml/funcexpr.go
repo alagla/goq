@@ -7,7 +7,7 @@ import (
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
-func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module *QuplaModule, scope *QuplaFuncDef) (*QuplaFuncExpr, error) {
+func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module *QuplaModule, scope *Function) (*FunctionExpr, error) {
 	funcDef := module.FindFuncDef(exprYAML.Name)
 	if funcDef == nil {
 		return nil, fmt.Errorf("can't find function '%v'", exprYAML.Name)

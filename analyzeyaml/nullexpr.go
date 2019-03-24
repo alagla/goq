@@ -4,7 +4,7 @@ import (
 	. "github.com/lunfardo314/goq/qupla"
 )
 
-func AnalyzeNullExpr(module *QuplaModule) (*QuplaNullExpr, error) {
+func AnalyzeNullExpr(module *QuplaModule) (*NullExpr, error) {
 	module.IncStat("nullExpr")
-	return &QuplaNullExpr{}, nil
+	return &NullExpr{}, nil
 }
