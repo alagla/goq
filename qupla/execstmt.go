@@ -47,7 +47,10 @@ func (ex *QuplaExecStmt) evalEnvironmentName() string {
 }
 
 func (ex *QuplaExecStmt) attach(disp *Supervisor, prev *QuplaExecStmt) error {
-	ex.evalEntity = ex.newEvalEntity(disp)
+	var err error
+	if ex.evalEntity, err = ex.newEvalEntity(disp); err != nil {
+		return err
+	}
 	envJoin := map[string]int{ex.evalEnvironmentName(): 5}
 	if err := disp.Attach(ex.evalEntity, envJoin, nil); err != nil {
 		return err
@@ -128,7 +131,7 @@ func (ec *execEvalCore) Call(_ Trits, res Trits) bool {
 	return null
 }
 
-func (ex *QuplaExecStmt) newEvalEntity(disp *Supervisor) *Entity {
+func (ex *QuplaExecStmt) newEvalEntity(disp *Supervisor) (*Entity, error) {
 	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.expr.GetSource())
 	core := &execEvalCore{exec: ex}
 	return disp.NewEntity(EntityOpts{

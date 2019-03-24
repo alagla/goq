@@ -24,17 +24,20 @@ func newMockEntityCore(name string, maxWaves int64) *mockEntityCore {
 	}
 }
 
-func newMockEntity(id int, maxCount int64) *Entity {
+func newMockEntity(id int, maxCount int64) (*Entity, error) {
 	name := fmt.Sprintf("mock_%v", id)
 	core := newMockEntityCore(name, maxCount)
-	ret := dispatcher.NewEntity(EntityOpts{
+	ret, err := dispatcher.NewEntity(EntityOpts{
 		Name:    name,
 		InSize:  81,
 		OutSize: 81,
 		Core:    core,
 	})
+	if err != nil {
+		return nil, err
+	}
 	core.entity = ret
-	return ret
+	return ret, nil
 }
 
 func (core *mockEntityCore) Call(args Trits, res Trits) bool {

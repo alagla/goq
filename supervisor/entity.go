@@ -70,8 +70,9 @@ func (ent *Entity) entityLoop() {
 		dec, _ := utils.TritsToBigInt(msg.effect)
 		logf(3, "effect '%v' (%v) -> entity '%v'", utils.TritsToString(msg.effect), dec, ent.name)
 		// calculate result
+		// TODO memory management
 		res := make(Trits, ent.outSize)
-		null = ent.core.Call(msg.effect, res)
+		null = ent.call(msg.effect, res)
 		if !null {
 			if msg.lastWithinLimit {
 				// postpone to new quant
@@ -97,5 +98,16 @@ func (ent *Entity) sendEffect(effect Trits, lastWithinLimit bool) {
 	ent.inChan <- entityMsg{
 		effect:          effect,
 		lastWithinLimit: lastWithinLimit,
+	}
+}
+
+func (ent *Entity) call(args Trits, res Trits) bool {
+	switch {
+	case ent.inSize == int64(len(args)) || ent.inSize == 0:
+		return ent.core.Call(args, res)
+	case int64(len(args)) < ent.inSize:
+		return ent.core.Call(PadTrits(args, int(ent.inSize)), res)
+	default:
+		return ent.core.Call(args[:ent.inSize], res)
 	}
 }

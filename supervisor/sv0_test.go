@@ -15,8 +15,11 @@ func TestPostEffect0(t *testing.T) {
 		t.Errorf("%v", err)
 		return
 	}
-	entity := newMockEntity(0, -1)
-
+	entity, err := newMockEntity(0, -1)
+	if err != nil {
+		t.Errorf("%v", err)
+		return
+	}
 	if err := dispatcher.Attach(entity, map[string]int{envName(0): 1}, nil); err != nil {
 		t.Errorf("%v", err)
 		return
@@ -63,7 +66,11 @@ func TestPostEffect1(t *testing.T) {
 	for i := 0; i < chainLen1; i++ {
 		// environment will be created when needed by attach
 
-		entity := newMockEntity(i, -1)
+		entity, err := newMockEntity(i, -1)
+		if err != nil {
+			t.Errorf("%v", err)
+			return
+		}
 
 		if err := dispatcher.Attach(entity, map[string]int{envName(i): 1}, nil); err != nil {
 			t.Errorf("%v", err)
@@ -125,10 +132,15 @@ func TestPostEffect2(t *testing.T) {
 
 	// generating line chain
 	var entity *Entity
+	var err error
 
 	for i := 0; i < chainLen2; i++ {
 		// environments created when needed by attach
-		entity = newMockEntity(i, maxCount)
+		entity, err = newMockEntity(i, maxCount)
+		if err != nil {
+			t.Errorf("%v", err)
+			return
+		}
 
 		if err := dispatcher.Attach(entity, map[string]int{envName(i): maxCount}, nil); err != nil {
 			t.Errorf("%v", err)

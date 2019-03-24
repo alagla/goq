@@ -22,13 +22,16 @@ func NewSupervisor(lockTimeout time.Duration) *Supervisor {
 }
 
 type EntityOpts struct {
-	Name    string
-	InSize  int64
-	OutSize int64
-	Core    EntityCore
+	Name    string     // unique name
+	InSize  int64      // size or concatenated args. 0 means entity accepts input of any size
+	OutSize int64      // size of the output. Must be > 0
+	Core    EntityCore // core object which does the work of the entity with Call interface
 }
 
-func (sv *Supervisor) NewEntity(opt EntityOpts) *Entity {
+func (sv *Supervisor) NewEntity(opt EntityOpts) (*Entity, error) {
+	if opt.OutSize < 1 || opt.InSize < 0 {
+		return nil, fmt.Errorf("must be: output size > 0, input size >= 0")
+	}
 	ret := &Entity{
 		supervisor: sv,
 		name:       opt.Name,
@@ -38,7 +41,7 @@ func (sv *Supervisor) NewEntity(opt EntityOpts) *Entity {
 		joined:     make([]*environment, 0),
 		core:       opt.Core,
 	}
-	return ret
+	return ret, nil
 }
 
 func (sv *Supervisor) GetQuantCount() int64 {

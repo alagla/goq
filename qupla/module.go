@@ -155,8 +155,13 @@ func (module *QuplaModule) AttachToSupervisor(disp *supervisor.Supervisor) bool 
 		if !funcdef.HasEnvStmt() {
 			continue
 		}
-		entity := NewFunctionEntity(disp, funcdef, NewStackProcessor())
-		if err := disp.Attach(entity, funcdef.GetJoinEnv(), funcdef.GetAffectEnv()); err != nil {
+		entity, err := NewFunctionEntity(disp, funcdef, NewStackProcessor())
+		if err != nil {
+			logf(0, "can't create entity: %v", err)
+			ret = false
+			continue
+		}
+		if err = disp.Attach(entity, funcdef.GetJoinEnv(), funcdef.GetAffectEnv()); err != nil {
 			logf(0, "error while attaching entity to dispatcher: %v", err)
 			ret = false
 		}

@@ -11,14 +11,22 @@ func TestAffectDelay3(t *testing.T) {
 	const delayAffect = 1000
 	fmt.Printf("\nTest 3: testing affect with delay on start = %v, delay affect = %v\n", delayOnStart, delayAffect)
 
-	entity0 := newMockEntity(0, -1)
+	entity0, err := newMockEntity(0, -1)
+	if err != nil {
+		t.Errorf("%v", err)
+		return
+	}
 	core0 := entity0.GetCore().(*mockEntityCore)
 	if err := dispatcher.Join(envName(0), entity0, 1); err != nil {
 		t.Errorf("%v", err)
 		return
 	}
 
-	entity1 := newMockEntity(1, -1)
+	entity1, err := newMockEntity(1, -1)
+	if err != nil {
+		t.Errorf("%v", err)
+		return
+	}
 	core1 := entity1.GetCore().(*mockEntityCore)
 	if err := dispatcher.Join(envName(1), entity1, 1); err != nil {
 		t.Errorf("%v", err)
@@ -72,10 +80,14 @@ func TestJoinLimit4(t *testing.T) {
 
 	// generating line chain
 	var entity *Entity
-
+	var err error
 	for i := 0; i < chainLen; i++ {
 		// environments created when needed by attach
-		entity = newMockEntity(i, maxCount)
+		entity, err = newMockEntity(i, maxCount)
+		if err != nil {
+			t.Errorf("%v", err)
+			return
+		}
 
 		if err := dispatcher.Join(envName(i), entity, joinLimit); err != nil {
 			t.Errorf("%v", err)
