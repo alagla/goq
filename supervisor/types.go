@@ -1,4 +1,4 @@
-package dispatcher
+package supervisor
 
 import (
 	"github.com/Workiva/go-datastructures/queue"
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type Dispatcher struct {
+type Supervisor struct {
 	queue           *queue.Queue
 	idle            bool
 	environments    map[string]*environment
@@ -19,7 +19,7 @@ type Dispatcher struct {
 }
 
 type Entity struct {
-	dispatcher *Dispatcher
+	supervisor *Supervisor
 	name       string
 	inSize     int64
 	outSize    int64
@@ -50,7 +50,7 @@ type joinEnvData struct {
 }
 
 type environment struct {
-	dispatcher *Dispatcher
+	supervisor *Supervisor
 	name       string
 	invalid    bool
 	joins      []*joinEnvData

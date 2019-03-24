@@ -1,4 +1,4 @@
-package dispatcher
+package supervisor
 
 import (
 	"fmt"
@@ -7,17 +7,17 @@ import (
 	"time"
 )
 
-// Public dispatcher API
+// Public supervisor API
 
-func NewDispatcher(lockTimeout time.Duration) *Dispatcher {
-	ret := &Dispatcher{
+func NewSupervisor(lockTimeout time.Duration) *Supervisor {
+	ret := &Supervisor{
 		queue:        queue.New(5),
 		environments: make(map[string]*environment),
 		accessLock:   newSema(),
 		timeout:      lockTimeout,
 	}
-	ret.accessLock.acquire(-1) // dispatcher starts locked
-	go ret.dispatcherInputLoop()
+	ret.accessLock.acquire(-1) // supervisor starts locked
+	go ret.supervisorInputLoop()
 	return ret
 }
 
@@ -28,9 +28,9 @@ type EntityOpts struct {
 	Core    EntityCore
 }
 
-func (disp *Dispatcher) NewEntity(opt EntityOpts) *Entity {
+func (sv *Supervisor) NewEntity(opt EntityOpts) *Entity {
 	ret := &Entity{
-		dispatcher: disp,
+		supervisor: sv,
 		name:       opt.Name,
 		inSize:     opt.InSize,
 		outSize:    opt.OutSize,
@@ -41,35 +41,35 @@ func (disp *Dispatcher) NewEntity(opt EntityOpts) *Entity {
 	return ret
 }
 
-func (disp *Dispatcher) GetQuantCount() int64 {
-	disp.quantCountMutex.RLock()
-	defer disp.quantCountMutex.RUnlock()
-	return disp.quantCount
+func (sv *Supervisor) GetQuantCount() int64 {
+	sv.quantCountMutex.RLock()
+	defer sv.quantCountMutex.RUnlock()
+	return sv.quantCount
 }
 
-func (disp *Dispatcher) CreateEnvironment(name string) error {
-	if !disp.accessLock.acquire(disp.timeout) {
+func (sv *Supervisor) CreateEnvironment(name string) error {
+	if !sv.accessLock.acquire(sv.timeout) {
 		return fmt.Errorf("request lock timeout: can't create environment")
 	}
-	defer disp.accessLock.release()
-	return disp.createEnvironment(name)
+	defer sv.accessLock.release()
+	return sv.createEnvironment(name)
 }
 
 // executes 'join' and 'affect' of the entity
-func (disp *Dispatcher) Attach(entity *Entity, joins, affects map[string]int) error {
-	if !disp.accessLock.acquire(disp.timeout) {
+func (sv *Supervisor) Attach(entity *Entity, joins, affects map[string]int) error {
+	if !sv.accessLock.acquire(sv.timeout) {
 		return fmt.Errorf("acquire lock timeout: can't attach entity to environment")
 	}
-	defer disp.accessLock.release()
+	defer sv.accessLock.release()
 
 	for envName, limit := range joins {
-		env := disp.getOrCreateEnvironment(envName)
+		env := sv.getOrCreateEnvironment(envName)
 		if err := env.join(entity, limit); err != nil {
 			return err
 		}
 	}
 	for envName, delay := range affects {
-		env := disp.getOrCreateEnvironment(envName)
+		env := sv.getOrCreateEnvironment(envName)
 		if err := env.affect(entity, delay); err != nil {
 			return err
 		}
@@ -77,48 +77,48 @@ func (disp *Dispatcher) Attach(entity *Entity, joins, affects map[string]int) er
 	return nil
 }
 
-func (disp *Dispatcher) Join(envName string, entity *Entity, limit int) error {
-	return disp.Attach(entity, map[string]int{envName: limit}, nil)
+func (sv *Supervisor) Join(envName string, entity *Entity, limit int) error {
+	return sv.Attach(entity, map[string]int{envName: limit}, nil)
 }
 
-func (disp *Dispatcher) Affect(envName string, entity *Entity, delay int) error {
-	return disp.Attach(entity, nil, map[string]int{envName: delay})
+func (sv *Supervisor) Affect(envName string, entity *Entity, delay int) error {
+	return sv.Attach(entity, nil, map[string]int{envName: delay})
 }
 
-func (disp *Dispatcher) DeleteEnvironment(envName string) error {
-	if !disp.accessLock.acquire(disp.timeout) {
+func (sv *Supervisor) DeleteEnvironment(envName string) error {
+	if !sv.accessLock.acquire(sv.timeout) {
 		return fmt.Errorf("request lock timeout: can't delete environment")
 	}
-	defer disp.accessLock.release()
+	defer sv.accessLock.release()
 
-	env, ok := disp.environments[envName]
+	env, ok := sv.environments[envName]
 	if !ok {
 		return fmt.Errorf("can't find environment '%v'", envName)
 	}
 	env.invalidate()
-	delete(disp.environments, envName)
+	delete(sv.environments, envName)
 	logf(5, "deleted environment '%v'", envName)
 	return nil
 }
 
-func (disp *Dispatcher) PostEffect(envName string, effect Trits, delay int) error {
-	return disp.postEffect(envName, nil, effect, delay, true)
+func (sv *Supervisor) PostEffect(envName string, effect Trits, delay int) error {
+	return sv.postEffect(envName, nil, effect, delay, true)
 }
 
-// calls doFunct if dispatcher becomes idle within 'timeout'
+// calls doFunct if supervisor becomes idle within 'timeout'
 // doFunct will be called upon release of the semaphore in the same goroutine.
-// The doFunct itself must take care about locking the dispatcher if needed
-func (disp *Dispatcher) DoIfIdle(timeout time.Duration, doFunct func()) bool {
-	if !disp.accessLock.acquire(timeout) {
+// The doFunct itself must take care about locking the supervisor if needed
+func (sv *Supervisor) DoIfIdle(timeout time.Duration, doFunct func()) bool {
+	if !sv.accessLock.acquire(timeout) {
 		return false
 	}
-	disp.accessLock.release()
+	sv.accessLock.release()
 	doFunct()
 	return true
 }
 
-func (disp *Dispatcher) DoOnIdle(doFunct func()) {
-	for !disp.DoIfIdle(1*time.Second, doFunct) {
+func (sv *Supervisor) DoOnIdle(doFunct func()) {
+	for !sv.DoIfIdle(1*time.Second, doFunct) {
 	}
 }
 
@@ -128,15 +128,15 @@ type EnvironmentInfo struct {
 	AffectedBy     []string
 }
 
-func (disp *Dispatcher) EnvironmentInfo() map[string]*EnvironmentInfo {
-	if !disp.accessLock.acquire(disp.timeout) {
+func (sv *Supervisor) EnvironmentInfo() map[string]*EnvironmentInfo {
+	if !sv.accessLock.acquire(sv.timeout) {
 		return nil
 	}
-	defer disp.accessLock.release()
+	defer sv.accessLock.release()
 
 	ret := make(map[string]*EnvironmentInfo)
 
-	for name, env := range disp.environments {
+	for name, env := range sv.environments {
 		envInfo := &EnvironmentInfo{
 			Size:           env.size,
 			JoinedEntities: make([]string, 0, len(env.joins)),
@@ -162,5 +162,5 @@ func (ent *Entity) GetCore() EntityCore {
 
 // for calls from within entity core. For debugging
 func (ent *Entity) GetQuantCount() int64 {
-	return ent.dispatcher.GetQuantCount()
+	return ent.supervisor.GetQuantCount()
 }

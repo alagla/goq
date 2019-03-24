@@ -3,7 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/lunfardo314/goq/abstract"
-	"github.com/lunfardo314/goq/dispatcher"
+	"github.com/lunfardo314/goq/supervisor"
 	. "github.com/lunfardo314/goq/utils"
 	"strings"
 )
@@ -149,7 +149,7 @@ func (module *QuplaModule) collectReferencingFuncs(nameSet StringSet) int {
 	return ret
 }
 
-func (module *QuplaModule) AttachToDispatcher(disp *dispatcher.Dispatcher) bool {
+func (module *QuplaModule) AttachToSupervisor(disp *supervisor.Supervisor) bool {
 	ret := true
 	for _, funcdef := range module.Functions {
 		if !funcdef.HasEnvStmt() {

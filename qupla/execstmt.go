@@ -3,7 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/dispatcher"
+	. "github.com/lunfardo314/goq/supervisor"
 	"time"
 )
 
@@ -46,7 +46,7 @@ func (ex *QuplaExecStmt) evalEnvironmentName() string {
 	return fmt.Sprintf("$%v_IN", ex.GetIdx())
 }
 
-func (ex *QuplaExecStmt) attach(disp *Dispatcher, prev *QuplaExecStmt) error {
+func (ex *QuplaExecStmt) attach(disp *Supervisor, prev *QuplaExecStmt) error {
 	ex.evalEntity = ex.newEvalEntity(disp)
 	envJoin := map[string]int{ex.evalEnvironmentName(): 5}
 	if err := disp.Attach(ex.evalEntity, envJoin, nil); err != nil {
@@ -62,11 +62,11 @@ func (ex *QuplaExecStmt) attach(disp *Dispatcher, prev *QuplaExecStmt) error {
 	return nil
 }
 
-func (ex *QuplaExecStmt) detach(disp *Dispatcher) error {
+func (ex *QuplaExecStmt) detach(disp *Supervisor) error {
 	return disp.DeleteEnvironment(ex.evalEnvironmentName())
 }
 
-func (ex *QuplaExecStmt) Run(disp *Dispatcher, repeat int) error {
+func (ex *QuplaExecStmt) Run(disp *Supervisor, repeat int) error {
 	if repeat < 1 {
 		return fmt.Errorf("'repeat' parameter must be >1")
 	}
@@ -128,7 +128,7 @@ func (ec *execEvalCore) Call(_ Trits, res Trits) bool {
 	return null
 }
 
-func (ex *QuplaExecStmt) newEvalEntity(disp *Dispatcher) *Entity {
+func (ex *QuplaExecStmt) newEvalEntity(disp *Supervisor) *Entity {
 	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.expr.GetSource())
 	core := &execEvalCore{exec: ex}
 	return disp.NewEntity(EntityOpts{

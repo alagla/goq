@@ -81,7 +81,7 @@ func CmdLoadModule(words []string) {
 	module, succ = analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
 	module.PrintStats()
 	if succ {
-		succ = module.AttachToDispatcher(dispatcherInstance)
+		succ = module.AttachToSupervisor(svisor)
 	}
 	if succ {
 		logf(0, "Module loaded successfully")
@@ -146,7 +146,7 @@ func CmdRun(words []string) {
 	}
 	switch {
 	case len(words) == 1:
-		if err := module.RunExecs(dispatcherInstance, currentExecIdx, currentExecIdx, chainMode); err != nil {
+		if err := module.RunExecs(svisor, currentExecIdx, currentExecIdx, chainMode); err != nil {
 			logf(0, "%v", err)
 			currentExecIdx = 0
 			return
@@ -154,7 +154,7 @@ func CmdRun(words []string) {
 		currentExecIdx++
 
 	case len(words) == 2 && words[1] == "all":
-		if err := module.RunExecs(dispatcherInstance, -1, -1, chainMode); err != nil {
+		if err := module.RunExecs(svisor, -1, -1, chainMode); err != nil {
 			logf(0, "%v", err)
 			return
 		}
@@ -162,7 +162,7 @@ func CmdRun(words []string) {
 
 	case len(words) == 2 && stringIsInt(words[1]):
 		idx, _ := strconv.Atoi(words[1])
-		if err := module.RunExecs(dispatcherInstance, idx, idx, chainMode); err != nil {
+		if err := module.RunExecs(svisor, idx, idx, chainMode); err != nil {
 			logf(0, "%v", err)
 			currentExecIdx = 0
 			return
@@ -179,7 +179,7 @@ func CmdRun(words []string) {
 
 		fromIdx, _ := strconv.Atoi(split[0])
 		toIdx, _ := strconv.Atoi(split[1])
-		if err := module.RunExecs(dispatcherInstance, fromIdx, toIdx, chainMode); err != nil {
+		if err := module.RunExecs(svisor, fromIdx, toIdx, chainMode); err != nil {
 			logf(0, "%v", err)
 			currentExecIdx = 0
 			return
@@ -225,7 +225,7 @@ func CmdRepeat(words []string) {
 		logf(0, "wrong number of repeats'")
 		return
 	}
-	if err := module.RunExec(dispatcherInstance, idx, repeat); err != nil {
+	if err := module.RunExec(svisor, idx, repeat); err != nil {
 		logf(0, "%v", err)
 	}
 }

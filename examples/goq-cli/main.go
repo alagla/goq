@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/c-bata/go-prompt"
 	"github.com/lunfardo314/goq/cfg"
-	"github.com/lunfardo314/goq/dispatcher"
 	"github.com/lunfardo314/goq/qupla"
+	"github.com/lunfardo314/goq/supervisor"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"strings"
 	"time"
 )
 
-var dispatcherInstance = dispatcher.NewDispatcher(1 * time.Second)
+var svisor = supervisor.NewSupervisor(1 * time.Second)
 var moduleYAML *QuplaModuleYAML
 var module *qupla.QuplaModule
 
@@ -38,7 +38,7 @@ var startupCmd = []string{
 }
 
 func main() {
-	logf(0, "Welcome to GOQ-CLI: a simple Qubic Dispatcher in Go Command Line Interface ver %v", cfg.Config.Version)
+	logf(0, "Welcome to GOQ-CLI: a simple Qubic Supervisor in Go Command Line Interface ver %v", cfg.Config.Version)
 	logf(0, "Now is %v", time.Now())
 	//logf(0, "Verbosity level is %v. Change with `verb <level>`", cfg.Config.Verbosity)
 	//logf(0, "Use TAB to select suggestion")

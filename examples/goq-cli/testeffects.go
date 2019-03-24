@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/iotaledger/iota.go/trinary"
-	"github.com/lunfardo314/goq/dispatcher"
+	"github.com/lunfardo314/goq/supervisor"
 	"github.com/lunfardo314/goq/utils"
 	"math/big"
 	"strconv"
@@ -16,7 +16,7 @@ var postEffects = []struct {
 	{"fibInit", "10"},
 }
 
-func postEffectsToDispatcher(disp *dispatcher.Dispatcher) {
+func postEffectsToSupervisor(disp *supervisor.Supervisor) {
 	logf(0, "-----------------------")
 	logf(0, "Posting test effects to environments")
 

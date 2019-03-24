@@ -1,4 +1,4 @@
-package dispatcher
+package supervisor
 
 import (
 	"fmt"
@@ -6,9 +6,9 @@ import (
 	. "github.com/lunfardo314/goq/utils"
 )
 
-func newEnvironment(disp *Dispatcher, name string) *environment {
+func newEnvironment(disp *Supervisor, name string) *environment {
 	ret := &environment{
-		dispatcher: disp,
+		supervisor: disp,
 		name:       name,
 		joins:      make([]*joinEnvData, 0),
 		affects:    make([]*Entity, 0),
@@ -78,12 +78,12 @@ func (env *environment) environmentLoop() {
 		}
 		dec, _ := TritsToBigInt(effect)
 		logf(3, "effect '%v' (%v) -> environment '%v'", TritsToString(effect), dec, env.name)
-		env.dispatcher.quantWG.Add(len(env.joins))
+		env.supervisor.quantWG.Add(len(env.joins))
 		for _, joinData := range env.joins {
 			joinData.count++
 			joinData.entity.sendEffect(effect, joinData.count == joinData.limit)
 		}
-		env.dispatcher.quantWG.Done()
+		env.supervisor.quantWG.Done()
 	}
 }
 

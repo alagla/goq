@@ -3,7 +3,7 @@ package qupla
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abstract"
-	. "github.com/lunfardo314/goq/dispatcher"
+	. "github.com/lunfardo314/goq/supervisor"
 )
 
 type functionEntityCore struct {
@@ -19,7 +19,7 @@ func (fc *functionEntityCore) Call(args Trits, res Trits) bool {
 	return fc.proc.Eval(expr, res)
 }
 
-func NewFunctionEntity(disp *Dispatcher, funcDef *QuplaFuncDef, proc ProcessorInterface) *Entity {
+func NewFunctionEntity(disp *Supervisor, funcDef *QuplaFuncDef, proc ProcessorInterface) *Entity {
 	return disp.NewEntity(EntityOpts{
 		Name:    funcDef.Name,
 		InSize:  funcDef.ArgSize(),

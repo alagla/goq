@@ -3,11 +3,11 @@ package qupla
 import (
 	"fmt"
 	"github.com/iotaledger/iota.go/trinary"
-	"github.com/lunfardo314/goq/dispatcher"
+	"github.com/lunfardo314/goq/supervisor"
 	"time"
 )
 
-func (module *QuplaModule) AttachExecs(disp *dispatcher.Dispatcher, fromIdx int, toIdx int, chain bool) []*QuplaExecStmt {
+func (module *QuplaModule) AttachExecs(disp *supervisor.Supervisor, fromIdx int, toIdx int, chain bool) []*QuplaExecStmt {
 	if len(module.execs) == 0 {
 		logf(0, "No executables to execute")
 		return nil
@@ -45,7 +45,7 @@ func (module *QuplaModule) AttachExecs(disp *dispatcher.Dispatcher, fromIdx int,
 	return ret
 }
 
-func (module *QuplaModule) detachExecs(disp *dispatcher.Dispatcher, execs []*QuplaExecStmt) error {
+func (module *QuplaModule) detachExecs(disp *supervisor.Supervisor, execs []*QuplaExecStmt) error {
 	for _, e := range execs {
 		if err := e.detach(disp); err != nil {
 			return err
@@ -54,7 +54,7 @@ func (module *QuplaModule) detachExecs(disp *dispatcher.Dispatcher, execs []*Qup
 	return nil
 }
 
-func (module *QuplaModule) runAttachedExecs(disp *dispatcher.Dispatcher, execs []*QuplaExecStmt, chain bool) error {
+func (module *QuplaModule) runAttachedExecs(disp *supervisor.Supervisor, execs []*QuplaExecStmt, chain bool) error {
 	if len(execs) == 0 {
 		return fmt.Errorf("No executables to execute")
 	}
@@ -70,7 +70,7 @@ func (module *QuplaModule) runAttachedExecs(disp *dispatcher.Dispatcher, execs [
 	return nil
 }
 
-func (module *QuplaModule) RunExec(disp *dispatcher.Dispatcher, idx int, repeat int) error {
+func (module *QuplaModule) RunExec(disp *supervisor.Supervisor, idx int, repeat int) error {
 	if module.ExecByIdx(idx) == nil {
 		return fmt.Errorf("can't find executable statement #%v", idx)
 	}
@@ -100,7 +100,7 @@ func (module *QuplaModule) RunExec(disp *dispatcher.Dispatcher, idx int, repeat 
 	return nil
 }
 
-func (module *QuplaModule) RunExecs(disp *dispatcher.Dispatcher, fromIdx int, toIdx int, chain bool) error {
+func (module *QuplaModule) RunExecs(disp *supervisor.Supervisor, fromIdx int, toIdx int, chain bool) error {
 	attachedExecs := module.AttachExecs(disp, fromIdx, toIdx, chain)
 
 	logf(0, "Running executable statements with indices between %v and %v", fromIdx, toIdx)

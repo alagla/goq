@@ -1,9 +1,9 @@
-package dispatcher_tests
+package sv_tests
 
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/dispatcher"
+	. "github.com/lunfardo314/goq/supervisor"
 	"github.com/lunfardo314/goq/utils"
 	"testing"
 )

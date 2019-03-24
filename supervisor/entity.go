@@ -1,4 +1,4 @@
-package dispatcher
+package supervisor
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
@@ -76,20 +76,20 @@ func (ent *Entity) entityLoop() {
 			if msg.lastWithinLimit {
 				// postpone to new quant
 				for _, affectInfo := range ent.affecting {
-					_ = ent.dispatcher.postEffect("", affectInfo.environment, res, affectInfo.delay, false)
+					_ = ent.supervisor.postEffect("", affectInfo.environment, res, affectInfo.delay, false)
 				}
 			} else {
 				for _, affectInfo := range ent.affecting {
 					if affectInfo.delay == 0 {
-						ent.dispatcher.quantWG.Add(1)
+						ent.supervisor.quantWG.Add(1)
 						affectInfo.environment.effectChan <- res
 					} else {
-						_ = ent.dispatcher.postEffect("", affectInfo.environment, res, affectInfo.delay, false)
+						_ = ent.supervisor.postEffect("", affectInfo.environment, res, affectInfo.delay, false)
 					}
 				}
 			}
 		}
-		ent.dispatcher.quantWG.Done()
+		ent.supervisor.quantWG.Done()
 	}
 }
 
