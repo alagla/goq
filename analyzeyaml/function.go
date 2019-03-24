@@ -10,7 +10,7 @@ import (
 
 // analyzes return size, creates variables and create entry in module's table
 // not finished analysis, but is is ok to analyze correctly recursive calls
-func AnalyzePreliminaryFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) error {
+func AnalyzeFunctionPreliminary(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) error {
 	ce, err := AnalyzeExpression(defYAML.ReturnType, module, nil)
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func AnalyzePreliminaryFuncDef(name string, defYAML *QuplaFuncDefYAML, module *Q
 	return module.AddFuncDef(name, def)
 }
 
-func AnalyzeFuncDef(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) error {
+func AnalyzeFunction(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule) error {
 	var err error
 
 	module.IncStat("numFuncDef")
