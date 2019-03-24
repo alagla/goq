@@ -1,4 +1,4 @@
-package sv_tests
+package misc
 
 import (
 	"fmt"
