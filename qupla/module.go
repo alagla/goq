@@ -106,9 +106,10 @@ func (module *QuplaModule) IncStat(key string) {
 }
 
 func (module *QuplaModule) PrintStats() {
-	logf(0, "Module stats:")
+	logf(2, "Module statistics:")
+	logf(2, "  module name: '%v'", module.name)
 	for k, v := range module.stats {
-		logf(0, "  %v : %v", k, v)
+		logf(2, "  %v : %v", k, v)
 	}
 }
 

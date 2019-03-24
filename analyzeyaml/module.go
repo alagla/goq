@@ -12,13 +12,16 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 
 	retSucc := true
 	logf(0, "Analyzing LUTs..")
+	numLuts := 0
 	for name, lutDefYAML := range moduleYAML.Luts {
+		numLuts++
 		if err := AnalyzeLutDef(name, lutDefYAML, ret); err != nil {
 			ret.IncStat("numErr")
 			logf(0, "%v", err)
 			retSucc = false
 		}
 	}
+	logf(1, "Analyzed %v LUTs", numLuts)
 
 	retSucc = true
 
@@ -37,12 +40,11 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 			retSucc = false
 		}
 	}
-	logf(0, "Analyzed %v functions", len(ret.Functions))
+	logf(1, "Analyzed %v functions", len(ret.Functions))
 
-	logf(0, "Determining stateful functions")
 	numWithStateVars, numStateful := ret.MarkStateful()
-	logf(0, "Found %v func def with state vars and %v stateful functions (which references them)",
-		numWithStateVars, numStateful)
+	logf(1, "Functions with state variables: %v", numWithStateVars)
+	logf(1, "Functions with state (which references functions with state variables): %v", numStateful)
 
 	//if n, ok := ret.stats["numEnvFundef"]; ok {
 	//	logf(0, "Functions joins/affects environments: %v", n)
@@ -67,20 +69,23 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 		}
 	}
 	if len(ret.Environments) > 0 {
-		logf(0, "Environments detected: '%v'", ret.Environments.Join(", "))
+		logf(1, "Environments: '%v'", ret.Environments.Join(", "))
 	} else {
-		logf(0, "Environments detected: none")
+		logf(1, "Environments: none")
 	}
 
 	logf(0, "Analyzing execs (tests and evals)..")
+	numExec := 0
 	for _, execYAML := range moduleYAML.Execs {
 		err := AnalyzeExecStmt(execYAML, ret)
+		numExec++
 		if err != nil {
 			ret.IncStat("numErr")
 			errorf("%v", err)
 			retSucc = false
 		}
 	}
+	logf(1, "Executable statements found: %v", numExec)
 
 	return ret, retSucc
 }

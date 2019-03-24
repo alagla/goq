@@ -13,16 +13,28 @@ import (
 )
 
 // Commands:
-// 		load [<module file>]
-//      save [<module file>]
-// 		verb [<level>]
-//      list [execs <search string>]
-//      runtime
-//      run  [idxFrom [- idxTo]]
+//    verb
+//    verb <level>
+//    runtime
+//    dir
+//    dir <directory name>
+//    load
+//    load <module yaml file>
+//    save
+//    save <file to save as yaml>
+//    list
+//    list <substring>
+//    run
+//    run all
+//    run <exec idx>
+//    run <from exec idx>-<to exec idx>
+//    repeat <exec idx> <repeat times>
+//    chain
+//    chain on|off
 
 func CmdVerbosity(words []string) {
 	if len(words) == 1 {
-		logf(0, "current verbosity level is %v", cfg.Config.Verbosity)
+		logf(0, "Verbosity level is %v", cfg.Config.Verbosity)
 		return
 	}
 	v, err := strconv.Atoi(words[1])
@@ -35,13 +47,33 @@ func CmdVerbosity(words []string) {
 
 }
 
-const fname = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
-const testout = "C:/Users/evaldas/Documents/proj/site_data/tmp/echotest.yml"
+func CmdDir(words []string) {
+	var err error
+	if len(words) >= 2 {
+		err = os.Chdir(words[1])
+		if err != nil {
+			logf(0, "%v", err)
+		}
+	}
+	currentDir, err := os.Getwd()
+	if err != nil {
+		logf(0, "%v", err)
+	} else {
+		logf(0, "Current directory is %v", currentDir)
+	}
+}
+
+const fnamedefault = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
+const testoutdef = "echotest.yml"
 
 func CmdLoadModule(words []string) {
 	var err error
 
-	logf(0, "Loading module form file %v", fname)
+	fname := fnamedefault
+	if len(words) == 2 && words[1] != "exitonfail" {
+		fname = words[1]
+	}
+	logf(0, "Loading QuplaYAML module form file %v", fname)
 	moduleYAML, err = NewQuplaModuleFromYAML(fname)
 	if err != nil {
 		logf(0, "Error while parsing YAML file: %v", err)
@@ -49,7 +81,7 @@ func CmdLoadModule(words []string) {
 		return
 	}
 	var succ bool
-	module, succ = analyzeyaml.AnalyzeQuplaModule("single_module", moduleYAML)
+	module, succ = analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
 	module.PrintStats()
 	if succ {
 		succ = module.AttachToDispatcher(dispatcherInstance)
@@ -65,22 +97,26 @@ func CmdLoadModule(words []string) {
 	}
 }
 
-func CmdSaveModule(_ []string) {
+func CmdSaveModule(words []string) {
 	if moduleYAML == nil {
-		logf(0, "Error: module was not loaded")
+		logf(0, "Error: module is not loaded")
 		return
 	}
-	logf(0, "Writing Qupla module to YAML file %v", testout)
+	fname := testoutdef
+	if len(words) == 2 {
+		fname = words[1]
+	}
+	logf(0, "Writing Qupla module to YAML file %v", fname)
 
-	if err := moduleYAML.WriteToFile(testout); err != nil {
-		logf(0, "Error occured: %v", err)
+	if err := moduleYAML.WriteToFile(fname); err != nil {
+		logf(0, "%v", err)
 	} else {
-		logf(0, "Succesfully saved Qupla module")
+		logf(0, "Successfully saved Qupla module to %v", fname)
 	}
 }
 
 func logExecs(list []*qupla.QuplaExecStmt) {
-	logf(0, "Found %v executables:", len(list))
+	logf(0, "Found %v executable statements:", len(list))
 	for _, ex := range list {
 		logf(0, "   #%v:  %v", ex.GetIdx(), ex.GetSource())
 	}
@@ -91,20 +127,12 @@ func CmdList(words []string) {
 		logf(0, "Error: module was not loaded")
 		return
 	}
-	target := "execs"
-	if len(words) >= 2 {
-		target = words[1]
-	}
 	substr := ""
-	if len(words) >= 3 {
-		substr = words[2]
+	if len(words) == 2 {
+		substr = words[1]
 	}
-	switch target {
-	case "execs":
-		execs := module.FindExecs(substr)
-		logExecs(execs)
-		return
-	}
+	execs := module.FindExecs(substr)
+	logExecs(execs)
 }
 
 func stringIsInt(s string) bool {
@@ -166,149 +194,41 @@ func CmdRun(words []string) {
 
 var chainMode = false
 
-func CmdMode(words []string) {
-	if len(words) == 1 {
-		if chainMode {
-			logf(0, "chain mode is ON")
-		} else {
-			logf(0, "chain mode is OFF")
-		}
-		return
+func CmdChain(words []string) {
+	if len(words) == 2 {
+		chainMode = words[1] == "on"
 	}
-	if len(words) == 2 && words[1] == "on" {
-		chainMode = true
-		logf(0, "chain mode is ON")
+	if chainMode {
+		logf(0, "chain mode is ON. Executable statements will be linked in a chain of environments")
 	} else {
-		chainMode = false
-		logf(0, "chain mode is OFF")
+		logf(0, "chain mode is OFF. Executable statements will be run in unlinked environments")
 	}
 }
-
-//var waveModeON = false
-//
-//func CmdWave(words []string) {
-//	if module == nil {
-//		logf(0, "error: module not loaded")
-//		return
-//	}
-//	if len(words) == 1 {
-//		if waveModeON {
-//			logf(0, "Wave mode is ON")
-//		} else {
-//			logf(0, "Wave mode is OFF")
-//		}
-//		return
-//	}
-//
-//	switch words[1] {
-//	case "on":
-//		waveModeON = true
-//		logf(0, "wave mode is ON")
-//	case "off":
-//		waveModeON = false
-//		logf(0, "wave mode is OFF")
-//
-//	case "start":
-//		if len(words) != 4 {
-//			logf(0, "error: wrong command")
-//			return
-//		}
-//		if dispatcherInstance.IsWaveMode() {
-//			logf(0, "   quant is already running")
-//			return
-//		}
-//		effectDec, err := strconv.Atoi(words[2])
-//		if err != nil {
-//			logf(0, "error: effect must be decimal integers")
-//			return
-//		}
-//		effectTrits := trinary.IntToTrits(int64(effectDec))
-//		envName := words[3]
-//		err = dispatcherInstance.QuantStart(envName, effectTrits, waveModeON, func() {
-//			logf(0, " -------- quant finished")
-//			waveModeON = false
-//		})
-//		if err != nil {
-//			logf(0, "%v", err)
-//		}
-//	case "next":
-//		if !dispatcherInstance.IsWaveMode() {
-//			logf(0, "error: quant wasn't started: can't continue with the wave")
-//		}
-//		if err := dispatcherInstance.WaveNext(); err != nil {
-//			logf(0, "error: %v", err)
-//			return
-//		}
-//		time.Sleep(100 * time.Millisecond)
-//	case "run":
-//		if !dispatcherInstance.IsWaveMode() {
-//			logf(0, "   can't continue: quant not running")
-//			return
-//		}
-//		if err := dispatcherInstance.WaveRun(); err != nil {
-//			logf(0, "%v", err)
-//		}
-//	case "status":
-//		listValues()
-//	}
-//}
-//
-//func listValues() {
-//	vDict := dispatcherInstance.WaveValues()
-//	if len(vDict) == 0 {
-//		logf(0, "   wave is empty")
-//	} else {
-//		names := make([]string, 0, len(vDict))
-//		for n := range vDict {
-//			names = append(names, n)
-//		}
-//		sort.Strings(names)
-//		logf(0, "   environment values:")
-//		for _, name := range names {
-//			logf(0, "    %v: '%v'", name, utils.TritsToString(vDict[name]))
-//		}
-//	}
-//}
 
 func CmdRuntime(_ []string) {
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)
 	memAllocMB := math.Round(100*(float64(mem.Alloc/1024)/1024)) / 100
+	m := "not loaded"
+	if module != nil {
+		m = module.GetName()
+	}
+	logf(0, "Module: %v", m)
 	logf(0, "Memory allocated: %vM", memAllocMB)
 	logf(0, "Number of goroutines: %v", runtime.NumGoroutine())
 }
 
-//func CmdStatus(_ []string) {
-//	eInfo := dispatcherInstance.EnvironmentInfo()
-//	logf(0, "Dispatcher status:")
-//	logf(1, "Found %v environments", len(eInfo))
-//
-//	names := make([]string, 0, len(eInfo))
-//	for n := range eInfo {
-//		names = append(names, n)
-//	}
-//	sort.Strings(names)
-//
-//	for _, name := range names {
-//		envStatus := eInfo[name]
-//		logf(2, "%v (size = %v):", name, envStatus.Size)
-//		entStr := ""
-//		for _, entName := range envStatus.AffectedBy {
-//			if entStr != "" {
-//				entStr += ", "
-//			}
-//			entStr += entName
-//		}
-//		logf(4, "Affected by %v entities: %v", len(envStatus.AffectedBy), entStr)
-//
-//		entStr = ""
-//		for _, entName := range envStatus.JoinedEntities {
-//			if entStr != "" {
-//				entStr += ", "
-//			}
-//			entStr += entName
-//		}
-//		logf(4, "Joined %v entities: %v", len(envStatus.JoinedEntities), entStr)
-//
-//	}
-//}
+func CmdRepeat(words []string) {
+	if len(words) != 3 || !stringIsInt(words[1]) || !stringIsInt(words[2]) {
+		logf(0, "usage: 'repeat <exec idx> <numrepeat>'")
+	}
+	idx, _ := strconv.Atoi(words[1])
+	repeat, _ := strconv.Atoi(words[2])
+	if repeat < 1 {
+		logf(0, "wrong number of repeats'")
+		return
+	}
+	if err := module.RunExec(dispatcherInstance, idx, repeat); err != nil {
+		logf(0, "%v", err)
+	}
+}

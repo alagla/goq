@@ -25,23 +25,25 @@ func logf(minVerbosity int, format string, args ...interface{}) {
 }
 func execBatch(cmdlist []string) {
 	for _, cmdline := range cmdlist {
+		logf(0, "Batch command: '%v'", cmdline)
 		executor(cmdline)
-		time.Sleep(100 * time.Millisecond)
 	}
 }
 
 var startupCmd = []string{
 	"load exitonfail",
-	//"run 0",
-	"run all",
+	"run 0-1",
+	// "run all",
 	//"run 0-10",
 }
 
 func main() {
-	logf(0, "goq-cli: GOQ (Qubic Dispatcher in Go) Command Line Interface ver %v", cfg.Config.Version)
+	logf(0, "Welcome to GOQ-CLI: a simple Qubic Dispatcher in Go Command Line Interface ver %v", cfg.Config.Version)
 	logf(0, "Now is %v", time.Now())
-	logf(0, "Verbosity level is %v", cfg.Config.Verbosity)
+	//logf(0, "Verbosity level is %v. Change with `verb <level>`", cfg.Config.Verbosity)
 	//logf(0, "Use TAB to select suggestion")
+	executor("dir")
+	executor("verb")
 
 	pnocli := flag.Bool("nocli", false, "bypass CLI")
 	flag.Parse()

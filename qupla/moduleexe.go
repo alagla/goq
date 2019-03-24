@@ -3,12 +3,11 @@ package qupla
 import (
 	"fmt"
 	"github.com/iotaledger/iota.go/trinary"
-	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/dispatcher"
 	"time"
 )
 
-func (module *QuplaModule) attachExecs(disp *dispatcher.Dispatcher, fromIdx int, toIdx int, chain bool) []*QuplaExecStmt {
+func (module *QuplaModule) AttachExecs(disp *dispatcher.Dispatcher, fromIdx int, toIdx int, chain bool) []*QuplaExecStmt {
 	if len(module.execs) == 0 {
 		logf(0, "No executables to execute")
 		return nil
@@ -23,22 +22,6 @@ func (module *QuplaModule) attachExecs(disp *dispatcher.Dispatcher, fromIdx int,
 		logf(0, "Wrong range of indices: from %v to %v", fromIdx, toIdx)
 		return nil
 	}
-	switch {
-	case cfg.Config.ExecEvals && cfg.Config.ExecTests:
-		logf(2, "Attaching to dispatcher: evals and tests")
-	case cfg.Config.ExecEvals && !cfg.Config.ExecTests:
-		logf(2, "Attaching to dispatcher: evals only")
-	case !cfg.Config.ExecEvals && cfg.Config.ExecTests:
-		logf(2, "Attaching to dispatcher: Etests only")
-	case !cfg.Config.ExecEvals && !cfg.Config.ExecTests:
-		logf(2, "Attaching to dispatcher: wrong config values, assume tests only")
-	}
-	if fromIdx < 0 && toIdx < 0 {
-		logf(2, "Index range: ALL (total %v)", len(module.execs))
-	} else {
-		logf(2, "Index range: %v - %v", fromIdx, toIdx)
-	}
-
 	ret := make([]*QuplaExecStmt, 0)
 
 	var exec *QuplaExecStmt
@@ -87,31 +70,70 @@ func (module *QuplaModule) runAttachedExecs(disp *dispatcher.Dispatcher, execs [
 	return nil
 }
 
-func (module *QuplaModule) RunExecs(disp *dispatcher.Dispatcher, fromIdx int, toIdx int, chain bool) error {
-	attachedExecs := module.attachExecs(disp, fromIdx, toIdx, chain)
-	logf(0, "Total executables in the module: %v", len(module.execs))
-	logf(0, "Skipped: %v", len(module.execs)-len(attachedExecs))
-	logf(0, "Start running executables: %v", len(attachedExecs))
-	start := time.Now()
-	if err := module.runAttachedExecs(disp, attachedExecs, chain); err != nil {
-		return err
+func (module *QuplaModule) RunExec(disp *dispatcher.Dispatcher, idx int, repeat int) error {
+	if module.ExecByIdx(idx) == nil {
+		return fmt.Errorf("can't find executable statement #%v", idx)
 	}
+	attachedExecs := module.AttachExecs(disp, idx, idx, false)
+	if len(attachedExecs) != 1 {
+		return fmt.Errorf("inconsistency")
+	}
+	logf(0, "Running %v times: '%v'", repeat, attachedExecs[0].GetName())
 
+	start := time.Now()
+	for i := 0; i < repeat; i++ {
+		if err := disp.PostEffect(attachedExecs[0].evalEnvironmentName(), trinary.Trits{0}, 0); err != nil {
+			return err
+		}
+	}
+	var duration time.Duration
 	onFinish := func() {
 		_ = module.detachExecs(disp, attachedExecs)
-		logf(0, "Finished running execs, chain mode = %v. Duration %v", chain, time.Since(start))
+		duration = time.Since(start)
+		logf(0, "Stop")
 	}
 
 	for !disp.DoIfIdle(5*time.Second, onFinish) {
 	}
 
-	reportRunResults(attachedExecs)
+	reportRunResults(attachedExecs, duration)
 	return nil
 }
 
-func reportRunResults(execs []*QuplaExecStmt) {
+func (module *QuplaModule) RunExecs(disp *dispatcher.Dispatcher, fromIdx int, toIdx int, chain bool) error {
+	attachedExecs := module.AttachExecs(disp, fromIdx, toIdx, chain)
+
+	logf(0, "Running executable statements with indices between %v and %v", fromIdx, toIdx)
+	logf(0, "   total in the module: %v", len(module.execs))
+	logf(0, "   running: %v", len(attachedExecs))
+	logf(0, "   skipped: %v", len(module.execs)-len(attachedExecs))
+	cmode := "OFF"
+	if chain {
+		cmode = "ON"
+	}
+	logf(0, "Chain mode is %v", cmode)
+	start := time.Now()
+	if err := module.runAttachedExecs(disp, attachedExecs, chain); err != nil {
+		return err
+	}
+
+	var duration time.Duration
+	onFinish := func() {
+		_ = module.detachExecs(disp, attachedExecs)
+		duration = time.Since(start)
+		logf(0, "Stop")
+	}
+
+	for !disp.DoIfIdle(5*time.Second, onFinish) {
+	}
+
+	reportRunResults(attachedExecs, duration)
+	return nil
+}
+
+func reportRunResults(execs []*QuplaExecStmt, duration time.Duration) {
 	logf(0, "Run summary:")
-	logf(0, "Executed %v executables", len(execs))
+	logf(0, "   Executed %v executable statements in %v", len(execs), duration)
 	numTest := 0
 	numEvals := 0
 	numTestsPassed := 0

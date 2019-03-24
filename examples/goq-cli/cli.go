@@ -7,7 +7,7 @@ import (
 )
 
 func executor(in string) {
-	logf(2, "goq-cli cmd: '%v'", in)
+	logf(5, "goq-cli cmd: '%v'", in)
 	words := strings.Split(in, " ")
 	if len(words) == 0 || words[0] == "" {
 		return
@@ -18,22 +18,22 @@ func executor(in string) {
 		os.Exit(0)
 	case "verb":
 		CmdVerbosity(words)
+	case "dir":
+		CmdDir(words)
 	case "load":
 		CmdLoadModule(words)
 	case "save":
 		CmdSaveModule(words)
 	case "run":
 		CmdRun(words)
-	case "mode":
-		CmdMode(words)
+	case "repeat":
+		CmdRepeat(words)
+	case "chain":
+		CmdChain(words)
 	case "list":
 		CmdList(words)
-	case "functions":
-		logf(0, "not implemented yet")
 	case "runtime":
 		CmdRuntime(words)
-	//case "status":
-	//	CmdStatus(words)
 
 	default:
 		logf(0, "unknown command")
