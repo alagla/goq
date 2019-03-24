@@ -33,18 +33,15 @@ import (
 //    chain on|off
 
 func CmdVerbosity(words []string) {
-	if len(words) == 1 {
-		logf(0, "Verbosity level is %v", cfg.Config.Verbosity)
-		return
+	if len(words) == 2 {
+		v, err := strconv.Atoi(words[1])
+		if err != nil || v < 0 {
+			logf(0, "must be non-negative integer")
+			return
+		}
+		cfg.Config.Verbosity = v
 	}
-	v, err := strconv.Atoi(words[1])
-	if err != nil || v < 0 {
-		logf(0, "must be non-negative integers")
-		return
-	}
-	cfg.Config.Verbosity = v
-	logf(0, "verbosity was set to %v", cfg.Config.Verbosity)
-
+	logf(0, "Verbosity level is %v", cfg.Config.Verbosity)
 }
 
 func CmdDir(words []string) {
