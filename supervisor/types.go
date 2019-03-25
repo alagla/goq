@@ -55,6 +55,5 @@ type environment struct {
 	invalid    bool
 	joins      []*joinEnvData
 	affects    []*Entity
-	size       int
 	effectChan chan Trits
 }

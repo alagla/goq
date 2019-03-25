@@ -126,7 +126,6 @@ func (sv *Supervisor) DoOnIdle(doFunct func()) {
 }
 
 type EnvironmentInfo struct {
-	Size           int
 	JoinedEntities []string
 	AffectedBy     []string
 }
@@ -141,7 +140,6 @@ func (sv *Supervisor) EnvironmentInfo() map[string]*EnvironmentInfo {
 
 	for name, env := range sv.environments {
 		envInfo := &EnvironmentInfo{
-			Size:           env.size,
 			JoinedEntities: make([]string, 0, len(env.joins)),
 			AffectedBy:     make([]string, 0, len(env.affects)),
 		}

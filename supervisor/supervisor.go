@@ -52,11 +52,6 @@ func (sv *Supervisor) resetCallCounters() {
 }
 
 func (sv *Supervisor) quantStart(env *environment, effect Trits, onQuantFinish func()) error {
-	var err error
-	if effect, err = env.adjustEffect(effect); err != nil {
-		return err
-	}
-
 	sv.resetCallCounters()
 	sv.quantWG.Add(1)
 	env.effectChan <- effect
