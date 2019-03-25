@@ -83,5 +83,5 @@ func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ *QuplaModule, _ *Funct
 	if err != nil {
 		return nil, err
 	}
-	return NewConstValue("", int64(ret)), nil
+	return NewConstValue("", ret), nil
 }

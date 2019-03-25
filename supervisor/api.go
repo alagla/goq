@@ -23,8 +23,8 @@ func NewSupervisor(lockTimeout time.Duration) *Supervisor {
 
 type EntityOpts struct {
 	Name    string     // unique name
-	InSize  int64      // size or concatenated args. 0 means entity accepts input of any size
-	OutSize int64      // size of the output. Must be > 0
+	InSize  int        // size or concatenated args. 0 means entity accepts input of any size
+	OutSize int        // size of the output. Must be > 0
 	Core    EntityCore // core object which does the work of the entity with Call interface
 }
 
@@ -126,7 +126,7 @@ func (sv *Supervisor) DoOnIdle(doFunct func()) {
 }
 
 type EnvironmentInfo struct {
-	Size           int64
+	Size           int
 	JoinedEntities []string
 	AffectedBy     []string
 }

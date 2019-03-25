@@ -8,7 +8,7 @@ type ConcatExpr struct {
 	ExpressionBase
 }
 
-func (e *ConcatExpr) Size() int64 {
+func (e *ConcatExpr) Size() int {
 	if e == nil {
 		return 0
 	}

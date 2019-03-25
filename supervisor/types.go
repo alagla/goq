@@ -21,8 +21,8 @@ type Supervisor struct {
 type Entity struct {
 	supervisor *Supervisor
 	name       string
-	inSize     int64
-	outSize    int64
+	inSize     int
+	outSize    int
 	affecting  []*affectEntData // list of affected environments where effects are sent
 	joined     []*environment   // list of environments which are being listened to
 	inChan     chan entityMsg   // chan for incoming effects
@@ -55,6 +55,6 @@ type environment struct {
 	invalid    bool
 	joins      []*joinEnvData
 	affects    []*Entity
-	size       int64
+	size       int
 	effectChan chan Trits
 }

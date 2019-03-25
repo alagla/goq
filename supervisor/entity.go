@@ -103,9 +103,9 @@ func (ent *Entity) sendEffect(effect Trits, lastWithinLimit bool) {
 
 func (ent *Entity) call(args Trits, res Trits) bool {
 	switch {
-	case ent.inSize == int64(len(args)) || ent.inSize == 0:
+	case ent.inSize == len(args) || ent.inSize == 0:
 		return ent.core.Call(args, res)
-	case int64(len(args)) < ent.inSize:
+	case len(args) < ent.inSize:
 		return ent.core.Call(PadTrits(args, int(ent.inSize)), res)
 	default:
 		return ent.core.Call(args[:ent.inSize], res)

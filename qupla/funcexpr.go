@@ -17,7 +17,7 @@ func NewFunctionExpr(src string, funcDef *Function) *FunctionExpr {
 	}
 }
 
-func (e *FunctionExpr) Size() int64 {
+func (e *FunctionExpr) Size() int {
 	if e == nil {
 		return 0
 	}

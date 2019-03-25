@@ -5,16 +5,16 @@ import (
 )
 
 type FieldExpr struct {
-	Offset int64
-	Size   int64
+	Offset int
+	Size   int
 }
 type TypeExpr struct {
 	ExpressionBase
-	size   int64
+	size   int
 	Fields []FieldExpr
 }
 
-func NewQuplaTypeExpr(src string, size int64) *TypeExpr {
+func NewQuplaTypeExpr(src string, size int) *TypeExpr {
 	return &TypeExpr{
 		ExpressionBase: NewExpressionBase(src),
 		size:           size,
@@ -22,7 +22,7 @@ func NewQuplaTypeExpr(src string, size int64) *TypeExpr {
 	}
 }
 
-func (e *TypeExpr) Size() int64 {
+func (e *TypeExpr) Size() int {
 	if e == nil {
 		return 0
 	}

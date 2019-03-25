@@ -10,7 +10,7 @@ type QuplaFieldExpr struct {
 	CondExpr ExpressionInterface
 }
 
-func (e *QuplaFieldExpr) Size() int64 {
+func (e *QuplaFieldExpr) Size() int {
 	if e == nil {
 		return 0
 	}

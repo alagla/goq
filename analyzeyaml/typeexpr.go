@@ -23,7 +23,7 @@ func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module *QuplaModule, scope *Fu
 
 	var fe ExpressionInterface
 	var fi *ConstTypeFieldInfo
-	var sumFld int64
+	var sumFld int
 	for fldName, expr := range exprYAML.Fields {
 		fi, err = typeInfo.GetFieldInfo(fldName)
 		if err != nil {

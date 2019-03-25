@@ -9,7 +9,7 @@ type CondExpr struct {
 	ExpressionBase
 }
 
-func (e *CondExpr) Size() int64 {
+func (e *CondExpr) Size() int {
 	if e == nil {
 		return 0
 	}

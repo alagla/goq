@@ -17,11 +17,11 @@ func NewQuplaSizeofExpr(value int64, tritValue Trits) *SizeofExpr {
 	}
 }
 
-func (e *SizeofExpr) Size() int64 {
+func (e *SizeofExpr) Size() int {
 	if e == nil {
 		return 0
 	}
-	return int64(len(e.TritValue))
+	return len(e.TritValue)
 }
 
 func (e *SizeofExpr) Eval(_ *EvalFrame, result Trits) bool {

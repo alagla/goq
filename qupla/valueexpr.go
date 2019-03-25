@@ -14,11 +14,11 @@ func NewValueExpr(t Trits) *ValueExpr {
 		TritValue: t,
 	}
 }
-func (e *ValueExpr) Size() int64 {
+func (e *ValueExpr) Size() int {
 	if e == nil {
 		return 0
 	}
-	return int64(len(e.TritValue))
+	return len(e.TritValue)
 }
 
 func (e *ValueExpr) Eval(_ *EvalFrame, result Trits) bool {

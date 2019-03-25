@@ -8,9 +8,9 @@ import (
 type VarInfo struct {
 	Name     string
 	Analyzed bool
-	Idx      int64
-	Offset   int64
-	Size     int64
+	Idx      int
+	Offset   int
+	Size     int
 	IsState  bool
 	IsParam  bool
 	Assign   ExpressionInterface
@@ -23,7 +23,7 @@ type EvalFrame struct {
 
 type ExpressionInterface interface {
 	GetSource() string
-	Size() int64
+	Size() int
 	Eval(*EvalFrame, Trits) bool
 	References(string) bool
 }
@@ -50,7 +50,7 @@ func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
 }
 
 func (frame *EvalFrame) EvalVar(idx int) (Trits, bool) {
-	vi, err := frame.context.FuncDef.VarByIdx(int64(idx))
+	vi, err := frame.context.FuncDef.VarByIdx(idx)
 	if err != nil {
 		panic(err)
 	}
@@ -91,7 +91,7 @@ func MatchSizes(e1, e2 ExpressionInterface) error {
 	return nil
 }
 
-func RequireSize(e ExpressionInterface, size int64) error {
+func RequireSize(e ExpressionInterface, size int) error {
 	s := e.Size()
 
 	if s != size {

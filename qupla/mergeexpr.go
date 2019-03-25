@@ -8,7 +8,7 @@ type MergeExpr struct {
 	ExpressionBase
 }
 
-func (e *MergeExpr) Size() int64 {
+func (e *MergeExpr) Size() int {
 	if e == nil {
 		return 0
 	}

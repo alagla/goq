@@ -12,7 +12,7 @@ func AnalyzeConstTypeName(exprYAML *QuplaConstTypeNameYAML, _ *QuplaModule, func
 	if err != nil {
 		return nil, err
 	}
-	ret := NewConstTypeInfo(exprYAML.TypeName, int64(sz))
+	ret := NewConstTypeInfo(exprYAML.TypeName, sz)
 
 	var offset int
 
@@ -25,8 +25,8 @@ func AnalyzeConstTypeName(exprYAML *QuplaConstTypeNameYAML, _ *QuplaModule, func
 				fldname, exprYAML.TypeName, funcDef.Name, err)
 		}
 		ret.Fields[fldname] = &ConstTypeFieldInfo{
-			Offset: int64(offset),
-			Size:   int64(sz),
+			Offset: offset,
+			Size:   sz,
 		}
 	}
 	return ret, nil

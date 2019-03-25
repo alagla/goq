@@ -10,7 +10,7 @@ type LutExpr struct {
 	LutDef  *LutDef
 }
 
-func (e *LutExpr) Size() int64 {
+func (e *LutExpr) Size() int {
 	if e == nil {
 		return 0
 	}

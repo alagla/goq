@@ -18,7 +18,7 @@ func newEnvironment(disp *Supervisor, name string) *environment {
 	return ret
 }
 
-func (env *environment) checkNewSize(size int64) bool {
+func (env *environment) checkNewSize(size int) bool {
 	if env.size != 0 {
 		if env.size != size {
 			return false
@@ -33,8 +33,8 @@ func (env *environment) adjustEffect(effect Trits) (Trits, error) {
 	if env.size == 0 {
 		effect = Trits{0}
 	} else {
-		if int64(len(effect)) != env.size {
-			if int64(len(effect)) > env.size {
+		if len(effect) != env.size {
+			if len(effect) > env.size {
 				return nil, fmt.Errorf("trit vector '%v' is too long for the environment '%v', size = %v",
 					TritsToString(effect), env.name, env.size)
 			}

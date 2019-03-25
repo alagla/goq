@@ -6,13 +6,13 @@ import (
 
 type SliceExpr struct {
 	ExpressionBase
-	LocalVarIdx int64
+	LocalVarIdx int
 	VarScope    *Function
-	offset      int64
-	size        int64
+	offset      int
+	size        int
 }
 
-func NewQuplaSliceExpr(src string, offset, size int64) *SliceExpr {
+func NewQuplaSliceExpr(src string, offset, size int) *SliceExpr {
 	return &SliceExpr{
 		ExpressionBase: NewExpressionBase(src),
 		offset:         offset,
@@ -20,7 +20,7 @@ func NewQuplaSliceExpr(src string, offset, size int64) *SliceExpr {
 	}
 }
 
-func (e *SliceExpr) Size() int64 {
+func (e *SliceExpr) Size() int {
 	if e == nil {
 		return 0
 	}

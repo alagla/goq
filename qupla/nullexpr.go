@@ -6,10 +6,10 @@ import (
 
 type NullExpr struct {
 	ExpressionBase
-	size int64
+	size int
 }
 
-func NewNullExpr(size int64) *NullExpr {
+func NewNullExpr(size int) *NullExpr {
 	return &NullExpr{
 		ExpressionBase: NewExpressionBase(""),
 		size:           size,
@@ -21,7 +21,7 @@ func IsNullExpr(e interface{}) bool {
 	return ok
 }
 
-func (e *NullExpr) Size() int64 {
+func (e *NullExpr) Size() int {
 	return e.size
 }
 
@@ -29,6 +29,6 @@ func (e *NullExpr) Eval(_ *EvalFrame, _ Trits) bool {
 	return true
 }
 
-func (e *NullExpr) SetSize(size int64) {
+func (e *NullExpr) SetSize(size int) {
 	e.size = size
 }
