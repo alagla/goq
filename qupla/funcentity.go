@@ -9,8 +9,8 @@ type functionEntityCore struct {
 	functionCalc *FunctionCalculator
 }
 
-func NewFunctionEntity(disp *Supervisor, function *Function) (*Entity, error) {
-	return disp.NewEntity(EntityOpts{
+func NewFunctionEntity(sv *Supervisor, function *Function) (*Entity, error) {
+	return sv.NewEntity(EntityOpts{
 		Name:    function.Name,
 		InSize:  function.ArgSize(),
 		OutSize: function.Size(),

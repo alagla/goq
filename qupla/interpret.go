@@ -16,12 +16,9 @@ type VarInfo struct {
 	Assign   ExpressionInterface
 }
 type EvalFrame struct {
-	prev     *EvalFrame
-	buffer   *growingBuffer
-	offset   int
-	size     int
-	scope    *FunctionExpr
-	valueTag []uint8 // 0x01 bit mean 'evaluated', 0x02 bit means is not null TODO optimize
+	prev    *EvalFrame
+	buffer  Trits
+	context *FunctionExpr
 }
 
 type ExpressionInterface interface {
@@ -35,92 +32,53 @@ type growingBuffer struct {
 	arr Trits
 }
 
-const segmentSize = 1024
+const (
+	notEvaluated    = int8(100)
+	evaluatedToNull = int8(101)
+)
 
 func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
-	size := int(expr.FuncDef.BufLen)
-	var buf *growingBuffer
-	offset := 0
-	if prev == nil {
-		buf = newGrowingBuffer(size)
-	} else {
-		buf = prev.buffer.growTo(prev.offset + prev.size + size)
-		offset = prev.offset + prev.size
+	ret := EvalFrame{
+		prev:    prev,
+		buffer:  make(Trits, expr.FuncDef.BufLen, expr.FuncDef.BufLen),
+		context: expr,
 	}
-	numVars := len(expr.FuncDef.LocalVars)
-	return EvalFrame{
-		prev:     prev,
-		buffer:   buf,
-		offset:   offset,
-		size:     size,
-		scope:    expr,
-		valueTag: make([]uint8, numVars, numVars),
+	for _, vi := range expr.FuncDef.LocalVars {
+		ret.buffer[vi.Offset] = notEvaluated
 	}
-}
-
-func newGrowingBuffer(size int) *growingBuffer {
-	alloc := (size/segmentSize + 1) * segmentSize
-	return &growingBuffer{
-		arr: make(Trits, alloc, alloc),
-	}
-}
-
-func (b *growingBuffer) growTo(size int) *growingBuffer {
-	if size <= len(b.arr) {
-		return b // no need to grow
-	}
-	alloc := (size/segmentSize + 1) * segmentSize
-	newArr := make(Trits, alloc, alloc)
-	copy(newArr, b.arr)
-	b.arr = newArr
-	return b
+	return ret
 }
 
 func (frame *EvalFrame) EvalVar(idx int) (Trits, bool) {
-	switch frame.valueTag[idx] & 0x03 {
-	case 0x01: // evaluated, null
-		logf(10, "evalVar evaluated NULL idx = %v in = '%v'", idx, frame.scope.FuncDef.Name)
+	vi, err := frame.context.FuncDef.VarByIdx(int64(idx))
+	if err != nil {
+		panic(err)
+	}
+	result := frame.buffer[vi.Offset : vi.Offset+vi.Size]
+	switch result[0] {
+	case evaluatedToNull:
+		logf(10, "evalVar evaluated NULL idx = %v in = '%v'", idx, frame.context.FuncDef.Name)
 		return nil, true
 
-	case 0x03: // evaluated, not null
-		logf(10, "evalVar evaluated NOT NULL idx = %v in '%v'", idx, frame.scope.FuncDef.Name)
-		vi, err := frame.scope.FuncDef.VarByIdx(int64(idx))
-		if err != nil {
-			panic(err)
-		}
-		return frame.Slice(int(vi.Offset), int(vi.Size)), false
-
-	case 0x00: // not evaluated
-		logf(10, "evalVar NOT evaluated, idx = %v in '%v'", idx, frame.scope.FuncDef.Name)
-		vi, err := frame.scope.FuncDef.VarByIdx(int64(idx))
-		if err != nil {
-			panic(err)
-		}
-		res := frame.Slice(int(vi.Offset), int(vi.Size))
+	case notEvaluated:
+		logf(10, "evalVar NOT evaluated, idx = %v in '%v'", idx, frame.context.FuncDef.Name)
 		if vi.IsParam {
-			if frame.scope.subexpr[vi.Idx].Eval(frame.prev, res) {
-				frame.valueTag[idx] = 0x01 // evaluated null
+			if frame.context.subexpr[vi.Idx].Eval(frame.prev, result) {
+				result[0] = evaluatedToNull
 				return nil, true
 			}
 		} else {
-			if vi.Assign.Eval(frame, res) {
-				frame.valueTag[idx] = 0x01 // evaluated null
+			if vi.Assign.Eval(frame, result) {
+				result[0] = evaluatedToNull
 				return nil, true
 			}
 		}
-		frame.valueTag[idx] = 0x03 // evaluated not null
-		return frame.Slice(int(vi.Offset), int(vi.Size)), false
+		return result, false
 
-	default:
-		panic("wrong var tag")
+	default: // evaluated, not null (must be valid trit, not checking)
+		logf(10, "evalVar evaluated NOT NULL idx = %v in '%v'", idx, frame.context.FuncDef.Name)
+		return result, false
 	}
-}
-
-func (frame *EvalFrame) Slice(offset, size int) Trits {
-	if frame == nil {
-		panic("attempt to take slice from nil frame")
-	}
-	return frame.buffer.arr[frame.offset+offset : frame.offset+offset+size]
 }
 
 func MatchSizes(e1, e2 ExpressionInterface) error {
@@ -140,4 +98,24 @@ func RequireSize(e ExpressionInterface, size int64) error {
 		return fmt.Errorf("sizes doesn't match: required %v != %v", size, s)
 	}
 	return nil
+}
+
+const segmentSize = 1024
+
+func newGrowingBuffer(size int) *growingBuffer {
+	alloc := (size/segmentSize + 1) * segmentSize
+	return &growingBuffer{
+		arr: make(Trits, alloc, alloc),
+	}
+}
+
+func (b *growingBuffer) growTo(size int) *growingBuffer {
+	if size <= len(b.arr) {
+		return b // no need to grow
+	}
+	alloc := (size/segmentSize + 1) * segmentSize
+	newArr := make(Trits, alloc, alloc)
+	copy(newArr, b.arr)
+	b.arr = newArr
+	return b
 }

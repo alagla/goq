@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Commands:
@@ -154,11 +155,13 @@ func CmdRun(words []string) {
 		currentExecIdx++
 
 	case len(words) == 2 && words[1] == "all":
+		start := time.Now()
 		if err := module.RunExecs(svisor, -1, -1, chainMode); err != nil {
 			logf(0, "%v", err)
 			return
 		}
 		currentExecIdx = 0
+		logf(0, "Duration %v", time.Since(start))
 
 	case len(words) == 2 && stringIsInt(words[1]):
 		idx, _ := strconv.Atoi(words[1])

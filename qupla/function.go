@@ -126,6 +126,7 @@ func (def *Function) NewFuncExpressionWithArgs(args trinary.Trits) (*FunctionExp
 	return ret, nil
 }
 
+// mock expression with all null arguments
 func (def *Function) NewFuncExpressionTemplate() *FunctionExpr {
 	ret := NewFunctionExpr("", def)
 

@@ -31,7 +31,7 @@ func NewExecStmt(src string, expr *FunctionExpr, isTest, isFloat bool, expected 
 }
 
 func (ex *ExecStmt) GetName() string {
-	return fmt.Sprintf("#%v-'%v'", ex.idx, ex.GetSource())
+	return fmt.Sprintf("#%v '%v'", ex.idx, ex.GetSource())
 }
 
 func (ex *ExecStmt) GetIdx() int {
@@ -131,10 +131,10 @@ func (ec *execEvalCore) Call(_ Trits, result Trits) bool {
 	return null
 }
 
-func (ex *ExecStmt) newEvalEntity(disp *Supervisor) (*Entity, error) {
+func (ex *ExecStmt) newEvalEntity(sv *Supervisor) (*Entity, error) {
 	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.expr.GetSource())
 	core := &execEvalCore{exec: ex}
-	return disp.NewEntity(EntityOpts{
+	return sv.NewEntity(EntityOpts{
 		Name:    name,
 		InSize:  0,
 		OutSize: ex.expr.Size(),
