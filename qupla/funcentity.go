@@ -28,7 +28,7 @@ func (fc *functionEntityCore) Call(args Trits, result Trits) bool {
 }
 
 func NewFunctionCalculator(function *Function) *FunctionCalculator {
-	mockExpr := function.NewFuncExpressionTemplate()
+	mockExpr := function.NewFuncExpressionWithNulls()
 	frame := newEvalFrame(mockExpr, nil)
 	return &FunctionCalculator{
 		function: function,

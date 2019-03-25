@@ -18,9 +18,6 @@ func NewFunctionExpr(src string, funcDef *Function) *FunctionExpr {
 }
 
 func (e *FunctionExpr) Size() int {
-	if e == nil {
-		return 0
-	}
 	return e.FuncDef.Size()
 }
 

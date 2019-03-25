@@ -9,8 +9,7 @@ import (
 	"time"
 )
 
-// TODO size checks when join/affect. Can be with different sizes
-// TODO dispose supervisor
+// TODO dispose supervisor ???
 
 func (sv *Supervisor) incQuantCount() {
 	sv.quantCountMutex.Lock()

@@ -11,10 +11,12 @@ type VarInfo struct {
 	Idx      int
 	Offset   int
 	Size     int
+	SliceEnd int
 	IsState  bool
 	IsParam  bool
 	Assign   ExpressionInterface
 }
+
 type EvalFrame struct {
 	prev    *EvalFrame
 	buffer  Trits
@@ -22,14 +24,9 @@ type EvalFrame struct {
 }
 
 type ExpressionInterface interface {
-	GetSource() string
 	Size() int
 	Eval(*EvalFrame, Trits) bool
 	References(string) bool
-}
-
-type growingBuffer struct {
-	arr Trits
 }
 
 const (
@@ -49,20 +46,19 @@ func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
 	return ret
 }
 
+// most intensive calls
 func (frame *EvalFrame) EvalVar(idx int) (Trits, bool) {
-	vi, err := frame.context.FuncDef.VarByIdx(idx)
-	if err != nil {
-		panic(err)
-	}
-	result := frame.buffer[vi.Offset : vi.Offset+vi.Size]
+	vi, _ := frame.context.FuncDef.VarByIdx(idx)
+	result := frame.buffer[vi.Offset:vi.SliceEnd]
 	switch result[0] {
 	case evaluatedToNull:
-		logf(10, "evalVar evaluated NULL idx = %v in = '%v'", idx, frame.context.FuncDef.Name)
+		//logf(10, "evalVar evaluated NULL idx = %v in = '%v'", idx, frame.context.FuncDef.Name)
 		return nil, true
 
 	case notEvaluated:
-		logf(10, "evalVar NOT evaluated, idx = %v in '%v'", idx, frame.context.FuncDef.Name)
+		//logf(10, "evalVar NOT evaluated, idx = %v in '%v'", idx, frame.context.FuncDef.Name)
 		if vi.IsParam {
+			// evaluated in the context of previous call
 			if frame.context.subexpr[vi.Idx].Eval(frame.prev, result) {
 				result[0] = evaluatedToNull
 				return nil, true
@@ -76,7 +72,7 @@ func (frame *EvalFrame) EvalVar(idx int) (Trits, bool) {
 		return result, false
 
 	default: // evaluated, not null (must be valid trit, not checking)
-		logf(10, "evalVar evaluated NOT NULL idx = %v in '%v'", idx, frame.context.FuncDef.Name)
+		//logf(10, "evalVar evaluated NOT NULL idx = %v in '%v'", idx, frame.context.FuncDef.Name)
 		return result, false
 	}
 }
@@ -100,22 +96,26 @@ func RequireSize(e ExpressionInterface, size int) error {
 	return nil
 }
 
-const segmentSize = 1024
-
-func newGrowingBuffer(size int) *growingBuffer {
-	alloc := (size/segmentSize + 1) * segmentSize
-	return &growingBuffer{
-		arr: make(Trits, alloc, alloc),
-	}
-}
-
-func (b *growingBuffer) growTo(size int) *growingBuffer {
-	if size <= len(b.arr) {
-		return b // no need to grow
-	}
-	alloc := (size/segmentSize + 1) * segmentSize
-	newArr := make(Trits, alloc, alloc)
-	copy(newArr, b.arr)
-	b.arr = newArr
-	return b
-}
+//type growingBuffer struct {
+//	arr Trits
+//}
+//
+//const segmentSize = 1024
+//
+//func newGrowingBuffer(size int) *growingBuffer {
+//	alloc := (size/segmentSize + 1) * segmentSize
+//	return &growingBuffer{
+//		arr: make(Trits, alloc, alloc),
+//	}
+//}
+//
+//func (b *growingBuffer) growTo(size int) *growingBuffer {
+//	if size <= len(b.arr) {
+//		return b // no need to grow
+//	}
+//	alloc := (size/segmentSize + 1) * segmentSize
+//	newArr := make(Trits, alloc, alloc)
+//	copy(newArr, b.arr)
+//	b.arr = newArr
+//	return b
+//}

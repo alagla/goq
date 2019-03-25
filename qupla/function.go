@@ -89,18 +89,6 @@ func (def *Function) VarByName(name string) (*VarInfo, error) {
 	return def.VarByIdx(idx)
 }
 
-func (def *Function) GetVarInfo(name string) (*VarInfo, error) {
-	ret, err := def.VarByName(name)
-	if err != nil {
-		return nil, err
-	}
-	if !ret.Analyzed {
-		// can only be called after analysis is completed
-		panic(fmt.Errorf("var '%v' is not analyzed in '%v'", name, def.Name))
-	}
-	return ret, nil
-}
-
 func (def *Function) CheckArgSizes(args []ExpressionInterface) error {
 	for i := range args {
 		if i >= def.NumParams || args[i].Size() != def.LocalVars[i].Size {
@@ -110,24 +98,8 @@ func (def *Function) CheckArgSizes(args []ExpressionInterface) error {
 	return nil
 }
 
-func (def *Function) NewFuncExpressionWithArgs(args trinary.Trits) (*FunctionExpr, error) {
-	if def.InSize != len(args) {
-		return nil, fmt.Errorf("Size mismatch: fundef '%v' has arg Size %v, trit vector's Size = %v",
-			def.Name, def.ArgSize(), len(args))
-	}
-	ret := NewFunctionExpr("", def)
-
-	offset := 0
-	for _, sz := range def.ParamSizes {
-		e := NewValueExpr(args[offset : offset+sz])
-		ret.AppendSubExpr(e)
-		offset += sz
-	}
-	return ret, nil
-}
-
 // mock expression with all null arguments
-func (def *Function) NewFuncExpressionTemplate() *FunctionExpr {
+func (def *Function) NewFuncExpressionWithNulls() *FunctionExpr {
 	ret := NewFunctionExpr("", def)
 
 	offset := 0

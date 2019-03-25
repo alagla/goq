@@ -29,14 +29,14 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 	for funName, funDefYAML := range moduleYAML.Functions {
 		if err := AnalyzeFunctionPreliminary(funName, funDefYAML, ret); err != nil {
 			ret.IncStat("numErr")
-			errorf("%v", err)
+			logf(0, "%v", err)
 			retSucc = false
 		}
 	}
 	for funName, funDefYAML := range moduleYAML.Functions {
 		if err := AnalyzeFunction(funName, funDefYAML, ret); err != nil {
 			ret.IncStat("numErr")
-			errorf("%v", err)
+			logf(0, "%v", err)
 			retSucc = false
 		}
 	}
@@ -81,7 +81,7 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 		numExec++
 		if err != nil {
 			ret.IncStat("numErr")
-			errorf("%v", err)
+			logf(0, "%v", err)
 			retSucc = false
 		}
 	}

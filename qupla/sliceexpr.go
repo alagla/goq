@@ -10,6 +10,7 @@ type SliceExpr struct {
 	VarScope    *Function
 	offset      int
 	size        int
+	sliceEnd    int
 }
 
 func NewQuplaSliceExpr(src string, offset, size int) *SliceExpr {
@@ -17,6 +18,7 @@ func NewQuplaSliceExpr(src string, offset, size int) *SliceExpr {
 		ExpressionBase: NewExpressionBase(src),
 		offset:         offset,
 		size:           size,
+		sliceEnd:       offset + size,
 	}
 }
 
@@ -28,10 +30,10 @@ func (e *SliceExpr) Size() int {
 }
 
 func (e *SliceExpr) Eval(frame *EvalFrame, result Trits) bool {
-	restmp, null := frame.EvalVar(int(e.LocalVarIdx))
+	restmp, null := frame.EvalVar(e.LocalVarIdx)
 	if null {
 		return true
 	}
-	copy(result, restmp[e.offset:e.offset+e.size])
+	copy(result, restmp[e.offset:e.sliceEnd])
 	return false
 }

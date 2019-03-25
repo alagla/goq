@@ -204,6 +204,7 @@ func finalizeLocalVars(def *Function, module *QuplaModule) error {
 			return fmt.Errorf("can't determine var size '%v': '%v'", v.Name, def.Name)
 		}
 		v.Offset = curOffset
+		v.SliceEnd = v.Offset + v.Size
 		curOffset += v.Size
 		if !v.IsParam {
 			if v.Assign == nil {

@@ -59,13 +59,13 @@ func (ent *Entity) checkStart() {
 }
 
 func (ent *Entity) entityLoop() {
-	logf(7, "entity '%v' loop STARTED", ent.name)
-	defer logf(7, "entity '%v'loop STOPPED", ent.name)
+	//logf(7, "entity '%v' loop STARTED", ent.name)
+	//defer logf(7, "entity '%v'loop STOPPED", ent.name)
 
 	var null bool
 	for msg := range ent.inChan {
 		if msg.effect == nil {
-			panic("nil effect")
+			panic("entity loop: nil effect")
 		}
 		dec, _ := utils.TritsToBigInt(msg.effect)
 		logf(3, "effect '%v' (%v) -> entity '%v'", utils.TritsToString(msg.effect), dec, ent.name)
