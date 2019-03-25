@@ -2,7 +2,6 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 type SliceExpr struct {
@@ -28,8 +27,8 @@ func (e *SliceExpr) Size() int64 {
 	return e.size
 }
 
-func (e *SliceExpr) Eval(proc ProcessorInterface, result Trits) bool {
-	restmp, null := proc.EvalVar(e.LocalVarIdx)
+func (e *SliceExpr) Eval(frame *EvalFrame, result Trits) bool {
+	restmp, null := frame.EvalVar(int(e.LocalVarIdx))
 	if null {
 		return true
 	}

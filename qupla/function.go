@@ -3,7 +3,6 @@ package qupla
 import (
 	"fmt"
 	"github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 type Function struct {
@@ -75,19 +74,26 @@ func (def *Function) GetVarIdx(name string) int64 {
 	return -1
 }
 
-func (def *Function) VarByIdx(idx int64) *VarInfo {
+func (def *Function) VarByIdx(idx int64) (*VarInfo, error) {
 	if idx < 0 || idx >= int64(len(def.LocalVars)) {
-		return nil
+		return nil, fmt.Errorf("worng var idx %v", idx)
 	}
-	return def.LocalVars[idx]
+	return def.LocalVars[idx], nil
 }
 
-func (def *Function) VarByName(name string) *VarInfo {
-	return def.VarByIdx(def.GetVarIdx(name))
+func (def *Function) VarByName(name string) (*VarInfo, error) {
+	idx := def.GetVarIdx(name)
+	if idx < 0 {
+		return nil, fmt.Errorf("can't finc variabe with name '%v'", name)
+	}
+	return def.VarByIdx(idx)
 }
 
 func (def *Function) GetVarInfo(name string) (*VarInfo, error) {
-	ret := def.VarByName(name)
+	ret, err := def.VarByName(name)
+	if err != nil {
+		return nil, err
+	}
 	if !ret.Analyzed {
 		// can only be called after analysis is completed
 		panic(fmt.Errorf("var '%v' is not analyzed in '%v'", name, def.Name))
@@ -104,18 +110,33 @@ func (def *Function) CheckArgSizes(args []ExpressionInterface) error {
 	return nil
 }
 
-func (def *Function) NewExpressionWithArgs(args trinary.Trits) (ExpressionInterface, error) {
+func (def *Function) NewFuncExpressionWithArgs(args trinary.Trits) (*FunctionExpr, error) {
 	if def.InSize != int64(len(args)) {
 		return nil, fmt.Errorf("Size mismatch: fundef '%v' has arg Size %v, trit vector's Size = %v",
 			def.Name, def.ArgSize(), len(args))
 	}
-	ret := NewQuplaFuncExpr("", def)
+	ret := NewFunctionExpr("", def)
 
 	offset := int64(0)
 	for _, sz := range def.ParamSizes {
-		e := NewQuplaValueExpr(args[offset : offset+sz])
+		e := NewValueExpr(args[offset : offset+sz])
 		ret.AppendSubExpr(e)
 		offset += sz
 	}
 	return ret, nil
+}
+
+func (def *Function) NewFuncExpressionTemplate() *FunctionExpr {
+	ret := NewFunctionExpr("", def)
+
+	offset := int64(0)
+	for _, sz := range def.ParamSizes {
+		ret.AppendSubExpr(NewNullExpr(sz))
+		offset += sz
+	}
+	return ret
+}
+
+func (def *Function) Eval(frame *EvalFrame, result trinary.Trits) bool {
+	return def.RetExpr.Eval(frame, result)
 }

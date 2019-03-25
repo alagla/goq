@@ -2,7 +2,6 @@ package analyzeyaml
 
 import (
 	"fmt"
-	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"strconv"
@@ -159,7 +158,7 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 	// variables defined by assigns
 	var vi *VarInfo
 	for name := range src.Assigns {
-		vi = def.VarByName(name)
+		vi, _ = def.VarByName(name)
 		if vi != nil {
 			if vi.IsParam {
 				return fmt.Errorf("cannot assign to function parameter: '%v' in '%v'", name, def.Name)
@@ -181,12 +180,11 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 }
 
 func analyzeAssigns(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
-	var err error
 	for name := range defYAML.Assigns {
 		// GetVarInfo analyzes expression if necessary
-		vi := def.VarByName(name)
-		if vi == nil {
-			panic(fmt.Errorf("analyzing assigns: can't find var '%v' in '%v'", name, def.Name))
+		vi, err := def.VarByName(name)
+		if err != nil {
+			panic(fmt.Errorf("'%v' : %v", def.Name, err))
 		}
 		if err = AnalyzeVar(vi, defYAML, def, module); err != nil {
 			return err

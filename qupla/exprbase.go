@@ -1,7 +1,5 @@
 package qupla
 
-import . "github.com/lunfardo314/goq/abstract"
-
 type ExpressionBase struct {
 	source  string
 	subexpr []ExpressionInterface

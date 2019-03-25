@@ -32,8 +32,8 @@ func execBatch(cmdlist []string) {
 
 var startupCmd = []string{
 	"load exitonfail",
-	"run 0-1",
-	// "run all",
+	//"run 0-1",
+	"run all",
 	//"run 0-10",
 }
 

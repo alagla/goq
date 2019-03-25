@@ -3,7 +3,6 @@ package qupla
 import (
 	. "fmt"
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 type CondExpr struct {
@@ -17,18 +16,18 @@ func (e *CondExpr) Size() int64 {
 	return e.subexpr[1].Size()
 }
 
-func (e *CondExpr) Eval(proc ProcessorInterface, result Trits) bool {
+func (e *CondExpr) Eval(frame *EvalFrame, result Trits) bool {
 	var buf [1]int8
-	null := proc.Eval(e.subexpr[0], buf[:])
+	null := e.subexpr[0].Eval(frame, buf[:])
 	if null {
 		return true
 	}
 	// bool is 0/1
 	switch buf[0] {
 	case 1:
-		return proc.Eval(e.subexpr[1], result)
+		return e.subexpr[1].Eval(frame, result)
 	case 0:
-		return proc.Eval(e.subexpr[2], result)
+		return e.subexpr[2].Eval(frame, result)
 	case -1:
 		return true
 	}

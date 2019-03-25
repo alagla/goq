@@ -2,28 +2,22 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/supervisor"
 )
 
 type functionEntityCore struct {
-	funcDef *Function
-	proc    ProcessorInterface
+	functionCalc *FunctionCalculator
 }
 
-func (fc *functionEntityCore) Call(args Trits, res Trits) bool {
-	expr, err := fc.funcDef.NewExpressionWithArgs(args)
-	if err != nil {
-		panic(err)
-	}
-	return fc.proc.Eval(expr, res)
-}
-
-func NewFunctionEntity(disp *Supervisor, funcDef *Function, proc ProcessorInterface) (*Entity, error) {
+func NewFunctionEntity(disp *Supervisor, function *Function) (*Entity, error) {
 	return disp.NewEntity(EntityOpts{
-		Name:    funcDef.Name,
-		InSize:  funcDef.ArgSize(),
-		OutSize: funcDef.Size(),
-		Core:    &functionEntityCore{funcDef, proc},
+		Name:    function.Name,
+		InSize:  function.ArgSize(),
+		OutSize: function.Size(),
+		Core:    &functionEntityCore{functionCalc: NewFunctionCalculator(function)},
 	})
+}
+
+func (fc *functionEntityCore) Call(args Trits, result Trits) bool {
+	return fc.functionCalc.evalWithArgs(args, result)
 }

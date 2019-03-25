@@ -119,13 +119,13 @@ type execEvalCore struct {
 	lastResult        Trits
 }
 
-func (ec *execEvalCore) Call(_ Trits, res Trits) bool {
+func (ec *execEvalCore) Call(_ Trits, result Trits) bool {
 	start := unixMsNow()
-	null := ec.exec.module.processor.Eval(ec.exec.expr, res)
+	null := ec.exec.expr.Eval(nil, result)
 	ec.numRun++
 	ec.totalDurationMsec += unixMsNow() - start
-	ec.lastResult = res
-	if ec.exec.isTest && ec.exec.resultIsExpected(res) {
+	ec.lastResult = result
+	if ec.exec.isTest && ec.exec.resultIsExpected(result) {
 		ec.numTestPassed++
 	}
 	return null

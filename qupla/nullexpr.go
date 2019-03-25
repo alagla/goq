@@ -2,12 +2,18 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 type NullExpr struct {
 	ExpressionBase
 	size int64
+}
+
+func NewNullExpr(size int64) *NullExpr {
+	return &NullExpr{
+		ExpressionBase: NewExpressionBase(""),
+		size:           size,
+	}
 }
 
 func IsNullExpr(e interface{}) bool {
@@ -19,7 +25,7 @@ func (e *NullExpr) Size() int64 {
 	return e.size
 }
 
-func (e *NullExpr) Eval(_ ProcessorInterface, _ Trits) bool {
+func (e *NullExpr) Eval(_ *EvalFrame, _ Trits) bool {
 	return true
 }
 

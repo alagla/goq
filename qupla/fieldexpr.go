@@ -2,7 +2,6 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 // TODO with fields expressions
@@ -18,6 +17,6 @@ func (e *QuplaFieldExpr) Size() int64 {
 	return e.CondExpr.Size()
 }
 
-func (e *QuplaFieldExpr) Eval(_ ProcessorInterface, _ Trits) bool {
+func (e *QuplaFieldExpr) Eval(_ *EvalFrame, _ Trits) bool {
 	return true
 }

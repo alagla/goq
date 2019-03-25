@@ -2,7 +2,6 @@ package analyzeyaml
 
 import (
 	. "fmt"
-	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/quplayaml/quplayaml"
 )

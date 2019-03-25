@@ -41,7 +41,7 @@ func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module *QuplaModule) (*Value
 	if t, err = NewTrits(t); err != nil {
 		return nil, err
 	}
-	return NewQuplaValueExpr(t), nil
+	return NewValueExpr(t), nil
 
 	// Todo checking float values
 

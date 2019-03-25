@@ -3,7 +3,6 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 type ConstExpression interface {
@@ -20,11 +19,11 @@ type ConstValue struct {
 }
 
 func (e *ConstValue) Size() int64 {
-	return 0 //todo
+	return 0 //todo ??
 }
 
-func (_ *ConstValue) Eval(_ ProcessorInterface, _ Trits) bool {
-	return true // todo
+func (_ *ConstValue) Eval(_ *EvalFrame, _ Trits) bool {
+	return true // todo ??
 }
 
 func (e *ConstValue) GetConstValue() int64 {

@@ -3,7 +3,6 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 type ConstTypeFieldInfo struct {
@@ -41,7 +40,7 @@ func (e *ConstTypeInfo) Size() int64 {
 	return 0
 }
 
-func (e *ConstTypeInfo) Eval(_ ProcessorInterface, _ Trits) bool {
+func (e *ConstTypeInfo) Eval(_ *EvalFrame, _ Trits) bool {
 	return true
 }
 
