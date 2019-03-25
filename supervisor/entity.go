@@ -59,33 +59,34 @@ func (ent *Entity) checkStart() {
 }
 
 func (ent *Entity) entityLoop() {
-	logf(7, "entity '%v' loop STARTED", ent.name)
-	defer logf(7, "entity '%v'loop STOPPED", ent.name)
+	//logf(7, "entity '%v' loop STARTED", ent.name)
+	//defer logf(7, "entity '%v'loop STOPPED", ent.name)
 
 	var null bool
 	for msg := range ent.inChan {
 		if msg.effect == nil {
-			panic("nil effect")
+			panic("entity loop: nil effect")
 		}
 		dec, _ := utils.TritsToBigInt(msg.effect)
 		logf(3, "effect '%v' (%v) -> entity '%v'", utils.TritsToString(msg.effect), dec, ent.name)
+
 		// calculate result
-		// TODO memory management
-		res := make(Trits, ent.outSize)
-		null = ent.call(msg.effect, res)
+		result := make(Trits, ent.outSize)
+		null = ent.core.Call(msg.effect, result)
+
 		if !null {
 			if msg.lastWithinLimit {
 				// postpone to new quant
 				for _, affectInfo := range ent.affecting {
-					_ = ent.supervisor.postEffect("", affectInfo.environment, res, affectInfo.delay, false)
+					_ = ent.supervisor.postEffect("", affectInfo.environment, result, affectInfo.delay, false)
 				}
 			} else {
 				for _, affectInfo := range ent.affecting {
 					if affectInfo.delay == 0 {
 						ent.supervisor.quantWG.Add(1)
-						affectInfo.environment.effectChan <- res
+						affectInfo.environment.effectChan <- result
 					} else {
-						_ = ent.supervisor.postEffect("", affectInfo.environment, res, affectInfo.delay, false)
+						_ = ent.supervisor.postEffect("", affectInfo.environment, result, affectInfo.delay, false)
 					}
 				}
 			}
@@ -98,16 +99,5 @@ func (ent *Entity) sendEffect(effect Trits, lastWithinLimit bool) {
 	ent.inChan <- entityMsg{
 		effect:          effect,
 		lastWithinLimit: lastWithinLimit,
-	}
-}
-
-func (ent *Entity) call(args Trits, res Trits) bool {
-	switch {
-	case ent.inSize == int64(len(args)) || ent.inSize == 0:
-		return ent.core.Call(args, res)
-	case int64(len(args)) < ent.inSize:
-		return ent.core.Call(PadTrits(args, int(ent.inSize)), res)
-	default:
-		return ent.core.Call(args[:ent.inSize], res)
 	}
 }

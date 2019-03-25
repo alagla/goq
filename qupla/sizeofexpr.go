@@ -2,7 +2,6 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 type SizeofExpr struct {
@@ -18,14 +17,14 @@ func NewQuplaSizeofExpr(value int64, tritValue Trits) *SizeofExpr {
 	}
 }
 
-func (e *SizeofExpr) Size() int64 {
+func (e *SizeofExpr) Size() int {
 	if e == nil {
 		return 0
 	}
-	return int64(len(e.TritValue))
+	return len(e.TritValue)
 }
 
-func (e *SizeofExpr) Eval(_ ProcessorInterface, result Trits) bool {
+func (e *SizeofExpr) Eval(_ *EvalFrame, result Trits) bool {
 	if e.TritValue == nil {
 		return true
 	}

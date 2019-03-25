@@ -2,9 +2,8 @@ package analyzeyaml
 
 import (
 	"fmt"
-	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
+	. "github.com/lunfardo314/goq/readyaml"
 )
 
 func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module *QuplaModule, scope *Function) (*TypeExpr, error) {
@@ -24,7 +23,7 @@ func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module *QuplaModule, scope *Fu
 
 	var fe ExpressionInterface
 	var fi *ConstTypeFieldInfo
-	var sumFld int64
+	var sumFld int
 	for fldName, expr := range exprYAML.Fields {
 		fi, err = typeInfo.GetFieldInfo(fldName)
 		if err != nil {

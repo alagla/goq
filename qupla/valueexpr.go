@@ -2,7 +2,6 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 type ValueExpr struct {
@@ -10,19 +9,19 @@ type ValueExpr struct {
 	TritValue Trits
 }
 
-func NewQuplaValueExpr(t Trits) *ValueExpr {
+func NewValueExpr(t Trits) *ValueExpr {
 	return &ValueExpr{
 		TritValue: t,
 	}
 }
-func (e *ValueExpr) Size() int64 {
+func (e *ValueExpr) Size() int {
 	if e == nil {
 		return 0
 	}
-	return int64(len(e.TritValue))
+	return len(e.TritValue)
 }
 
-func (e *ValueExpr) Eval(_ ProcessorInterface, result Trits) bool {
+func (e *ValueExpr) Eval(_ *EvalFrame, result Trits) bool {
 	if e.TritValue == nil {
 		return true
 	}

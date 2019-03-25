@@ -3,7 +3,6 @@ package qupla
 import (
 	"fmt"
 	"github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 type Function struct {
@@ -11,15 +10,15 @@ type Function struct {
 	Joins             map[string]int
 	Affects           map[string]int
 	Name              string
-	retSize           int64
+	retSize           int
 	RetExpr           ExpressionInterface
 	LocalVars         []*VarInfo
-	NumParams         int64 // idx < NumParams represents parameter, idx >= represents local var (assign)
-	BufLen            int64 // total length of the local var buffer
+	NumParams         int // idx < NumParams represents parameter, idx >= represents local var (assign)
+	BufLen            int // total length of the local var buffer
 	HasStateVariables bool
 	hasState          bool
-	InSize            int64
-	ParamSizes        []int64
+	InSize            int
+	ParamSizes        []int
 }
 
 func (def *Function) HasState() bool {
@@ -35,22 +34,22 @@ func (def *Function) References(funName string) bool {
 	return def.RetExpr.References(funName)
 }
 
-func NewQuplaFuncDef(name string, size int64) *Function {
+func NewQuplaFuncDef(name string, size int) *Function {
 	return &Function{
 		Name:       name,
 		retSize:    size,
 		LocalVars:  make([]*VarInfo, 0, 10),
 		Joins:      make(map[string]int),
 		Affects:    make(map[string]int),
-		ParamSizes: make([]int64, 0, 5),
+		ParamSizes: make([]int, 0, 5),
 	}
 }
 
-func (def *Function) Size() int64 {
+func (def *Function) Size() int {
 	return def.retSize
 }
 
-func (def *Function) ArgSize() int64 {
+func (def *Function) ArgSize() int {
 	return def.InSize
 }
 
@@ -66,56 +65,51 @@ func (def *Function) GetAffectEnv() map[string]int {
 	return def.Affects
 }
 
-func (def *Function) GetVarIdx(name string) int64 {
+func (def *Function) GetVarIdx(name string) int {
 	for i, lv := range def.LocalVars {
 		if lv.Name == name {
-			return int64(i)
+			return i
 		}
 	}
 	return -1
 }
 
-func (def *Function) VarByIdx(idx int64) *VarInfo {
-	if idx < 0 || idx >= int64(len(def.LocalVars)) {
-		return nil
+func (def *Function) VarByIdx(idx int) (*VarInfo, error) {
+	if idx < 0 || idx >= len(def.LocalVars) {
+		return nil, fmt.Errorf("worng var idx %v", idx)
 	}
-	return def.LocalVars[idx]
+	return def.LocalVars[idx], nil
 }
 
-func (def *Function) VarByName(name string) *VarInfo {
-	return def.VarByIdx(def.GetVarIdx(name))
-}
-
-func (def *Function) GetVarInfo(name string) (*VarInfo, error) {
-	ret := def.VarByName(name)
-	if !ret.Analyzed {
-		// can only be called after analysis is completed
-		panic(fmt.Errorf("var '%v' is not analyzed in '%v'", name, def.Name))
+func (def *Function) VarByName(name string) (*VarInfo, error) {
+	idx := def.GetVarIdx(name)
+	if idx < 0 {
+		return nil, fmt.Errorf("can't finc variabe with name '%v'", name)
 	}
-	return ret, nil
+	return def.VarByIdx(idx)
 }
 
 func (def *Function) CheckArgSizes(args []ExpressionInterface) error {
 	for i := range args {
-		if int64(i) >= def.NumParams || args[i].Size() != def.LocalVars[i].Size {
+		if i >= def.NumParams || args[i].Size() != def.LocalVars[i].Size {
 			return fmt.Errorf("param and arg # %v mismach in %v", i, def.Name)
 		}
 	}
 	return nil
 }
 
-func (def *Function) NewExpressionWithArgs(args trinary.Trits) (ExpressionInterface, error) {
-	if def.InSize != int64(len(args)) {
-		return nil, fmt.Errorf("Size mismatch: fundef '%v' has arg Size %v, trit vector's Size = %v",
-			def.Name, def.ArgSize(), len(args))
-	}
-	ret := NewQuplaFuncExpr("", def)
+// mock expression with all null arguments
+func (def *Function) NewFuncExpressionWithNulls() *FunctionExpr {
+	ret := NewFunctionExpr("", def)
 
-	offset := int64(0)
+	offset := 0
 	for _, sz := range def.ParamSizes {
-		e := NewQuplaValueExpr(args[offset : offset+sz])
-		ret.AppendSubExpr(e)
+		ret.AppendSubExpr(NewNullExpr(sz))
 		offset += sz
 	}
-	return ret, nil
+	return ret
+}
+
+func (def *Function) Eval(frame *EvalFrame, result trinary.Trits) bool {
+	return def.RetExpr.Eval(frame, result)
 }

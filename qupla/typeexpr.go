@@ -2,20 +2,19 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 type FieldExpr struct {
-	Offset int64
-	Size   int64
+	Offset int
+	Size   int
 }
 type TypeExpr struct {
 	ExpressionBase
-	size   int64
+	size   int
 	Fields []FieldExpr
 }
 
-func NewQuplaTypeExpr(src string, size int64) *TypeExpr {
+func NewQuplaTypeExpr(src string, size int) *TypeExpr {
 	return &TypeExpr{
 		ExpressionBase: NewExpressionBase(src),
 		size:           size,
@@ -23,16 +22,16 @@ func NewQuplaTypeExpr(src string, size int64) *TypeExpr {
 	}
 }
 
-func (e *TypeExpr) Size() int64 {
+func (e *TypeExpr) Size() int {
 	if e == nil {
 		return 0
 	}
 	return e.size
 }
 
-func (e *TypeExpr) Eval(proc ProcessorInterface, result Trits) bool {
+func (e *TypeExpr) Eval(frame *EvalFrame, result Trits) bool {
 	for idx, subExpr := range e.subexpr {
-		if proc.Eval(subExpr, result[e.Fields[idx].Offset:e.Fields[idx].Offset+e.Fields[idx].Size]) {
+		if subExpr.Eval(frame, result[e.Fields[idx].Offset:e.Fields[idx].Offset+e.Fields[idx].Size]) {
 			return true
 		}
 	}

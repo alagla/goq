@@ -2,9 +2,8 @@ package analyzeyaml
 
 import (
 	"fmt"
-	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
+	. "github.com/lunfardo314/goq/readyaml"
 	"strconv"
 )
 
@@ -15,7 +14,7 @@ func AnalyzeFunctionPreliminary(name string, defYAML *QuplaFuncDefYAML, module *
 	if err != nil {
 		return err
 	}
-	var sz int64
+	var sz int
 	if sz, err = GetConstValue(ce); err != nil {
 		return err
 	}
@@ -123,13 +122,13 @@ func AnalyzeVar(vi *VarInfo, defYAML *QuplaFuncDefYAML, def *Function, module *Q
 
 func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
 	// function parameters (first numParams)
-	def.NumParams = int64(len(src.Params))
+	def.NumParams = len(src.Params)
 	for idx, arg := range src.Params {
 		if def.GetVarIdx(arg.ArgName) >= 0 {
 			return fmt.Errorf("duplicate arg Name '%v'", arg.ArgName)
 		}
 		def.LocalVars = append(def.LocalVars, &VarInfo{
-			Idx:      int64(idx),
+			Idx:      idx,
 			Name:     arg.ArgName,
 			Size:     arg.Size,
 			Analyzed: true,
@@ -139,7 +138,7 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 	}
 	// the rest of indices belong to local vars (incl state)
 	// state variables
-	var idx int64
+	var idx int
 	def.HasStateVariables = len(src.State) > 0
 	for name, s := range src.State {
 		idx = def.GetVarIdx(name)
@@ -148,7 +147,7 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 		} else {
 			// for old value
 			def.LocalVars = append(def.LocalVars, &VarInfo{
-				Idx:     int64(len(def.LocalVars)),
+				Idx:     len(def.LocalVars),
 				Name:    name,
 				Size:    s.Size,
 				IsState: true,
@@ -159,7 +158,7 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 	// variables defined by assigns
 	var vi *VarInfo
 	for name := range src.Assigns {
-		vi = def.VarByName(name)
+		vi, _ = def.VarByName(name)
 		if vi != nil {
 			if vi.IsParam {
 				return fmt.Errorf("cannot assign to function parameter: '%v' in '%v'", name, def.Name)
@@ -169,7 +168,7 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 			}
 		} else {
 			def.LocalVars = append(def.LocalVars, &VarInfo{
-				Idx:     int64(len(def.LocalVars)),
+				Idx:     len(def.LocalVars),
 				Name:    name,
 				Size:    0, // unknown yet
 				IsState: false,
@@ -181,12 +180,11 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 }
 
 func analyzeAssigns(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
-	var err error
 	for name := range defYAML.Assigns {
 		// GetVarInfo analyzes expression if necessary
-		vi := def.VarByName(name)
-		if vi == nil {
-			panic(fmt.Errorf("analyzing assigns: can't find var '%v' in '%v'", name, def.Name))
+		vi, err := def.VarByName(name)
+		if err != nil {
+			panic(fmt.Errorf("'%v' : %v", def.Name, err))
 		}
 		if err = AnalyzeVar(vi, defYAML, def, module); err != nil {
 			return err
@@ -196,7 +194,7 @@ func analyzeAssigns(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModul
 }
 
 func finalizeLocalVars(def *Function, module *QuplaModule) error {
-	var curOffset int64
+	var curOffset int
 	def.InSize = 0
 	for _, v := range def.LocalVars {
 		if v.Size == 0 {
@@ -206,6 +204,7 @@ func finalizeLocalVars(def *Function, module *QuplaModule) error {
 			return fmt.Errorf("can't determine var size '%v': '%v'", v.Name, def.Name)
 		}
 		v.Offset = curOffset
+		v.SliceEnd = v.Offset + v.Size
 		curOffset += v.Size
 		if !v.IsParam {
 			if v.Assign == nil {
@@ -219,7 +218,7 @@ func finalizeLocalVars(def *Function, module *QuplaModule) error {
 			return fmt.Errorf("sizes doesn't match for var '%v' in '%v'", v.Name, def.Name)
 		}
 	}
-	def.BufLen = int64(curOffset)
+	def.BufLen = curOffset
 
 	if def.HasStateVariables {
 		module.IncStat("numStatefulFunDef")

@@ -31,7 +31,7 @@ func NewExecStmt(src string, expr *FunctionExpr, isTest, isFloat bool, expected 
 }
 
 func (ex *ExecStmt) GetName() string {
-	return fmt.Sprintf("#%v-'%v'", ex.idx, ex.GetSource())
+	return fmt.Sprintf("#%v '%v'", ex.idx, ex.GetSource())
 }
 
 func (ex *ExecStmt) GetIdx() int {
@@ -119,22 +119,22 @@ type execEvalCore struct {
 	lastResult        Trits
 }
 
-func (ec *execEvalCore) Call(_ Trits, res Trits) bool {
+func (ec *execEvalCore) Call(_ Trits, result Trits) bool {
 	start := unixMsNow()
-	null := ec.exec.module.processor.Eval(ec.exec.expr, res)
+	null := ec.exec.expr.Eval(nil, result)
 	ec.numRun++
 	ec.totalDurationMsec += unixMsNow() - start
-	ec.lastResult = res
-	if ec.exec.isTest && ec.exec.resultIsExpected(res) {
+	ec.lastResult = result
+	if ec.exec.isTest && ec.exec.resultIsExpected(result) {
 		ec.numTestPassed++
 	}
 	return null
 }
 
-func (ex *ExecStmt) newEvalEntity(disp *Supervisor) (*Entity, error) {
+func (ex *ExecStmt) newEvalEntity(sv *Supervisor) (*Entity, error) {
 	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.expr.GetSource())
 	core := &execEvalCore{exec: ex}
-	return disp.NewEntity(EntityOpts{
+	return sv.NewEntity(EntityOpts{
 		Name:    name,
 		InSize:  0,
 		OutSize: ex.expr.Size(),

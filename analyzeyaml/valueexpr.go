@@ -4,7 +4,7 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
+	. "github.com/lunfardo314/goq/readyaml"
 	"math/big"
 )
 
@@ -41,7 +41,7 @@ func AnalyzeValueExpr(exprYAML *QuplaValueExprYAML, module *QuplaModule) (*Value
 	if t, err = NewTrits(t); err != nil {
 		return nil, err
 	}
-	return NewQuplaValueExpr(t), nil
+	return NewValueExpr(t), nil
 
 	// Todo checking float values
 

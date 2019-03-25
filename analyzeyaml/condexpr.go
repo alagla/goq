@@ -3,7 +3,7 @@ package analyzeyaml
 import (
 	. "fmt"
 	. "github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
+	. "github.com/lunfardo314/goq/readyaml"
 )
 
 func AnalyzeCondExpr(exprYAML *QuplaCondExprYAML, module *QuplaModule, scope *Function) (*CondExpr, error) {

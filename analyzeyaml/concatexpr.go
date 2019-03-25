@@ -2,7 +2,7 @@ package analyzeyaml
 
 import (
 	. "github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
+	. "github.com/lunfardo314/goq/readyaml"
 )
 
 func AnalyzeConcatExpr(exprYAML *QuplaConcatExprYAML, module *QuplaModule, scope *Function) (*ConcatExpr, error) {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/qupla"
+	. "github.com/lunfardo314/goq/readyaml"
 	"github.com/lunfardo314/goq/utils"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"strings"
 )
 

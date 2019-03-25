@@ -3,21 +3,20 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
-	. "github.com/lunfardo314/goq/abstract"
 )
 
 type ConstTypeFieldInfo struct {
-	Offset int64
-	Size   int64
+	Offset int
+	Size   int
 }
 
 type ConstTypeInfo struct {
 	name   string
-	size   int64
+	size   int
 	Fields map[string]*ConstTypeFieldInfo
 }
 
-func NewConstTypeInfo(name string, size int64) *ConstTypeInfo {
+func NewConstTypeInfo(name string, size int) *ConstTypeInfo {
 	return &ConstTypeInfo{
 		name:   name,
 		size:   size,
@@ -25,7 +24,7 @@ func NewConstTypeInfo(name string, size int64) *ConstTypeInfo {
 	}
 }
 
-func (e *ConstTypeInfo) GetConstValue() int64 {
+func (e *ConstTypeInfo) GetConstValue() int {
 	return e.size
 }
 
@@ -37,11 +36,11 @@ func (e *ConstTypeInfo) GetSource() string {
 	return ""
 }
 
-func (e *ConstTypeInfo) Size() int64 {
+func (e *ConstTypeInfo) Size() int {
 	return 0
 }
 
-func (e *ConstTypeInfo) Eval(_ ProcessorInterface, _ Trits) bool {
+func (e *ConstTypeInfo) Eval(_ *EvalFrame, _ Trits) bool {
 	return true
 }
 

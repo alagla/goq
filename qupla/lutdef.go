@@ -12,12 +12,10 @@ type LutDef struct {
 	LutLookupTable []Trits
 }
 
-//func (LutDef *LutDef) SetName(Name string) {
-//	LutDef.Name = Name
-//}
+// TODO optimize according to Abra's 3 input/1 output spec
 
-func (lutDef *LutDef) Size() int64 {
-	return int64(lutDef.OutputSize)
+func (lutDef *LutDef) Size() int {
+	return lutDef.OutputSize
 }
 
 func (lutDef *LutDef) Lookup(res, args Trits) bool {

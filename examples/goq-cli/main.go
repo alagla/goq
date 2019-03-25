@@ -6,8 +6,8 @@ import (
 	"github.com/c-bata/go-prompt"
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/qupla"
+	. "github.com/lunfardo314/goq/readyaml"
 	"github.com/lunfardo314/goq/supervisor"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
 	"strings"
 	"time"
 )
@@ -32,8 +32,8 @@ func execBatch(cmdlist []string) {
 
 var startupCmd = []string{
 	"load exitonfail",
-	"run 0-1",
-	// "run all",
+	//"run 0-1",
+	"run all",
 	//"run 0-10",
 }
 

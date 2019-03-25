@@ -2,9 +2,8 @@ package analyzeyaml
 
 import (
 	"fmt"
-	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
+	. "github.com/lunfardo314/goq/readyaml"
 	"strconv"
 	"strings"
 )
@@ -84,5 +83,5 @@ func AnalyzeConstNumber(exprYAML *QuplaConstNumberYAML, _ *QuplaModule, _ *Funct
 	if err != nil {
 		return nil, err
 	}
-	return NewConstValue("", int64(ret)), nil
+	return NewConstValue("", ret), nil
 }

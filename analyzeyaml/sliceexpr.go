@@ -3,16 +3,16 @@ package analyzeyaml
 import (
 	"fmt"
 	. "github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
+	. "github.com/lunfardo314/goq/readyaml"
 )
 
 func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module *QuplaModule, scope *Function) (*SliceExpr, error) {
 	ret := NewQuplaSliceExpr(exprYAML.Source, exprYAML.Offset, exprYAML.SliceSize)
 	module.IncStat("numSliceExpr")
 	ret.VarScope = scope
-	vi := scope.VarByName(exprYAML.Var)
-	if vi == nil {
-		return nil, fmt.Errorf("can't find var '%v' in '%v'", exprYAML.Var, scope.Name)
+	vi, err := scope.VarByName(exprYAML.Var)
+	if err != nil {
+		return nil, fmt.Errorf("'%v': %v", scope.Name, err)
 	}
 	ret.LocalVarIdx = vi.Idx
 	if ret.LocalVarIdx < 0 {

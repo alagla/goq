@@ -2,9 +2,8 @@ package analyzeyaml
 
 import (
 	. "fmt"
-	. "github.com/lunfardo314/goq/abstract"
 	. "github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
+	. "github.com/lunfardo314/goq/readyaml"
 )
 
 func AnalyzeExpression(dataYAML interface{}, module *QuplaModule, scope *Function) (ExpressionInterface, error) {

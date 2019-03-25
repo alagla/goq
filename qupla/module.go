@@ -2,7 +2,6 @@ package qupla
 
 import (
 	"fmt"
-	. "github.com/lunfardo314/goq/abstract"
 	"github.com/lunfardo314/goq/supervisor"
 	. "github.com/lunfardo314/goq/utils"
 	"strings"
@@ -15,7 +14,6 @@ type QuplaModule struct {
 	Functions    map[string]*Function
 	execs        []*ExecStmt
 	stats        map[string]int
-	processor    ProcessorInterface
 	Environments StringSet
 }
 
@@ -37,7 +35,6 @@ func NewQuplaModule(name string) *QuplaModule {
 		Functions:    make(map[string]*Function),
 		execs:        make([]*ExecStmt, 0, 10),
 		stats:        make(map[string]int),
-		processor:    NewStackProcessor(),
 		Environments: make(StringSet),
 	}
 }
@@ -149,19 +146,19 @@ func (module *QuplaModule) collectReferencingFuncs(nameSet StringSet) int {
 	return ret
 }
 
-func (module *QuplaModule) AttachToSupervisor(disp *supervisor.Supervisor) bool {
+func (module *QuplaModule) AttachToSupervisor(sv *supervisor.Supervisor) bool {
 	ret := true
 	for _, funcdef := range module.Functions {
 		if !funcdef.HasEnvStmt() {
 			continue
 		}
-		entity, err := NewFunctionEntity(disp, funcdef, NewStackProcessor())
+		entity, err := NewFunctionEntity(sv, funcdef)
 		if err != nil {
 			logf(0, "can't create entity: %v", err)
 			ret = false
 			continue
 		}
-		if err = disp.Attach(entity, funcdef.GetJoinEnv(), funcdef.GetAffectEnv()); err != nil {
+		if err = sv.Attach(entity, funcdef.GetJoinEnv(), funcdef.GetAffectEnv()); err != nil {
 			logf(0, "error while attaching entity to dispatcher: %v", err)
 			ret = false
 		}

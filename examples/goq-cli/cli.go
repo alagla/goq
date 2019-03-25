@@ -8,6 +8,7 @@ import (
 
 func executor(in string) {
 	logf(5, "goq-cli cmd: '%v'", in)
+	in = strings.Trim(in, " \t\n")
 	words := strings.Split(in, " ")
 	if len(words) == 0 || words[0] == "" {
 		return

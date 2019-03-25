@@ -1,7 +1,6 @@
 package supervisor
 
 import (
-	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/utils"
 )
@@ -18,37 +17,7 @@ func newEnvironment(disp *Supervisor, name string) *environment {
 	return ret
 }
 
-func (env *environment) checkNewSize(size int64) bool {
-	if env.size != 0 {
-		if env.size != size {
-			return false
-		}
-	} else {
-		env.size = size
-	}
-	return true
-}
-
-func (env *environment) adjustEffect(effect Trits) (Trits, error) {
-	if env.size == 0 {
-		effect = Trits{0}
-	} else {
-		if int64(len(effect)) != env.size {
-			if int64(len(effect)) > env.size {
-				return nil, fmt.Errorf("trit vector '%v' is too long for the environment '%v', size = %v",
-					TritsToString(effect), env.name, env.size)
-			}
-			effect = PadTrits(effect, int(env.size))
-		}
-	}
-	return effect, nil
-}
-
 func (env *environment) join(entity *Entity, limit int) error {
-	if !env.checkNewSize(entity.inSize) {
-		return fmt.Errorf("size mismach between joining entity '%v' (in size=%v) and the environment '%v' (size=%v)",
-			entity.name, entity.inSize, env.name, env.size)
-	}
 	env.joins = append(env.joins, &joinEnvData{
 		entity: entity,
 		limit:  limit,
@@ -58,10 +27,6 @@ func (env *environment) join(entity *Entity, limit int) error {
 }
 
 func (env *environment) affect(entity *Entity, delay int) error {
-	if !env.checkNewSize(entity.outSize) {
-		return fmt.Errorf("size mismach between affecting entity '%v' (out size=%v) and the environment '%v' (size=%v)",
-			entity.name, entity.outSize, env.name, env.size)
-	}
 	env.affects = append(env.affects, entity)
 	entity.affectEnvironment(env, delay)
 	return nil
