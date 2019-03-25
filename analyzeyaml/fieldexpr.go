@@ -2,7 +2,7 @@ package analyzeyaml
 
 import (
 	. "github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
+	. "github.com/lunfardo314/goq/readyaml"
 )
 
 func AnalyzeFieldExpr(exprYAML *QuplaFieldExprYAML, module *QuplaModule, scope *Function) (*QuplaFieldExpr, error) {

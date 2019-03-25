@@ -3,8 +3,8 @@ package analyzeyaml
 import (
 	"fmt"
 	. "github.com/lunfardo314/goq/qupla"
+	. "github.com/lunfardo314/goq/readyaml"
 	. "github.com/lunfardo314/goq/utils"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
 )
 
 func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule, bool) {

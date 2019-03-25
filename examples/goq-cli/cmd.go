@@ -4,7 +4,7 @@ import (
 	"github.com/lunfardo314/goq/analyzeyaml"
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
+	. "github.com/lunfardo314/goq/readyaml"
 	"math"
 	"os"
 	"runtime"

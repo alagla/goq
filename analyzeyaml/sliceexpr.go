@@ -3,7 +3,7 @@ package analyzeyaml
 import (
 	"fmt"
 	. "github.com/lunfardo314/goq/qupla"
-	. "github.com/lunfardo314/quplayaml/quplayaml"
+	. "github.com/lunfardo314/goq/readyaml"
 )
 
 func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module *QuplaModule, scope *Function) (*SliceExpr, error) {
