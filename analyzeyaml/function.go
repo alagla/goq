@@ -19,10 +19,7 @@ func AnalyzeFunctionPreliminary(name string, defYAML *QuplaFuncDefYAML, module *
 		return err
 	}
 	def := NewFunction(name, sz)
-	if def.IsIntercepted() {
-		logf(2, "Function '%v' is intercepted", name)
-		module.IncStat("numFuncIntercepted")
-	}
+
 	if err = createVarScope(defYAML, def, module); err != nil {
 		return err
 	}

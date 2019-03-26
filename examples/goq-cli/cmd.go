@@ -114,13 +114,13 @@ func CmdSaveModule(words []string) {
 }
 
 func logExecs(list []*qupla.ExecStmt) {
-	logf(0, "Found %v executable statements:", len(list))
 	for _, ex := range list {
 		logf(0, "   #%v:  %v", ex.GetIdx(), ex.GetSource())
 	}
+	logf(0, "Found %v executable statements:", len(list))
 }
 
-func CmdList(words []string) {
+func CmdLexe(words []string) {
 	if moduleYAML == nil {
 		logf(0, "Error: module was not loaded")
 		return
@@ -131,6 +131,54 @@ func CmdList(words []string) {
 	}
 	execs := module.FindExecs(substr)
 	logExecs(execs)
+}
+
+func CmdTrace(words []string) {
+	if moduleYAML == nil {
+		logf(0, "Error: module was not loaded")
+		return
+	}
+	if len(words) < 2 {
+		logf(0, "usage: trace stop|<filter substr> [1|2]")
+		return
+	}
+	if words[1] == "stop" {
+		module.SetTraceLevel(0, "")
+		logf(0, "all tracing stopped")
+		return
+	}
+	traceLevel := 1
+	var err error
+	if len(words) == 3 {
+		traceLevel, err = strconv.Atoi(words[2])
+		if err != nil {
+			logf(0, "wrong command: %v", err)
+			return
+		}
+	}
+	funcs := module.SetTraceLevel(traceLevel, words[1])
+	logFuncs(funcs)
+	logf(0, "Set trace level = %v", traceLevel)
+}
+
+func logFuncs(list []*qupla.Function) {
+	for _, fun := range list {
+		logf(0, "   %v", fun.Name)
+	}
+	logf(0, "Found %v functions:", len(list))
+}
+
+func CmdLfun(words []string) {
+	if moduleYAML == nil {
+		logf(0, "Error: module was not loaded")
+		return
+	}
+	substr := ""
+	if len(words) == 2 {
+		substr = words[1]
+	}
+	funcs := module.FindFuncs(substr)
+	logFuncs(funcs)
 }
 
 func stringIsInt(s string) bool {

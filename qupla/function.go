@@ -3,6 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/utils"
 )
 
 type Function struct {
@@ -19,7 +20,11 @@ type Function struct {
 	hasState          bool
 	InSize            int
 	ParamSizes        []int
-	interceptions     []func(Trits)
+	traceLevel        int
+}
+
+func (def *Function) SetTraceLevel(traceLevel int) {
+	def.traceLevel = traceLevel
 }
 
 func (def *Function) HasState() bool {
@@ -37,13 +42,12 @@ func (def *Function) References(funName string) bool {
 
 func NewFunction(name string, size int) *Function {
 	return &Function{
-		Name:          name,
-		retSize:       size,
-		LocalVars:     make([]*VarInfo, 0, 10),
-		Joins:         make(map[string]int),
-		Affects:       make(map[string]int),
-		ParamSizes:    make([]int, 0, 5),
-		interceptions: getOnReturnInterceptions(name),
+		Name:       name,
+		retSize:    size,
+		LocalVars:  make([]*VarInfo, 0, 10),
+		Joins:      make(map[string]int),
+		Affects:    make(map[string]int),
+		ParamSizes: make([]int, 0, 5),
 	}
 }
 
@@ -57,10 +61,6 @@ func (def *Function) ArgSize() int {
 
 func (def *Function) HasEnvStmt() bool {
 	return len(def.Joins) > 0 || len(def.Affects) > 0
-}
-
-func (def *Function) IsIntercepted() bool {
-	return len(def.interceptions) > 0
 }
 
 func (def *Function) GetJoinEnv() map[string]int {
@@ -118,11 +118,14 @@ func (def *Function) NewFuncExpressionWithNulls() *FunctionExpr {
 
 func (def *Function) Eval(frame *EvalFrame, result Trits) bool {
 	null := def.RetExpr.Eval(frame, result)
-	if null {
-		return true
+	if def.traceLevel > 0 {
+		if !null {
+			bi, _ := utils.TritsToBigInt(result)
+			logf(def.traceLevel, "trace '%v': returned %v, '%v'",
+				def.Name, bi, utils.TritsToString(result))
+		} else {
+			logf(2+def.traceLevel, "trace '%v': returned null")
+		}
 	}
-	for _, ic := range def.interceptions {
-		ic(result)
-	}
-	return false
+	return null
 }

@@ -3,6 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/utils"
 )
 
 type VarInfo struct {
@@ -46,33 +47,53 @@ func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
 	return ret
 }
 
+// TODO suboptimal with tracing code
+
 func (vi *VarInfo) Eval(frame *EvalFrame) (Trits, bool) {
 	result := frame.buffer[vi.Offset:vi.SliceEnd]
+	null := false
+	cached := false
+
 	switch result[0] {
 	case evaluatedToNull:
-		//logf(10, "evalVar evaluated NULL idx = %v in = '%v'", idx, frame.context.FuncDef.Name)
-		return nil, true
+		null = true
+		cached = true
 
 	case notEvaluated:
-		//logf(10, "evalVar NOT evaluated, idx = %v in '%v'", idx, frame.context.FuncDef.Name)
 		if vi.IsParam {
 			// evaluated in the context of previous call
 			if frame.context.subexpr[vi.Idx].Eval(frame.prev, result) {
 				result[0] = evaluatedToNull
-				return nil, true
+				null = true
 			}
 		} else {
 			if vi.Assign.Eval(frame, result) {
 				result[0] = evaluatedToNull
-				return nil, true
+				null = true
 			}
 		}
-		return result, false
 
 	default: // evaluated, not null (must be valid trit, not checking)
-		//logf(10, "evalVar evaluated NOT NULL idx = %v in '%v'", idx, frame.context.FuncDef.Name)
-		return result, false
+		cached = true
 	}
+
+	if frame.context.FuncDef.traceLevel > 1 {
+		var s string
+		if cached {
+			s = "cached value "
+		} else {
+			s = "evaluated value "
+		}
+		if null {
+			s += "null"
+		} else {
+			bi, _ := utils.TritsToBigInt(result)
+			s += fmt.Sprintf("%v, '%v'", bi, utils.TritsToString(result))
+		}
+		logf(frame.context.FuncDef.traceLevel, "trace var %v.%v: %v",
+			frame.context.FuncDef.Name, vi.Name, s)
+	}
+	return result, null
 }
 
 func MatchSizes(e1, e2 ExpressionInterface) error {

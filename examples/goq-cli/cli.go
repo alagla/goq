@@ -31,8 +31,12 @@ func executor(in string) {
 		CmdRepeat(words)
 	case "chain":
 		CmdChain(words)
-	case "list":
-		CmdList(words)
+	case "lexe":
+		CmdLexe(words)
+	case "lfun":
+		CmdLfun(words)
+	case "trace":
+		CmdTrace(words)
 	case "runtime":
 		CmdRuntime(words)
 
