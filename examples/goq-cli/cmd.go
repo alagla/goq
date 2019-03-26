@@ -68,7 +68,7 @@ func CmdLoadModule(words []string) {
 	var err error
 
 	fname := fnamedefault
-	if len(words) == 2 && words[1] != "exitonfail" {
+	if len(words) >= 2 && words[1] != "exitonfail" {
 		fname = words[1]
 	}
 	logf(0, "Loading QuplaYAML module form file %v", fname)

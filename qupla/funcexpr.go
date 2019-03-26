@@ -30,6 +30,6 @@ func (e *FunctionExpr) References(funName string) bool {
 
 func (e *FunctionExpr) Eval(frame *EvalFrame, result Trits) bool {
 	newFrame := newEvalFrame(e, frame)
-	return e.FuncDef.RetExpr.Eval(&newFrame, result) // - avoid unnecessary call
-	//return e.FuncDef.Eval(&newFrame, result)
+	//return e.FuncDef.RetExpr.Eval(&newFrame, result) // - avoid unnecessary call
+	return e.FuncDef.Eval(&newFrame, result) //this is slower, did this way due to intercepted functions
 }

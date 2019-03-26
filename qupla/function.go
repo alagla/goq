@@ -2,7 +2,7 @@ package qupla
 
 import (
 	"fmt"
-	"github.com/iotaledger/iota.go/trinary"
+	. "github.com/iotaledger/iota.go/trinary"
 )
 
 type Function struct {
@@ -19,6 +19,7 @@ type Function struct {
 	hasState          bool
 	InSize            int
 	ParamSizes        []int
+	interceptions     []func(Trits)
 }
 
 func (def *Function) HasState() bool {
@@ -34,14 +35,15 @@ func (def *Function) References(funName string) bool {
 	return def.RetExpr.References(funName)
 }
 
-func NewQuplaFuncDef(name string, size int) *Function {
+func NewFunction(name string, size int) *Function {
 	return &Function{
-		Name:       name,
-		retSize:    size,
-		LocalVars:  make([]*VarInfo, 0, 10),
-		Joins:      make(map[string]int),
-		Affects:    make(map[string]int),
-		ParamSizes: make([]int, 0, 5),
+		Name:          name,
+		retSize:       size,
+		LocalVars:     make([]*VarInfo, 0, 10),
+		Joins:         make(map[string]int),
+		Affects:       make(map[string]int),
+		ParamSizes:    make([]int, 0, 5),
+		interceptions: getOnReturnInterceptions(name),
 	}
 }
 
@@ -55,6 +57,10 @@ func (def *Function) ArgSize() int {
 
 func (def *Function) HasEnvStmt() bool {
 	return len(def.Joins) > 0 || len(def.Affects) > 0
+}
+
+func (def *Function) IsIntercepted() bool {
+	return len(def.interceptions) > 0
 }
 
 func (def *Function) GetJoinEnv() map[string]int {
@@ -110,6 +116,13 @@ func (def *Function) NewFuncExpressionWithNulls() *FunctionExpr {
 	return ret
 }
 
-func (def *Function) Eval(frame *EvalFrame, result trinary.Trits) bool {
-	return def.RetExpr.Eval(frame, result)
+func (def *Function) Eval(frame *EvalFrame, result Trits) bool {
+	null := def.RetExpr.Eval(frame, result)
+	if null {
+		return true
+	}
+	for _, ic := range def.interceptions {
+		ic(result)
+	}
+	return false
 }

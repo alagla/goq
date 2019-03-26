@@ -31,9 +31,10 @@ func execBatch(cmdlist []string) {
 }
 
 var startupCmd = []string{
-	"load exitonfail",
+	"load goq-cli/Examples.yml exitonfail",
+	"run 84",
 	//"run 0-1",
-	"run all",
+	//"run all",
 	//"run 0-10",
 }
 
