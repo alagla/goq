@@ -1,15 +1,18 @@
 package main
 
 import (
+	"github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/analyzeyaml"
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/goq/readyaml"
+	"github.com/lunfardo314/goq/utils"
 	"math"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -23,8 +26,14 @@ import (
 //    load <module yaml file>
 //    save
 //    save <file to save as yaml>
-//    list
-//    list <substring>
+//    lexe
+//    lexe <filter substring>
+//    lfun
+//    lfun <filter substring>
+//    lenv
+//    trace stop
+//    trace <filter substring>
+//    trace <filter substring> <traceLevel>
 //    run
 //    run all
 //    run <exec idx>
@@ -32,6 +41,7 @@ import (
 //    repeat <exec idx> <repeat times>
 //    chain
 //    chain on|off
+//    post <effect decimal> <environment>
 
 func CmdVerbosity(words []string) {
 	if len(words) == 2 {
@@ -181,6 +191,17 @@ func CmdLfun(words []string) {
 	logFuncs(funcs)
 }
 
+func CmdLenv(words []string) {
+	if moduleYAML == nil {
+		logf(0, "Error: module was not loaded")
+		return
+	}
+	for env := range module.Environments {
+		logf(0, "    %v", env)
+	}
+	logf(0, "   Total %v environments found", len(module.Environments))
+}
+
 func stringIsInt(s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil
@@ -279,4 +300,34 @@ func CmdRepeat(words []string) {
 	if err := module.RunExec(svisor, idx, repeat); err != nil {
 		logf(0, "%v", err)
 	}
+}
+
+func CmdPost(words []string) {
+	if module == nil {
+		logf(0, "Error: module not loaded")
+		return
+	}
+	if len(words) != 3 {
+		logf(0, "Usage: post <effect decimal> <environment>")
+		return
+	}
+	dec, err := strconv.Atoi(words[1])
+	if err != nil {
+		logf(0, "Usage: post <effect decimal> <environment>")
+		return
+	}
+	effect := trinary.IntToTrits(int64(dec))
+	logf(0, "Posting effect %v, '%v' to environment '%v'",
+		dec, utils.TritsToString(effect), words[2])
+
+	err = svisor.PostEffect(words[2], effect, 0)
+	if err != nil {
+		logf(0, "error: %v", err)
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	svisor.DoOnIdle(func() {
+		wg.Done()
+	})
+	wg.Wait()
 }

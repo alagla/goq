@@ -46,21 +46,15 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 	logf(1, "Functions with state variables: %v", numWithStateVars)
 	logf(1, "Functions with state (which references functions with state variables): %v", numStateful)
 
-	//if n, ok := ret.stats["numEnvFundef"]; ok {
-	//	logf(0, "Functions joins/affects environments: %v", n)
-	//} else {
-	//	logf(0, "No function joins/affects environments")
-	//}
-
 	for funname, fundef := range ret.Functions {
 		if fundef.HasEnvStmt() {
 			joins := StringSet{}
-			for e, p := range fundef.GetJoinEnv() {
-				joins.Append(fmt.Sprintf("%v(%v)", e, p))
+			for e := range fundef.GetJoinEnv() {
+				joins.Append(fmt.Sprintf("%v", e))
 			}
 			affects := StringSet{}
-			for e, p := range fundef.GetAffectEnv() {
-				affects.Append(fmt.Sprintf("%v(%v)", e, p))
+			for e := range fundef.GetAffectEnv() {
+				affects.Append(fmt.Sprintf("%v", e))
 			}
 			ret.Environments.AppendAll(affects)
 			ret.Environments.AppendAll(joins)

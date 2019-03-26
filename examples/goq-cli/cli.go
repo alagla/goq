@@ -35,10 +35,14 @@ func executor(in string) {
 		CmdLexe(words)
 	case "lfun":
 		CmdLfun(words)
+	case "lenv":
+		CmdLenv(words)
 	case "trace":
 		CmdTrace(words)
 	case "runtime":
 		CmdRuntime(words)
+	case "post":
+		CmdPost(words)
 
 	default:
 		logf(0, "unknown command")
