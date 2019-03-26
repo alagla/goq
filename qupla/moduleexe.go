@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/supervisor"
+	"github.com/lunfardo314/goq/utils"
 	"time"
 )
 
@@ -151,6 +152,8 @@ func reportRunResults(execs []*ExecStmt, duration time.Duration) {
 			numTest++
 		} else {
 			logf(2, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
+			bi, _ := utils.TritsToBigInt(summ.lastResult)
+			logf(2, "   result: %v, '%v'", bi, utils.TritsToString(summ.lastResult))
 			numEvals++
 		}
 		if summ.testPassed {

@@ -1,0 +1,5552 @@
+module: 'Fibonacci.yml'
+# import Qupla
+
+types: 
+  # type Trit [1]
+  Trit:
+    vector: 1
+    size: '1'
+  # type Tryte [3]
+  Tryte:
+    vector: 3
+    size: '3'
+  # type Tiny [9]
+  Tiny:
+    vector: 9
+    size: '9'
+  # type Int [27]
+  Int:
+    vector: 27
+    size: '27'
+  # type Huge [81]
+  Huge:
+    vector: 81
+    size: '81'
+  # type Hash [243]
+  Hash:
+    vector: 243
+    size: '243'
+  # type Hash3 [729]
+  Hash3:
+    vector: 729
+    size: '729'
+  # type Hash9 [2187]
+  Hash9:
+    vector: 2187
+    size: '2187'
+  # type Signature [6561]
+  Signature:
+    vector: 6561
+    size: '6561'
+  # type Trit2 [2]
+  Trit2:
+    vector: 2
+    size: '2'
+  # type Trit4 [4]
+  Trit4:
+    vector: 4
+    size: '4'
+  # type Tryte2 [6]
+  Tryte2:
+    vector: 6
+    size: '6'
+  # type Tryte4 [12]
+  Tryte4:
+    vector: 12
+    size: '12'
+  # type Tiny2 [18]
+  Tiny2:
+    vector: 18
+    size: '18'
+  # type Tiny4 [36]
+  Tiny4:
+    vector: 36
+    size: '36'
+  # type Int2 [54]
+  Int2:
+    vector: 54
+    size: '54'
+  # type Int4 [108]
+  Int4:
+    vector: 108
+    size: '108'
+  # type Huge2 [162]
+  Huge2:
+    vector: 162
+    size: '162'
+  # type Huge4 [324]
+  Huge4:
+    vector: 324
+    size: '324'
+  # type Hash2 [486]
+  Hash2:
+    vector: 486
+    size: '486'
+  # type Hash4 [972]
+  Hash4:
+    vector: 972
+    size: '972'
+  # type Bool [Trit]
+  Bool:
+    vector: Trit
+    size: '1'
+  # type Carry [Trit]
+  Carry:
+    vector: Trit
+    size: '1'
+  # type TritCarry { ... }
+  TritCarry:
+    size: '*'
+    fields: 
+        value: 
+          vector: Trit
+          size: '1'
+        carry: 
+          vector: Carry
+          size: '1'
+  # type TinyFloat { ... }
+  TinyFloat:
+    size: '*'
+    fields: 
+        mantissa: 
+          vector: Tiny
+          size: '9'
+        exponent: 
+          vector: Tryte
+          size: '3'
+  # type Float { ... }
+  Float:
+    size: '*'
+    fields: 
+        mantissa: 
+          vector: Tiny2
+          size: '18'
+        exponent: 
+          vector: Tryte2
+          size: '6'
+  # type Double { ... }
+  Double:
+    size: '*'
+    fields: 
+        mantissa: 
+          vector: Tiny4
+          size: '36'
+        exponent: 
+          vector: Tiny
+          size: '9'
+  # type HugeFloat { ... }
+  HugeFloat:
+    size: '*'
+    fields: 
+        mantissa: 
+          vector: Int2
+          size: '54'
+        exponent: 
+          vector: Tiny2
+          size: '18'
+  # type Attachment { ... }
+  Attachment:
+    size: '*'
+    fields: 
+        timestamp: 
+          vector: Int
+          size: '27'
+        timestampLowerBound: 
+          vector: Int
+          size: '27'
+        timestampUpperBound: 
+          vector: Int
+          size: '27'
+  # type Transaction { ... }
+  Transaction:
+    size: '*'
+    fields: 
+        signature: 
+          vector: Signature
+          size: '6561'
+        extraDataDigest: 
+          vector: Hash
+          size: '243'
+        address: 
+          vector: Hash
+          size: '243'
+        value: 
+          vector: Huge
+          size: '81'
+        issuanceTimestamp: 
+          vector: Int
+          size: '27'
+        timelockLowerBound: 
+          vector: Int
+          size: '27'
+        timelockUpperBound: 
+          vector: Int
+          size: '27'
+        bundle: 
+          vector: Huge
+          size: '81'
+        trunk: 
+          vector: Hash
+          size: '243'
+        branch: 
+          vector: Hash
+          size: '243'
+        tag: 
+          vector: Huge
+          size: '81'
+        attachment: 
+          vector: Attachment
+          size: '81'
+        nonce: 
+          vector: Huge
+          size: '81'
+luts: 
+  # lut not
+  not:
+    lutTable:
+      - '0 = 1'
+      - '1 = 0'
+  # lut and
+  and:
+    lutTable:
+      - '00 = 0'
+      - '01 = 0'
+      - '10 = 0'
+      - '11 = 1'
+  # lut and3
+  and3:
+    lutTable:
+      - '000 = 0'
+      - '001 = 0'
+      - '010 = 0'
+      - '011 = 0'
+      - '100 = 0'
+      - '101 = 0'
+      - '110 = 0'
+      - '111 = 1'
+  # lut or
+  or:
+    lutTable:
+      - '00 = 0'
+      - '01 = 1'
+      - '10 = 1'
+      - '11 = 1'
+  # lut or3
+  or3:
+    lutTable:
+      - '000 = 0'
+      - '001 = 1'
+      - '010 = 1'
+      - '011 = 1'
+      - '100 = 1'
+      - '101 = 1'
+      - '110 = 1'
+      - '111 = 1'
+  # lut xor
+  xor:
+    lutTable:
+      - '00 = 0'
+      - '01 = 1'
+      - '10 = 1'
+      - '11 = 0'
+  # lut xor3
+  xor3:
+    lutTable:
+      - '000 = 0'
+      - '001 = 1'
+      - '010 = 1'
+      - '011 = 0'
+      - '100 = 1'
+      - '101 = 0'
+      - '110 = 0'
+      - '111 = 1'
+  # lut nand
+  nand:
+    lutTable:
+      - '00 = 1'
+      - '01 = 1'
+      - '10 = 1'
+      - '11 = 0'
+  # lut nand3
+  nand3:
+    lutTable:
+      - '000 = 1'
+      - '001 = 1'
+      - '010 = 1'
+      - '011 = 1'
+      - '100 = 1'
+      - '101 = 1'
+      - '110 = 1'
+      - '111 = 0'
+  # lut nor
+  nor:
+    lutTable:
+      - '00 = 1'
+      - '01 = 0'
+      - '10 = 0'
+      - '11 = 0'
+  # lut nor3
+  nor3:
+    lutTable:
+      - '000 = 1'
+      - '001 = 0'
+      - '010 = 0'
+      - '011 = 0'
+      - '100 = 0'
+      - '101 = 0'
+      - '110 = 0'
+      - '111 = 0'
+  # lut xnor
+  xnor:
+    lutTable:
+      - '00 = 1'
+      - '01 = 0'
+      - '10 = 0'
+      - '11 = 1'
+  # lut equal
+  equal:
+    lutTable:
+      - '-- = 1'
+      - '-0 = 0'
+      - '-1 = 0'
+      - '0- = 0'
+      - '00 = 1'
+      - '01 = 0'
+      - '1- = 0'
+      - '10 = 0'
+      - '11 = 1'
+  # lut isMin
+  isMin:
+    lutTable:
+      - '- = 1'
+      - '0 = 0'
+      - '1 = 0'
+  # lut isNegative
+  isNegative:
+    lutTable:
+      - '- = 1'
+      - '0 = 0'
+      - '1 = 0'
+  # lut isOne
+  isOne:
+    lutTable:
+      - '- = 0'
+      - '0 = 0'
+      - '1 = 1'
+  # lut isPositive
+  isPositive:
+    lutTable:
+      - '- = 0'
+      - '0 = 0'
+      - '1 = 1'
+  # lut isZero
+  isZero:
+    lutTable:
+      - '- = 0'
+      - '0 = 1'
+      - '1 = 0'
+  # lut notNegative
+  notNegative:
+    lutTable:
+      - '- = 0'
+      - '0 = 1'
+      - '1 = 1'
+  # lut notPositive
+  notPositive:
+    lutTable:
+      - '- = 1'
+      - '0 = 1'
+      - '1 = 0'
+  # lut notZero
+  notZero:
+    lutTable:
+      - '- = 1'
+      - '0 = 0'
+      - '1 = 1'
+  # lut cmp
+  cmp:
+    lutTable:
+      - '-- = 0'
+      - '0- = 1'
+      - '1- = 1'
+      - '-0 = -'
+      - '00 = 0'
+      - '10 = 1'
+      - '-1 = -'
+      - '01 = -'
+      - '11 = 0'
+  # lut isLess
+  isLess:
+    lutTable:
+      - '- = 1'
+      - '0 = 0'
+      - '1 = 0'
+  # lut isGreater
+  isGreater:
+    lutTable:
+      - '- = 0'
+      - '0 = 0'
+      - '1 = 1'
+  # lut isEqual
+  isEqual:
+    lutTable:
+      - '- = 0'
+      - '0 = 1'
+      - '1 = 0'
+  # lut notLess
+  notLess:
+    lutTable:
+      - '- = 0'
+      - '0 = 1'
+      - '1 = 1'
+  # lut notGreater
+  notGreater:
+    lutTable:
+      - '- = 1'
+      - '0 = 1'
+      - '1 = 0'
+  # lut notEqual
+  notEqual:
+    lutTable:
+      - '- = 1'
+      - '0 = 0'
+      - '1 = 1'
+  # lut even
+  even:
+    lutTable:
+      - '--- = 0'
+      - '0-- = 1'
+      - '1-- = 0'
+      - '-0- = 1'
+      - '00- = 0'
+      - '10- = 1'
+      - '-1- = 0'
+      - '01- = 1'
+      - '11- = 0'
+      - '--0 = 1'
+      - '0-0 = 0'
+      - '1-0 = 1'
+      - '-00 = 0'
+      - '000 = 1'
+      - '100 = 0'
+      - '-10 = 1'
+      - '010 = 0'
+      - '110 = 1'
+      - '--1 = 0'
+      - '0-1 = 1'
+      - '1-1 = 0'
+      - '-01 = 1'
+      - '001 = 0'
+      - '101 = 1'
+      - '-11 = 0'
+      - '011 = 1'
+      - '111 = 0'
+  # lut fullAdd
+  fullAdd:
+    lutTable:
+      - '--- = 0-'
+      - '--0 = 1-'
+      - '--1 = -0'
+      - '-0- = 1-'
+      - '-00 = -0'
+      - '-01 = 00'
+      - '-1- = -0'
+      - '-10 = 00'
+      - '-11 = 10'
+      - '0-- = 1-'
+      - '0-0 = -0'
+      - '0-1 = 00'
+      - '00- = -0'
+      - '000 = 00'
+      - '001 = 10'
+      - '01- = 00'
+      - '010 = 10'
+      - '011 = -1'
+      - '1-- = -0'
+      - '1-0 = 00'
+      - '1-1 = 10'
+      - '10- = 00'
+      - '100 = 10'
+      - '101 = -1'
+      - '11- = 10'
+      - '110 = -1'
+      - '111 = 01'
+  # lut fullMul
+  fullMul:
+    lutTable:
+      - '-- = 1'
+      - '-0 = 0'
+      - '-1 = -'
+      - '0- = 0'
+      - '00 = 0'
+      - '01 = 0'
+      - '1- = -'
+      - '10 = 0'
+      - '11 = 1'
+  # lut halfAdd
+  halfAdd:
+    lutTable:
+      - '-- = 1-'
+      - '-0 = -0'
+      - '-1 = 00'
+      - '0- = -0'
+      - '00 = 00'
+      - '01 = 10'
+      - '1- = 00'
+      - '10 = 10'
+      - '11 = -1'
+  # lut neg
+  neg:
+    lutTable:
+      - '- = 1'
+      - '0 = 0'
+      - '1 = -'
+  # lut sign
+  sign:
+    lutTable:
+      - '--- = -'
+      - '0-- = -'
+      - '1-- = -'
+      - '-0- = -'
+      - '00- = -'
+      - '10- = -'
+      - '-1- = -'
+      - '01- = -'
+      - '11- = -'
+      - '--0 = -'
+      - '0-0 = -'
+      - '1-0 = -'
+      - '-00 = -'
+      - '000 = 0'
+      - '100 = 1'
+      - '-10 = 1'
+      - '010 = 1'
+      - '110 = 1'
+      - '--1 = 1'
+      - '0-1 = 1'
+      - '1-1 = 1'
+      - '-01 = 1'
+      - '001 = 1'
+      - '101 = 1'
+      - '-11 = 1'
+      - '011 = 1'
+      - '111 = 1'
+  # lut unequal
+  unequal:
+    lutTable:
+      - '-- = 0'
+      - '-0 = 1'
+      - '-1 = 1'
+      - '0- = 1'
+      - '00 = 0'
+      - '01 = 1'
+      - '1- = 1'
+      - '10 = 1'
+      - '11 = 0'
+functions: 
+# 
+# func Int fibonacci1<Int>(Int n) {
+#   retN = isLess[cmp<Int>(n, 2)]
+#   nMin1 = decr<Int>(n)
+#   nMin2 = sub<Int>(n, 2)
+#   return retN ? n : add<Int>(fibonacci1<Int>(nMin1), fibonacci1<Int>(nMin2))
+# }
+  fibonacci1_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Int
+        size: 27
+    params:
+      - 
+        argName: n
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    assigns: 
+      retN:
+        LutExpr:
+          name: isLess
+          args: 
+            - 
+              FuncExpr:
+                source: 'cmp<Int>(n, 2)'
+                name: cmp_27
+                args:
+                - 
+                  SliceExpr:
+                    source: 'n'
+                    var: n
+                    offset: 0
+                    size: 27
+                - 
+                  ValueExpr:
+                      value: '2'
+                      trits: '-10000000000000000000000000'
+                      trytes: 'B99999999'
+      nMin1:
+        FuncExpr:
+          source: 'decr<Int>(n)'
+          name: decr_27
+          args:
+          - 
+            SliceExpr:
+              source: 'n'
+              var: n
+              offset: 0
+              size: 27
+      nMin2:
+        FuncExpr:
+          source: 'sub<Int>(n, 2)'
+          name: sub_27
+          args:
+          - 
+            SliceExpr:
+              source: 'n'
+              var: n
+              offset: 0
+              size: 27
+          - 
+            ValueExpr:
+                value: '2'
+                trits: '-10000000000000000000000000'
+                trytes: 'B99999999'
+    return: 
+    # retN ? n : add<Int>(fibonacci1<Int>(nMin1), fibonacci1<Int>(nMin2))
+      CondExpr:
+        source: 'retN ? n : add<Int>(fibonacci1<Int>(nMin1), fibonacci1<Int>(nMin2))'
+        if: 
+          SliceExpr:
+            source: 'retN'
+            var: retN
+            offset: 0
+            size: 1
+        then: 
+          SliceExpr:
+            source: 'n'
+            var: n
+            offset: 0
+            size: 27
+        else:
+          FuncExpr:
+            source: 'add<Int>(fibonacci1<Int>(nMin1), fibonacci1<Int>(nMin2))'
+            name: add_27
+            args:
+            - 
+              FuncExpr:
+                source: 'fibonacci1<Int>(nMin1)'
+                name: fibonacci1_27
+                args:
+                - 
+                  SliceExpr:
+                    source: 'nMin1'
+                    var: nMin1
+                    offset: 0
+                    size: 27
+            - 
+              FuncExpr:
+                source: 'fibonacci1<Int>(nMin2)'
+                name: fibonacci1_27
+                args:
+                - 
+                  SliceExpr:
+                    source: 'nMin2'
+                    var: nMin2
+                    offset: 0
+                    size: 27
+# 
+# func Trit cmp<Int>(Int lhs, Int rhs) {
+#   val0 = cmp<A>(lhs[0 : A], rhs[0 : A])
+#   val1 = cmp<B>(lhs[A : B], rhs[A : B])
+#   val2 = cmp<C>(lhs[A + B : C], rhs[A + B : C])
+#   return sign[val0, val1, val2]
+# }
+  cmp_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: lhs
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+      - 
+        argName: rhs
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'cmp<A>(lhs[0 : A], rhs[0 : A])'
+          name: cmp_9
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[0 : A]'
+              var: lhs
+              offset: 0
+              size: 9
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'rhs[0 : A]'
+              var: rhs
+              offset: 0
+              size: 9
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+      val1:
+        FuncExpr:
+          source: 'cmp<B>(lhs[A : B], rhs[A : B])'
+          name: cmp_9
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A : B]'
+              var: lhs
+              offset: 9
+              size: 9
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'rhs[A : B]'
+              var: rhs
+              offset: 9
+              size: 9
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 9
+      val2:
+        FuncExpr:
+          source: 'cmp<C>(lhs[A + B : C], rhs[A + B : C])'
+          name: cmp_9
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A + B : C]'
+              var: lhs
+              offset: 18
+              size: 9
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 9
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 9
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'rhs[A + B : C]'
+              var: rhs
+              offset: 18
+              size: 9
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 9
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 9
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 9
+    return: 
+    # sign[val0, val1, val2]
+      LutExpr:
+        name: sign
+        args: 
+          - 
+            SliceExpr:
+              source: 'val0'
+              var: val0
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val1'
+              var: val1
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val2'
+              var: val2
+              offset: 0
+              size: 1
+# 
+# func Trit cmp<A>(A lhs, A rhs) {
+#   val0 = cmp<A>(lhs[0 : A], rhs[0 : A])
+#   val1 = cmp<B>(lhs[A : B], rhs[A : B])
+#   val2 = cmp<C>(lhs[A + B : C], rhs[A + B : C])
+#   return sign[val0, val1, val2]
+# }
+  cmp_9:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: lhs
+        size: 9
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 9
+      - 
+        argName: rhs
+        size: 9
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 9
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'cmp<A>(lhs[0 : A], rhs[0 : A])'
+          name: cmp_3
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[0 : A]'
+              var: lhs
+              offset: 0
+              size: 3
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'rhs[0 : A]'
+              var: rhs
+              offset: 0
+              size: 3
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+      val1:
+        FuncExpr:
+          source: 'cmp<B>(lhs[A : B], rhs[A : B])'
+          name: cmp_3
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A : B]'
+              var: lhs
+              offset: 3
+              size: 3
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'rhs[A : B]'
+              var: rhs
+              offset: 3
+              size: 3
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 3
+      val2:
+        FuncExpr:
+          source: 'cmp<C>(lhs[A + B : C], rhs[A + B : C])'
+          name: cmp_3
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A + B : C]'
+              var: lhs
+              offset: 6
+              size: 3
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 3
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 3
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'rhs[A + B : C]'
+              var: rhs
+              offset: 6
+              size: 3
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 3
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 3
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 3
+    return: 
+    # sign[val0, val1, val2]
+      LutExpr:
+        name: sign
+        args: 
+          - 
+            SliceExpr:
+              source: 'val0'
+              var: val0
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val1'
+              var: val1
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val2'
+              var: val2
+              offset: 0
+              size: 1
+# 
+# func Trit cmp<A>(A lhs, A rhs) {
+#   val0 = cmp<A>(lhs[0 : A], rhs[0 : A])
+#   val1 = cmp<B>(lhs[A : B], rhs[A : B])
+#   val2 = cmp<C>(lhs[A + B : C], rhs[A + B : C])
+#   return sign[val0, val1, val2]
+# }
+  cmp_3:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: lhs
+        size: 3
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 3
+      - 
+        argName: rhs
+        size: 3
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 3
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'cmp<A>(lhs[0 : A], rhs[0 : A])'
+          name: cmp_1
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[0 : A]'
+              var: lhs
+              offset: 0
+              size: 1
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'rhs[0 : A]'
+              var: rhs
+              offset: 0
+              size: 1
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+      val1:
+        FuncExpr:
+          source: 'cmp<B>(lhs[A : B], rhs[A : B])'
+          name: cmp_1
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A : B]'
+              var: lhs
+              offset: 1
+              size: 1
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'rhs[A : B]'
+              var: rhs
+              offset: 1
+              size: 1
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 1
+      val2:
+        FuncExpr:
+          source: 'cmp<C>(lhs[A + B : C], rhs[A + B : C])'
+          name: cmp_1
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A + B : C]'
+              var: lhs
+              offset: 2
+              size: 1
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 1
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 1
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'rhs[A + B : C]'
+              var: rhs
+              offset: 2
+              size: 1
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 1
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 1
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 1
+    return: 
+    # sign[val0, val1, val2]
+      LutExpr:
+        name: sign
+        args: 
+          - 
+            SliceExpr:
+              source: 'val0'
+              var: val0
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val1'
+              var: val1
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val2'
+              var: val2
+              offset: 0
+              size: 1
+# 
+# func Int decr<Int>(Int val) {
+#   halfSum = halfAdd<Int>(val, -)
+#   return halfSum.value
+# }
+  decr_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Int
+        size: 27
+    params:
+      - 
+        argName: val
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    assigns: 
+      halfSum:
+        FuncExpr:
+          source: 'halfAdd<Int>(val, -)'
+          name: halfAdd_27
+          args:
+          - 
+            SliceExpr:
+              source: 'val'
+              var: val
+              offset: 0
+              size: 27
+          - 
+            ValueExpr:
+                value: '-'
+                trits: '-'
+                trytes: 'Z'
+    return: 
+    # halfSum.value
+      SliceExpr:
+        source: 'halfSum.value'
+        var: halfSum
+        offset: 0
+        size: 27
+        fields: 
+          - value
+# 
+# func TCarry halfAdd<Int>(Int val, Carry carry) {
+#   add0 = halfAdd<A>(val[0 : A], carry)
+#   add1 = halfAdd<B>(val[A : B], add0.carry)
+#   add2 = halfAdd<C>(val[A + B : C], add1.carry)
+#   return add0.value & add1.value & add2
+# }
+  halfAdd_27:
+    returnType: 
+      ConstTypeName:
+        typeName: TCarry
+        size: 28
+        fields:
+          value: 
+            size: '27'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '27'
+    params:
+      - 
+        argName: val
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    assigns: 
+      add0:
+        FuncExpr:
+          source: 'halfAdd<A>(val[0 : A], carry)'
+          name: halfAdd_9
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 9
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'carry'
+              var: carry
+              offset: 0
+              size: 1
+      add1:
+        FuncExpr:
+          source: 'halfAdd<B>(val[A : B], add0.carry)'
+          name: halfAdd_9
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 9
+              size: 9
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'add0.carry'
+              var: add0
+              offset: 9
+              size: 1
+              fields: 
+                - carry
+      add2:
+        FuncExpr:
+          source: 'halfAdd<C>(val[A + B : C], add1.carry)'
+          name: halfAdd_9
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 18
+              size: 9
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 9
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 9
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'add1.carry'
+              var: add1
+              offset: 9
+              size: 1
+              fields: 
+                - carry
+    return: 
+    # add0.value & add1.value & add2
+      ConcatExpr:
+        source: 'add0.value & add1.value & add2'
+        lhs: 
+          ConcatExpr:
+            source: 'add0.value & add1.value'
+            lhs: 
+              SliceExpr:
+                source: 'add0.value'
+                var: add0
+                offset: 0
+                size: 9
+                fields: 
+                  - value
+            rhs: 
+              SliceExpr:
+                source: 'add1.value'
+                var: add1
+                offset: 0
+                size: 9
+                fields: 
+                  - value
+        rhs: 
+          SliceExpr:
+            source: 'add2'
+            var: add2
+            offset: 0
+            size: 10
+# 
+# func TCarry halfAdd<A>(A val, Carry carry) {
+#   add0 = halfAdd<A>(val[0 : A], carry)
+#   add1 = halfAdd<B>(val[A : B], add0.carry)
+#   add2 = halfAdd<C>(val[A + B : C], add1.carry)
+#   return add0.value & add1.value & add2
+# }
+  halfAdd_9:
+    returnType: 
+      ConstTypeName:
+        typeName: TCarry
+        size: 10
+        fields:
+          value: 
+            size: '9'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '9'
+    params:
+      - 
+        argName: val
+        size: 9
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 9
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    assigns: 
+      add0:
+        FuncExpr:
+          source: 'halfAdd<A>(val[0 : A], carry)'
+          name: halfAdd_3
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 3
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'carry'
+              var: carry
+              offset: 0
+              size: 1
+      add1:
+        FuncExpr:
+          source: 'halfAdd<B>(val[A : B], add0.carry)'
+          name: halfAdd_3
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 3
+              size: 3
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'add0.carry'
+              var: add0
+              offset: 3
+              size: 1
+              fields: 
+                - carry
+      add2:
+        FuncExpr:
+          source: 'halfAdd<C>(val[A + B : C], add1.carry)'
+          name: halfAdd_3
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 6
+              size: 3
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 3
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 3
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'add1.carry'
+              var: add1
+              offset: 3
+              size: 1
+              fields: 
+                - carry
+    return: 
+    # add0.value & add1.value & add2
+      ConcatExpr:
+        source: 'add0.value & add1.value & add2'
+        lhs: 
+          ConcatExpr:
+            source: 'add0.value & add1.value'
+            lhs: 
+              SliceExpr:
+                source: 'add0.value'
+                var: add0
+                offset: 0
+                size: 3
+                fields: 
+                  - value
+            rhs: 
+              SliceExpr:
+                source: 'add1.value'
+                var: add1
+                offset: 0
+                size: 3
+                fields: 
+                  - value
+        rhs: 
+          SliceExpr:
+            source: 'add2'
+            var: add2
+            offset: 0
+            size: 4
+# 
+# func TCarry halfAdd<A>(A val, Carry carry) {
+#   add0 = halfAdd<A>(val[0 : A], carry)
+#   add1 = halfAdd<B>(val[A : B], add0.carry)
+#   add2 = halfAdd<C>(val[A + B : C], add1.carry)
+#   return add0.value & add1.value & add2
+# }
+  halfAdd_3:
+    returnType: 
+      ConstTypeName:
+        typeName: TCarry
+        size: 4
+        fields:
+          value: 
+            size: '3'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '3'
+    params:
+      - 
+        argName: val
+        size: 3
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 3
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    assigns: 
+      add0:
+        FuncExpr:
+          source: 'halfAdd<A>(val[0 : A], carry)'
+          name: halfAdd_1
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 1
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'carry'
+              var: carry
+              offset: 0
+              size: 1
+      add1:
+        FuncExpr:
+          source: 'halfAdd<B>(val[A : B], add0.carry)'
+          name: halfAdd_1
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 1
+              size: 1
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'add0.carry'
+              var: add0
+              offset: 1
+              size: 1
+              fields: 
+                - carry
+      add2:
+        FuncExpr:
+          source: 'halfAdd<C>(val[A + B : C], add1.carry)'
+          name: halfAdd_1
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 2
+              size: 1
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 1
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 1
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'add1.carry'
+              var: add1
+              offset: 1
+              size: 1
+              fields: 
+                - carry
+    return: 
+    # add0.value & add1.value & add2
+      ConcatExpr:
+        source: 'add0.value & add1.value & add2'
+        lhs: 
+          ConcatExpr:
+            source: 'add0.value & add1.value'
+            lhs: 
+              SliceExpr:
+                source: 'add0.value'
+                var: add0
+                offset: 0
+                size: 1
+                fields: 
+                  - value
+            rhs: 
+              SliceExpr:
+                source: 'add1.value'
+                var: add1
+                offset: 0
+                size: 1
+                fields: 
+                  - value
+        rhs: 
+          SliceExpr:
+            source: 'add2'
+            var: add2
+            offset: 0
+            size: 2
+# 
+# func Int sub<Int>(Int lhs, Int rhs) {
+#   sum = fullAdd<Int>(lhs, neg<Int>(rhs), 0)
+#   return sum.value
+# }
+  sub_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Int
+        size: 27
+    params:
+      - 
+        argName: lhs
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+      - 
+        argName: rhs
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    assigns: 
+      sum:
+        FuncExpr:
+          source: 'fullAdd<Int>(lhs, neg<Int>(rhs), 0)'
+          name: fullAdd_27
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs'
+              var: lhs
+              offset: 0
+              size: 27
+          - 
+            FuncExpr:
+              source: 'neg<Int>(rhs)'
+              name: neg_27
+              args:
+              - 
+                SliceExpr:
+                  source: 'rhs'
+                  var: rhs
+                  offset: 0
+                  size: 27
+          - 
+            ValueExpr:
+                value: '0'
+                trits: '0'
+                trytes: '9'
+    return: 
+    # sum.value
+      SliceExpr:
+        source: 'sum.value'
+        var: sum
+        offset: 0
+        size: 27
+        fields: 
+          - value
+# 
+# func TCarry fullAdd<Int>(Int lhs, Int rhs, Carry carry) {
+#   add0 = fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)
+#   add1 = fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)
+#   add2 = fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)
+#   return add0.value & add1.value & add2
+# }
+  fullAdd_27:
+    returnType: 
+      ConstTypeName:
+        typeName: TCarry
+        size: 28
+        fields:
+          value: 
+            size: '27'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '27'
+    params:
+      - 
+        argName: lhs
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+      - 
+        argName: rhs
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    assigns: 
+      add0:
+        FuncExpr:
+          source: 'fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)'
+          name: fullAdd_9
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[0 : A]'
+              var: lhs
+              offset: 0
+              size: 9
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'rhs[0 : A]'
+              var: rhs
+              offset: 0
+              size: 9
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'carry'
+              var: carry
+              offset: 0
+              size: 1
+      add1:
+        FuncExpr:
+          source: 'fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)'
+          name: fullAdd_9
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A : B]'
+              var: lhs
+              offset: 9
+              size: 9
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'rhs[A : B]'
+              var: rhs
+              offset: 9
+              size: 9
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'add0.carry'
+              var: add0
+              offset: 9
+              size: 1
+              fields: 
+                - carry
+      add2:
+        FuncExpr:
+          source: 'fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)'
+          name: fullAdd_9
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A + B : C]'
+              var: lhs
+              offset: 18
+              size: 9
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 9
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 9
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'rhs[A + B : C]'
+              var: rhs
+              offset: 18
+              size: 9
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 9
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 9
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 9
+          - 
+            SliceExpr:
+              source: 'add1.carry'
+              var: add1
+              offset: 9
+              size: 1
+              fields: 
+                - carry
+    return: 
+    # add0.value & add1.value & add2
+      ConcatExpr:
+        source: 'add0.value & add1.value & add2'
+        lhs: 
+          ConcatExpr:
+            source: 'add0.value & add1.value'
+            lhs: 
+              SliceExpr:
+                source: 'add0.value'
+                var: add0
+                offset: 0
+                size: 9
+                fields: 
+                  - value
+            rhs: 
+              SliceExpr:
+                source: 'add1.value'
+                var: add1
+                offset: 0
+                size: 9
+                fields: 
+                  - value
+        rhs: 
+          SliceExpr:
+            source: 'add2'
+            var: add2
+            offset: 0
+            size: 10
+# 
+# func TCarry fullAdd<A>(A lhs, A rhs, Carry carry) {
+#   add0 = fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)
+#   add1 = fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)
+#   add2 = fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)
+#   return add0.value & add1.value & add2
+# }
+  fullAdd_9:
+    returnType: 
+      ConstTypeName:
+        typeName: TCarry
+        size: 10
+        fields:
+          value: 
+            size: '9'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '9'
+    params:
+      - 
+        argName: lhs
+        size: 9
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 9
+      - 
+        argName: rhs
+        size: 9
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 9
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    assigns: 
+      add0:
+        FuncExpr:
+          source: 'fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)'
+          name: fullAdd_3
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[0 : A]'
+              var: lhs
+              offset: 0
+              size: 3
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'rhs[0 : A]'
+              var: rhs
+              offset: 0
+              size: 3
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'carry'
+              var: carry
+              offset: 0
+              size: 1
+      add1:
+        FuncExpr:
+          source: 'fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)'
+          name: fullAdd_3
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A : B]'
+              var: lhs
+              offset: 3
+              size: 3
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'rhs[A : B]'
+              var: rhs
+              offset: 3
+              size: 3
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'add0.carry'
+              var: add0
+              offset: 3
+              size: 1
+              fields: 
+                - carry
+      add2:
+        FuncExpr:
+          source: 'fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)'
+          name: fullAdd_3
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A + B : C]'
+              var: lhs
+              offset: 6
+              size: 3
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 3
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 3
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'rhs[A + B : C]'
+              var: rhs
+              offset: 6
+              size: 3
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 3
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 3
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 3
+          - 
+            SliceExpr:
+              source: 'add1.carry'
+              var: add1
+              offset: 3
+              size: 1
+              fields: 
+                - carry
+    return: 
+    # add0.value & add1.value & add2
+      ConcatExpr:
+        source: 'add0.value & add1.value & add2'
+        lhs: 
+          ConcatExpr:
+            source: 'add0.value & add1.value'
+            lhs: 
+              SliceExpr:
+                source: 'add0.value'
+                var: add0
+                offset: 0
+                size: 3
+                fields: 
+                  - value
+            rhs: 
+              SliceExpr:
+                source: 'add1.value'
+                var: add1
+                offset: 0
+                size: 3
+                fields: 
+                  - value
+        rhs: 
+          SliceExpr:
+            source: 'add2'
+            var: add2
+            offset: 0
+            size: 4
+# 
+# func TCarry fullAdd<A>(A lhs, A rhs, Carry carry) {
+#   add0 = fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)
+#   add1 = fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)
+#   add2 = fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)
+#   return add0.value & add1.value & add2
+# }
+  fullAdd_3:
+    returnType: 
+      ConstTypeName:
+        typeName: TCarry
+        size: 4
+        fields:
+          value: 
+            size: '3'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '3'
+    params:
+      - 
+        argName: lhs
+        size: 3
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 3
+      - 
+        argName: rhs
+        size: 3
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 3
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    assigns: 
+      add0:
+        FuncExpr:
+          source: 'fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)'
+          name: fullAdd_1
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[0 : A]'
+              var: lhs
+              offset: 0
+              size: 1
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'rhs[0 : A]'
+              var: rhs
+              offset: 0
+              size: 1
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'carry'
+              var: carry
+              offset: 0
+              size: 1
+      add1:
+        FuncExpr:
+          source: 'fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)'
+          name: fullAdd_1
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A : B]'
+              var: lhs
+              offset: 1
+              size: 1
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'rhs[A : B]'
+              var: rhs
+              offset: 1
+              size: 1
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'add0.carry'
+              var: add0
+              offset: 1
+              size: 1
+              fields: 
+                - carry
+      add2:
+        FuncExpr:
+          source: 'fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)'
+          name: fullAdd_1
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A + B : C]'
+              var: lhs
+              offset: 2
+              size: 1
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 1
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 1
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'rhs[A + B : C]'
+              var: rhs
+              offset: 2
+              size: 1
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 1
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 1
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 1
+          - 
+            SliceExpr:
+              source: 'add1.carry'
+              var: add1
+              offset: 1
+              size: 1
+              fields: 
+                - carry
+    return: 
+    # add0.value & add1.value & add2
+      ConcatExpr:
+        source: 'add0.value & add1.value & add2'
+        lhs: 
+          ConcatExpr:
+            source: 'add0.value & add1.value'
+            lhs: 
+              SliceExpr:
+                source: 'add0.value'
+                var: add0
+                offset: 0
+                size: 1
+                fields: 
+                  - value
+            rhs: 
+              SliceExpr:
+                source: 'add1.value'
+                var: add1
+                offset: 0
+                size: 1
+                fields: 
+                  - value
+        rhs: 
+          SliceExpr:
+            source: 'add2'
+            var: add2
+            offset: 0
+            size: 2
+# 
+# func Int neg<Int>(Int val) {
+#   val0 = neg<A>(val[0 : A])
+#   val1 = neg<B>(val[A : B])
+#   val2 = neg<C>(val[A + B : C])
+#   return val0 & val1 & val2
+# }
+  neg_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Int
+        size: 27
+    params:
+      - 
+        argName: val
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'neg<A>(val[0 : A])'
+          name: neg_9
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 9
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+      val1:
+        FuncExpr:
+          source: 'neg<B>(val[A : B])'
+          name: neg_9
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 9
+              size: 9
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 9
+      val2:
+        FuncExpr:
+          source: 'neg<C>(val[A + B : C])'
+          name: neg_9
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 18
+              size: 9
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 9
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 9
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 9
+    return: 
+    # val0 & val1 & val2
+      ConcatExpr:
+        source: 'val0 & val1 & val2'
+        lhs: 
+          ConcatExpr:
+            source: 'val0 & val1'
+            lhs: 
+              SliceExpr:
+                source: 'val0'
+                var: val0
+                offset: 0
+                size: 9
+            rhs: 
+              SliceExpr:
+                source: 'val1'
+                var: val1
+                offset: 0
+                size: 9
+        rhs: 
+          SliceExpr:
+            source: 'val2'
+            var: val2
+            offset: 0
+            size: 9
+# 
+# func A neg<A>(A val) {
+#   val0 = neg<A>(val[0 : A])
+#   val1 = neg<B>(val[A : B])
+#   val2 = neg<C>(val[A + B : C])
+#   return val0 & val1 & val2
+# }
+  neg_9:
+    returnType: 
+      ConstTypeName:
+        typeName: A
+        size: 9
+    params:
+      - 
+        argName: val
+        size: 9
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 9
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'neg<A>(val[0 : A])'
+          name: neg_3
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 3
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+      val1:
+        FuncExpr:
+          source: 'neg<B>(val[A : B])'
+          name: neg_3
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 3
+              size: 3
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 3
+      val2:
+        FuncExpr:
+          source: 'neg<C>(val[A + B : C])'
+          name: neg_3
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 6
+              size: 3
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 3
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 3
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 3
+    return: 
+    # val0 & val1 & val2
+      ConcatExpr:
+        source: 'val0 & val1 & val2'
+        lhs: 
+          ConcatExpr:
+            source: 'val0 & val1'
+            lhs: 
+              SliceExpr:
+                source: 'val0'
+                var: val0
+                offset: 0
+                size: 3
+            rhs: 
+              SliceExpr:
+                source: 'val1'
+                var: val1
+                offset: 0
+                size: 3
+        rhs: 
+          SliceExpr:
+            source: 'val2'
+            var: val2
+            offset: 0
+            size: 3
+# 
+# func A neg<A>(A val) {
+#   val0 = neg<A>(val[0 : A])
+#   val1 = neg<B>(val[A : B])
+#   val2 = neg<C>(val[A + B : C])
+#   return val0 & val1 & val2
+# }
+  neg_3:
+    returnType: 
+      ConstTypeName:
+        typeName: A
+        size: 3
+    params:
+      - 
+        argName: val
+        size: 3
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 3
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'neg<A>(val[0 : A])'
+          name: neg_1
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 1
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+      val1:
+        FuncExpr:
+          source: 'neg<B>(val[A : B])'
+          name: neg_1
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 1
+              size: 1
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 1
+      val2:
+        FuncExpr:
+          source: 'neg<C>(val[A + B : C])'
+          name: neg_1
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 2
+              size: 1
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 1
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 1
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 1
+    return: 
+    # val0 & val1 & val2
+      ConcatExpr:
+        source: 'val0 & val1 & val2'
+        lhs: 
+          ConcatExpr:
+            source: 'val0 & val1'
+            lhs: 
+              SliceExpr:
+                source: 'val0'
+                var: val0
+                offset: 0
+                size: 1
+            rhs: 
+              SliceExpr:
+                source: 'val1'
+                var: val1
+                offset: 0
+                size: 1
+        rhs: 
+          SliceExpr:
+            source: 'val2'
+            var: val2
+            offset: 0
+            size: 1
+# 
+# func Int add<Int>(Int lhs, Int rhs) {
+#   sum = fullAdd<Int>(lhs, rhs, 0)
+#   return sum.value
+# }
+  add_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Int
+        size: 27
+    params:
+      - 
+        argName: lhs
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+      - 
+        argName: rhs
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    assigns: 
+      sum:
+        FuncExpr:
+          source: 'fullAdd<Int>(lhs, rhs, 0)'
+          name: fullAdd_27
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs'
+              var: lhs
+              offset: 0
+              size: 27
+          - 
+            SliceExpr:
+              source: 'rhs'
+              var: rhs
+              offset: 0
+              size: 27
+          - 
+            ValueExpr:
+                value: '0'
+                trits: '0'
+                trytes: '9'
+    return: 
+    # sum.value
+      SliceExpr:
+        source: 'sum.value'
+        var: sum
+        offset: 0
+        size: 27
+        fields: 
+          - value
+# 
+# func Int fibonacci2<Int>(Int n) {
+#   retN = isLess[cmp<Int>(n, 2)]
+#   return retN ? n : fibPart2<Int>(sub<Int>(n, 2), 0, 1)
+# }
+  fibonacci2_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Int
+        size: 27
+    params:
+      - 
+        argName: n
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    assigns: 
+      retN:
+        LutExpr:
+          name: isLess
+          args: 
+            - 
+              FuncExpr:
+                source: 'cmp<Int>(n, 2)'
+                name: cmp_27
+                args:
+                - 
+                  SliceExpr:
+                    source: 'n'
+                    var: n
+                    offset: 0
+                    size: 27
+                - 
+                  ValueExpr:
+                      value: '2'
+                      trits: '-10000000000000000000000000'
+                      trytes: 'B99999999'
+    return: 
+    # retN ? n : fibPart2<Int>(sub<Int>(n, 2), 0, 1)
+      CondExpr:
+        source: 'retN ? n : fibPart2<Int>(sub<Int>(n, 2), 0, 1)'
+        if: 
+          SliceExpr:
+            source: 'retN'
+            var: retN
+            offset: 0
+            size: 1
+        then: 
+          SliceExpr:
+            source: 'n'
+            var: n
+            offset: 0
+            size: 27
+        else:
+          FuncExpr:
+            source: 'fibPart2<Int>(sub<Int>(n, 2), 0, 1)'
+            name: fibPart2_27
+            args:
+            - 
+              FuncExpr:
+                source: 'sub<Int>(n, 2)'
+                name: sub_27
+                args:
+                - 
+                  SliceExpr:
+                    source: 'n'
+                    var: n
+                    offset: 0
+                    size: 27
+                - 
+                  ValueExpr:
+                      value: '2'
+                      trits: '-10000000000000000000000000'
+                      trytes: 'B99999999'
+            - 
+              ValueExpr:
+                  value: '0'
+                  trits: '000000000000000000000000000'
+                  trytes: '999999999'
+            - 
+              ValueExpr:
+                  value: '1'
+                  trits: '100000000000000000000000000'
+                  trytes: 'A99999999'
+# 
+# func Int fibPart2<Int>(Int n, Int fib0, Int fib1) {
+#   retFib2 = isZero[sign<Int>(n)]
+#   fib2 = add<Int>(fib0, fib1)
+#   return retFib2 ? fib2 : fibPart2<Int>(decr<Int>(n), fib1, fib2)
+# }
+  fibPart2_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Int
+        size: 27
+    params:
+      - 
+        argName: n
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+      - 
+        argName: fib0
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+      - 
+        argName: fib1
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    assigns: 
+      retFib2:
+        LutExpr:
+          name: isZero
+          args: 
+            - 
+              FuncExpr:
+                source: 'sign<Int>(n)'
+                name: sign_27
+                args:
+                - 
+                  SliceExpr:
+                    source: 'n'
+                    var: n
+                    offset: 0
+                    size: 27
+      fib2:
+        FuncExpr:
+          source: 'add<Int>(fib0, fib1)'
+          name: add_27
+          args:
+          - 
+            SliceExpr:
+              source: 'fib0'
+              var: fib0
+              offset: 0
+              size: 27
+          - 
+            SliceExpr:
+              source: 'fib1'
+              var: fib1
+              offset: 0
+              size: 27
+    return: 
+    # retFib2 ? fib2 : fibPart2<Int>(decr<Int>(n), fib1, fib2)
+      CondExpr:
+        source: 'retFib2 ? fib2 : fibPart2<Int>(decr<Int>(n), fib1, fib2)'
+        if: 
+          SliceExpr:
+            source: 'retFib2'
+            var: retFib2
+            offset: 0
+            size: 1
+        then: 
+          SliceExpr:
+            source: 'fib2'
+            var: fib2
+            offset: 0
+            size: 27
+        else:
+          FuncExpr:
+            source: 'fibPart2<Int>(decr<Int>(n), fib1, fib2)'
+            name: fibPart2_27
+            args:
+            - 
+              FuncExpr:
+                source: 'decr<Int>(n)'
+                name: decr_27
+                args:
+                - 
+                  SliceExpr:
+                    source: 'n'
+                    var: n
+                    offset: 0
+                    size: 27
+            - 
+              SliceExpr:
+                source: 'fib1'
+                var: fib1
+                offset: 0
+                size: 27
+            - 
+              SliceExpr:
+                source: 'fib2'
+                var: fib2
+                offset: 0
+                size: 27
+# 
+# func Trit sign<Int>(Int val) {
+#   val0 = sign<A>(val[0 : A])
+#   val1 = sign<B>(val[A : B])
+#   val2 = sign<C>(val[A + B : C])
+#   return sign[val0, val1, val2]
+# }
+  sign_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: val
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'sign<A>(val[0 : A])'
+          name: sign_9
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 9
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+      val1:
+        FuncExpr:
+          source: 'sign<B>(val[A : B])'
+          name: sign_9
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 9
+              size: 9
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 9
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 9
+      val2:
+        FuncExpr:
+          source: 'sign<C>(val[A + B : C])'
+          name: sign_9
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 18
+              size: 9
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 9
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 9
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 9
+    return: 
+    # sign[val0, val1, val2]
+      LutExpr:
+        name: sign
+        args: 
+          - 
+            SliceExpr:
+              source: 'val0'
+              var: val0
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val1'
+              var: val1
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val2'
+              var: val2
+              offset: 0
+              size: 1
+# 
+# func Trit sign<A>(A val) {
+#   val0 = sign<A>(val[0 : A])
+#   val1 = sign<B>(val[A : B])
+#   val2 = sign<C>(val[A + B : C])
+#   return sign[val0, val1, val2]
+# }
+  sign_9:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: val
+        size: 9
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 9
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'sign<A>(val[0 : A])'
+          name: sign_3
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 3
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+      val1:
+        FuncExpr:
+          source: 'sign<B>(val[A : B])'
+          name: sign_3
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 3
+              size: 3
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 3
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 3
+      val2:
+        FuncExpr:
+          source: 'sign<C>(val[A + B : C])'
+          name: sign_3
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 6
+              size: 3
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 3
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 3
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 3
+    return: 
+    # sign[val0, val1, val2]
+      LutExpr:
+        name: sign
+        args: 
+          - 
+            SliceExpr:
+              source: 'val0'
+              var: val0
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val1'
+              var: val1
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val2'
+              var: val2
+              offset: 0
+              size: 1
+# 
+# func Trit sign<A>(A val) {
+#   val0 = sign<A>(val[0 : A])
+#   val1 = sign<B>(val[A : B])
+#   val2 = sign<C>(val[A + B : C])
+#   return sign[val0, val1, val2]
+# }
+  sign_3:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: val
+        size: 3
+        type: 
+          ConstTypeName:
+            typeName: A
+            size: 3
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'sign<A>(val[0 : A])'
+          name: sign_1
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 1
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+      val1:
+        FuncExpr:
+          source: 'sign<B>(val[A : B])'
+          name: sign_1
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 1
+              size: 1
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 1
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 1
+      val2:
+        FuncExpr:
+          source: 'sign<C>(val[A + B : C])'
+          name: sign_1
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 2
+              size: 1
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 1
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 1
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 1
+    return: 
+    # sign[val0, val1, val2]
+      LutExpr:
+        name: sign
+        args: 
+          - 
+            SliceExpr:
+              source: 'val0'
+              var: val0
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val1'
+              var: val1
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val2'
+              var: val2
+              offset: 0
+              size: 1
+# 
+# func Huge fibonacci2<Huge>(Huge n) {
+#   retN = isLess[cmp<Huge>(n, 2)]
+#   return retN ? n : fibPart2<Huge>(sub<Huge>(n, 2), 0, 1)
+# }
+  fibonacci2_81:
+    returnType: 
+      ConstTypeName:
+        typeName: Huge
+        size: 81
+    params:
+      - 
+        argName: n
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+    assigns: 
+      retN:
+        LutExpr:
+          name: isLess
+          args: 
+            - 
+              FuncExpr:
+                source: 'cmp<Huge>(n, 2)'
+                name: cmp_81
+                args:
+                - 
+                  SliceExpr:
+                    source: 'n'
+                    var: n
+                    offset: 0
+                    size: 81
+                - 
+                  ValueExpr:
+                      value: '2'
+                      trits: '-10000000000000000000000000000000000000000000000000000000000000000000000000000000'
+                      trytes: 'B99999999999999999999999999'
+    return: 
+    # retN ? n : fibPart2<Huge>(sub<Huge>(n, 2), 0, 1)
+      CondExpr:
+        source: 'retN ? n : fibPart2<Huge>(sub<Huge>(n, 2), 0, 1)'
+        if: 
+          SliceExpr:
+            source: 'retN'
+            var: retN
+            offset: 0
+            size: 1
+        then: 
+          SliceExpr:
+            source: 'n'
+            var: n
+            offset: 0
+            size: 81
+        else:
+          FuncExpr:
+            source: 'fibPart2<Huge>(sub<Huge>(n, 2), 0, 1)'
+            name: fibPart2_81
+            args:
+            - 
+              FuncExpr:
+                source: 'sub<Huge>(n, 2)'
+                name: sub_81
+                args:
+                - 
+                  SliceExpr:
+                    source: 'n'
+                    var: n
+                    offset: 0
+                    size: 81
+                - 
+                  ValueExpr:
+                      value: '2'
+                      trits: '-10000000000000000000000000000000000000000000000000000000000000000000000000000000'
+                      trytes: 'B99999999999999999999999999'
+            - 
+              ValueExpr:
+                  value: '0'
+                  trits: '000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+                  trytes: '999999999999999999999999999'
+            - 
+              ValueExpr:
+                  value: '1'
+                  trits: '100000000000000000000000000000000000000000000000000000000000000000000000000000000'
+                  trytes: 'A99999999999999999999999999'
+# 
+# func Huge fibPart2<Huge>(Huge n, Huge fib0, Huge fib1) {
+#   retFib2 = isZero[sign<Huge>(n)]
+#   fib2 = add<Huge>(fib0, fib1)
+#   return retFib2 ? fib2 : fibPart2<Huge>(decr<Huge>(n), fib1, fib2)
+# }
+  fibPart2_81:
+    returnType: 
+      ConstTypeName:
+        typeName: Huge
+        size: 81
+    params:
+      - 
+        argName: n
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+      - 
+        argName: fib0
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+      - 
+        argName: fib1
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+    assigns: 
+      retFib2:
+        LutExpr:
+          name: isZero
+          args: 
+            - 
+              FuncExpr:
+                source: 'sign<Huge>(n)'
+                name: sign_81
+                args:
+                - 
+                  SliceExpr:
+                    source: 'n'
+                    var: n
+                    offset: 0
+                    size: 81
+      fib2:
+        FuncExpr:
+          source: 'add<Huge>(fib0, fib1)'
+          name: add_81
+          args:
+          - 
+            SliceExpr:
+              source: 'fib0'
+              var: fib0
+              offset: 0
+              size: 81
+          - 
+            SliceExpr:
+              source: 'fib1'
+              var: fib1
+              offset: 0
+              size: 81
+    return: 
+    # retFib2 ? fib2 : fibPart2<Huge>(decr<Huge>(n), fib1, fib2)
+      CondExpr:
+        source: 'retFib2 ? fib2 : fibPart2<Huge>(decr<Huge>(n), fib1, fib2)'
+        if: 
+          SliceExpr:
+            source: 'retFib2'
+            var: retFib2
+            offset: 0
+            size: 1
+        then: 
+          SliceExpr:
+            source: 'fib2'
+            var: fib2
+            offset: 0
+            size: 81
+        else:
+          FuncExpr:
+            source: 'fibPart2<Huge>(decr<Huge>(n), fib1, fib2)'
+            name: fibPart2_81
+            args:
+            - 
+              FuncExpr:
+                source: 'decr<Huge>(n)'
+                name: decr_81
+                args:
+                - 
+                  SliceExpr:
+                    source: 'n'
+                    var: n
+                    offset: 0
+                    size: 81
+            - 
+              SliceExpr:
+                source: 'fib1'
+                var: fib1
+                offset: 0
+                size: 81
+            - 
+              SliceExpr:
+                source: 'fib2'
+                var: fib2
+                offset: 0
+                size: 81
+# 
+# func Trit cmp<Huge>(Huge lhs, Huge rhs) {
+#   val0 = cmp<A>(lhs[0 : A], rhs[0 : A])
+#   val1 = cmp<B>(lhs[A : B], rhs[A : B])
+#   val2 = cmp<C>(lhs[A + B : C], rhs[A + B : C])
+#   return sign[val0, val1, val2]
+# }
+  cmp_81:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: lhs
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+      - 
+        argName: rhs
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'cmp<A>(lhs[0 : A], rhs[0 : A])'
+          name: cmp_27
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[0 : A]'
+              var: lhs
+              offset: 0
+              size: 27
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'rhs[0 : A]'
+              var: rhs
+              offset: 0
+              size: 27
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+      val1:
+        FuncExpr:
+          source: 'cmp<B>(lhs[A : B], rhs[A : B])'
+          name: cmp_27
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A : B]'
+              var: lhs
+              offset: 27
+              size: 27
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'rhs[A : B]'
+              var: rhs
+              offset: 27
+              size: 27
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 27
+      val2:
+        FuncExpr:
+          source: 'cmp<C>(lhs[A + B : C], rhs[A + B : C])'
+          name: cmp_27
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A + B : C]'
+              var: lhs
+              offset: 54
+              size: 27
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 27
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 27
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'rhs[A + B : C]'
+              var: rhs
+              offset: 54
+              size: 27
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 27
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 27
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 27
+    return: 
+    # sign[val0, val1, val2]
+      LutExpr:
+        name: sign
+        args: 
+          - 
+            SliceExpr:
+              source: 'val0'
+              var: val0
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val1'
+              var: val1
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val2'
+              var: val2
+              offset: 0
+              size: 1
+# 
+# func Trit sign<Huge>(Huge val) {
+#   val0 = sign<A>(val[0 : A])
+#   val1 = sign<B>(val[A : B])
+#   val2 = sign<C>(val[A + B : C])
+#   return sign[val0, val1, val2]
+# }
+  sign_81:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: val
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'sign<A>(val[0 : A])'
+          name: sign_27
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 27
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+      val1:
+        FuncExpr:
+          source: 'sign<B>(val[A : B])'
+          name: sign_27
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 27
+              size: 27
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 27
+      val2:
+        FuncExpr:
+          source: 'sign<C>(val[A + B : C])'
+          name: sign_27
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 54
+              size: 27
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 27
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 27
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 27
+    return: 
+    # sign[val0, val1, val2]
+      LutExpr:
+        name: sign
+        args: 
+          - 
+            SliceExpr:
+              source: 'val0'
+              var: val0
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val1'
+              var: val1
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'val2'
+              var: val2
+              offset: 0
+              size: 1
+# 
+# func Huge add<Huge>(Huge lhs, Huge rhs) {
+#   sum = fullAdd<Huge>(lhs, rhs, 0)
+#   return sum.value
+# }
+  add_81:
+    returnType: 
+      ConstTypeName:
+        typeName: Huge
+        size: 81
+    params:
+      - 
+        argName: lhs
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+      - 
+        argName: rhs
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+    assigns: 
+      sum:
+        FuncExpr:
+          source: 'fullAdd<Huge>(lhs, rhs, 0)'
+          name: fullAdd_81
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs'
+              var: lhs
+              offset: 0
+              size: 81
+          - 
+            SliceExpr:
+              source: 'rhs'
+              var: rhs
+              offset: 0
+              size: 81
+          - 
+            ValueExpr:
+                value: '0'
+                trits: '0'
+                trytes: '9'
+    return: 
+    # sum.value
+      SliceExpr:
+        source: 'sum.value'
+        var: sum
+        offset: 0
+        size: 81
+        fields: 
+          - value
+# 
+# func TCarry fullAdd<Huge>(Huge lhs, Huge rhs, Carry carry) {
+#   add0 = fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)
+#   add1 = fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)
+#   add2 = fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)
+#   return add0.value & add1.value & add2
+# }
+  fullAdd_81:
+    returnType: 
+      ConstTypeName:
+        typeName: TCarry
+        size: 82
+        fields:
+          value: 
+            size: '81'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '81'
+    params:
+      - 
+        argName: lhs
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+      - 
+        argName: rhs
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    assigns: 
+      add0:
+        FuncExpr:
+          source: 'fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)'
+          name: fullAdd_27
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[0 : A]'
+              var: lhs
+              offset: 0
+              size: 27
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'rhs[0 : A]'
+              var: rhs
+              offset: 0
+              size: 27
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'carry'
+              var: carry
+              offset: 0
+              size: 1
+      add1:
+        FuncExpr:
+          source: 'fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)'
+          name: fullAdd_27
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A : B]'
+              var: lhs
+              offset: 27
+              size: 27
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'rhs[A : B]'
+              var: rhs
+              offset: 27
+              size: 27
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'add0.carry'
+              var: add0
+              offset: 27
+              size: 1
+              fields: 
+                - carry
+      add2:
+        FuncExpr:
+          source: 'fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)'
+          name: fullAdd_27
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs[A + B : C]'
+              var: lhs
+              offset: 54
+              size: 27
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 27
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 27
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'rhs[A + B : C]'
+              var: rhs
+              offset: 54
+              size: 27
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 27
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 27
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'add1.carry'
+              var: add1
+              offset: 27
+              size: 1
+              fields: 
+                - carry
+    return: 
+    # add0.value & add1.value & add2
+      ConcatExpr:
+        source: 'add0.value & add1.value & add2'
+        lhs: 
+          ConcatExpr:
+            source: 'add0.value & add1.value'
+            lhs: 
+              SliceExpr:
+                source: 'add0.value'
+                var: add0
+                offset: 0
+                size: 27
+                fields: 
+                  - value
+            rhs: 
+              SliceExpr:
+                source: 'add1.value'
+                var: add1
+                offset: 0
+                size: 27
+                fields: 
+                  - value
+        rhs: 
+          SliceExpr:
+            source: 'add2'
+            var: add2
+            offset: 0
+            size: 28
+# 
+# func Huge decr<Huge>(Huge val) {
+#   halfSum = halfAdd<Huge>(val, -)
+#   return halfSum.value
+# }
+  decr_81:
+    returnType: 
+      ConstTypeName:
+        typeName: Huge
+        size: 81
+    params:
+      - 
+        argName: val
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+    assigns: 
+      halfSum:
+        FuncExpr:
+          source: 'halfAdd<Huge>(val, -)'
+          name: halfAdd_81
+          args:
+          - 
+            SliceExpr:
+              source: 'val'
+              var: val
+              offset: 0
+              size: 81
+          - 
+            ValueExpr:
+                value: '-'
+                trits: '-'
+                trytes: 'Z'
+    return: 
+    # halfSum.value
+      SliceExpr:
+        source: 'halfSum.value'
+        var: halfSum
+        offset: 0
+        size: 81
+        fields: 
+          - value
+# 
+# func TCarry halfAdd<Huge>(Huge val, Carry carry) {
+#   add0 = halfAdd<A>(val[0 : A], carry)
+#   add1 = halfAdd<B>(val[A : B], add0.carry)
+#   add2 = halfAdd<C>(val[A + B : C], add1.carry)
+#   return add0.value & add1.value & add2
+# }
+  halfAdd_81:
+    returnType: 
+      ConstTypeName:
+        typeName: TCarry
+        size: 82
+        fields:
+          value: 
+            size: '81'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '81'
+    params:
+      - 
+        argName: val
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    assigns: 
+      add0:
+        FuncExpr:
+          source: 'halfAdd<A>(val[0 : A], carry)'
+          name: halfAdd_27
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 27
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'carry'
+              var: carry
+              offset: 0
+              size: 1
+      add1:
+        FuncExpr:
+          source: 'halfAdd<B>(val[A : B], add0.carry)'
+          name: halfAdd_27
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 27
+              size: 27
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'add0.carry'
+              var: add0
+              offset: 27
+              size: 1
+              fields: 
+                - carry
+      add2:
+        FuncExpr:
+          source: 'halfAdd<C>(val[A + B : C], add1.carry)'
+          name: halfAdd_27
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 54
+              size: 27
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 27
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 27
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 27
+          - 
+            SliceExpr:
+              source: 'add1.carry'
+              var: add1
+              offset: 27
+              size: 1
+              fields: 
+                - carry
+    return: 
+    # add0.value & add1.value & add2
+      ConcatExpr:
+        source: 'add0.value & add1.value & add2'
+        lhs: 
+          ConcatExpr:
+            source: 'add0.value & add1.value'
+            lhs: 
+              SliceExpr:
+                source: 'add0.value'
+                var: add0
+                offset: 0
+                size: 27
+                fields: 
+                  - value
+            rhs: 
+              SliceExpr:
+                source: 'add1.value'
+                var: add1
+                offset: 0
+                size: 27
+                fields: 
+                  - value
+        rhs: 
+          SliceExpr:
+            source: 'add2'
+            var: add2
+            offset: 0
+            size: 28
+# 
+# func Huge sub<Huge>(Huge lhs, Huge rhs) {
+#   sum = fullAdd<Huge>(lhs, neg<Huge>(rhs), 0)
+#   return sum.value
+# }
+  sub_81:
+    returnType: 
+      ConstTypeName:
+        typeName: Huge
+        size: 81
+    params:
+      - 
+        argName: lhs
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+      - 
+        argName: rhs
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+    assigns: 
+      sum:
+        FuncExpr:
+          source: 'fullAdd<Huge>(lhs, neg<Huge>(rhs), 0)'
+          name: fullAdd_81
+          args:
+          - 
+            SliceExpr:
+              source: 'lhs'
+              var: lhs
+              offset: 0
+              size: 81
+          - 
+            FuncExpr:
+              source: 'neg<Huge>(rhs)'
+              name: neg_81
+              args:
+              - 
+                SliceExpr:
+                  source: 'rhs'
+                  var: rhs
+                  offset: 0
+                  size: 81
+          - 
+            ValueExpr:
+                value: '0'
+                trits: '0'
+                trytes: '9'
+    return: 
+    # sum.value
+      SliceExpr:
+        source: 'sum.value'
+        var: sum
+        offset: 0
+        size: 81
+        fields: 
+          - value
+# 
+# func Huge neg<Huge>(Huge val) {
+#   val0 = neg<A>(val[0 : A])
+#   val1 = neg<B>(val[A : B])
+#   val2 = neg<C>(val[A + B : C])
+#   return val0 & val1 & val2
+# }
+  neg_81:
+    returnType: 
+      ConstTypeName:
+        typeName: Huge
+        size: 81
+    params:
+      - 
+        argName: val
+        size: 81
+        type: 
+          ConstTypeName:
+            typeName: Huge
+            size: 81
+    assigns: 
+      val0:
+        FuncExpr:
+          source: 'neg<A>(val[0 : A])'
+          name: neg_27
+          args:
+          - 
+            SliceExpr:
+              source: 'val[0 : A]'
+              var: val
+              offset: 0
+              size: 27
+              start:
+                ConstNumber:
+                  value: 0
+              end:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+      val1:
+        FuncExpr:
+          source: 'neg<B>(val[A : B])'
+          name: neg_27
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A : B]'
+              var: val
+              offset: 27
+              size: 27
+              start:
+                ConstTypeName:
+                  typeName: A
+                  size: 27
+              end:
+                ConstTypeName:
+                  typeName: B
+                  size: 27
+      val2:
+        FuncExpr:
+          source: 'neg<C>(val[A + B : C])'
+          name: neg_27
+          args:
+          - 
+            SliceExpr:
+              source: 'val[A + B : C]'
+              var: val
+              offset: 54
+              size: 27
+              start:
+                ConstExpr:
+                  operator: '+'
+                  lhs: 
+                    ConstTypeName:
+                      typeName: A
+                      size: 27
+                  rhs: 
+                    ConstTypeName:
+                      typeName: B
+                      size: 27
+              end:
+                ConstTypeName:
+                  typeName: C
+                  size: 27
+    return: 
+    # val0 & val1 & val2
+      ConcatExpr:
+        source: 'val0 & val1 & val2'
+        lhs: 
+          ConcatExpr:
+            source: 'val0 & val1'
+            lhs: 
+              SliceExpr:
+                source: 'val0'
+                var: val0
+                offset: 0
+                size: 27
+            rhs: 
+              SliceExpr:
+                source: 'val1'
+                var: val1
+                offset: 0
+                size: 27
+        rhs: 
+          SliceExpr:
+            source: 'val2'
+            var: val2
+            offset: 0
+            size: 27
+# 
+# func LoopInfo fibonacci3<Int>(Int n) {
+#   affect fibLoop
+#   return LoopInfo{
+#     n = n
+#     fib1 = as<Int>(0)
+#     fib2 = as<Int>(1)
+#     sign = sign<Int>(n)
+#   }
+# }
+  fibonacci3_27:
+    returnType: 
+      ConstTypeName:
+        typeName: LoopInfo
+        size: 82
+        fields:
+          n: 
+            size: '27'
+            offset: '0'
+          fib1: 
+            size: '27'
+            offset: '27'
+          fib2: 
+            size: '27'
+            offset: '54'
+          sign: 
+            size: '1'
+            offset: '81'
+    params:
+      - 
+        argName: n
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    env: 
+      - 
+        name: fibLoop
+        type: affect
+    return: 
+    # LoopInfo{
+    #   n = n
+    #   fib1 = as<Int>(0)
+    #   fib2 = as<Int>(1)
+    #   sign = sign<Int>(n)
+    # }
+      TypeExpr:
+        source: 'LoopInfo{ /   n = n /   fib1 = as<Int>(0) /   fib2 = as<Int>(1) /   sign = sign<Int>(n) / }'
+        type: 
+          ConstTypeName:
+            typeName: LoopInfo
+            size: 82
+            fields:
+              n: 
+                size: '27'
+                offset: '0'
+              fib1: 
+                size: '27'
+                offset: '27'
+              fib2: 
+                size: '27'
+                offset: '54'
+              sign: 
+                size: '1'
+                offset: '81'
+        fieldValues: 
+          n:
+            SliceExpr:
+              source: 'n'
+              var: n
+              offset: 0
+              size: 27
+          fib1:
+            FuncExpr:
+              source: 'as<Int>(0)'
+              name: as_27
+              args:
+              - 
+                ValueExpr:
+                    value: '0'
+                    trits: '000000000000000000000000000'
+                    trytes: '999999999'
+          fib2:
+            FuncExpr:
+              source: 'as<Int>(1)'
+              name: as_27
+              args:
+              - 
+                ValueExpr:
+                    value: '1'
+                    trits: '100000000000000000000000000'
+                    trytes: 'A99999999'
+          sign:
+            FuncExpr:
+              source: 'sign<Int>(n)'
+              name: sign_27
+              args:
+              - 
+                SliceExpr:
+                  source: 'n'
+                  var: n
+                  offset: 0
+                  size: 27
+# 
+# func LoopInfo fibLoop<Int>(LoopInfo info) {
+#   join fibLoop
+#   affect fibLoop
+#   nMinOne = decr<Int>(info.n)
+#   nextInfo = LoopInfo{
+#     n = nMinOne
+#     fib1 = info.fib2
+#     fib2 = add<Int>(info.fib1, info.fib2)
+#     sign = sign<Int>(nMinOne)
+#   }
+#   return isPositive[info.sign] ? nextInfo : null
+# }
+  fibLoop_27:
+    returnType: 
+      ConstTypeName:
+        typeName: LoopInfo
+        size: 82
+        fields:
+          n: 
+            size: '27'
+            offset: '0'
+          fib1: 
+            size: '27'
+            offset: '27'
+          fib2: 
+            size: '27'
+            offset: '54'
+          sign: 
+            size: '1'
+            offset: '81'
+    params:
+      - 
+        argName: info
+        size: 82
+        type: 
+          ConstTypeName:
+            typeName: LoopInfo
+            size: 82
+            fields:
+              n: 
+                size: '27'
+                offset: '0'
+              fib1: 
+                size: '27'
+                offset: '27'
+              fib2: 
+                size: '27'
+                offset: '54'
+              sign: 
+                size: '1'
+                offset: '81'
+    env: 
+      - 
+        name: fibLoop
+        type: join
+      - 
+        name: fibLoop
+        type: affect
+    assigns: 
+      nMinOne:
+        FuncExpr:
+          source: 'decr<Int>(info.n)'
+          name: decr_27
+          args:
+          - 
+            SliceExpr:
+              source: 'info.n'
+              var: info
+              offset: 0
+              size: 27
+              fields: 
+                - n
+      nextInfo:
+        TypeExpr:
+          source: 'LoopInfo{ /   n = nMinOne /   fib1 = info.fib2 /   fib2 = add<Int>(info.fib1, info.fib2) /   sign = sign<Int>(nMinOne) / }'
+          type: 
+            ConstTypeName:
+              typeName: LoopInfo
+              size: 82
+              fields:
+                n: 
+                  size: '27'
+                  offset: '0'
+                fib1: 
+                  size: '27'
+                  offset: '27'
+                fib2: 
+                  size: '27'
+                  offset: '54'
+                sign: 
+                  size: '1'
+                  offset: '81'
+          fieldValues: 
+            n:
+              SliceExpr:
+                source: 'nMinOne'
+                var: nMinOne
+                offset: 0
+                size: 27
+            fib1:
+              SliceExpr:
+                source: 'info.fib2'
+                var: info
+                offset: 54
+                size: 27
+                fields: 
+                  - fib2
+            fib2:
+              FuncExpr:
+                source: 'add<Int>(info.fib1, info.fib2)'
+                name: add_27
+                args:
+                - 
+                  SliceExpr:
+                    source: 'info.fib1'
+                    var: info
+                    offset: 27
+                    size: 27
+                    fields: 
+                      - fib1
+                - 
+                  SliceExpr:
+                    source: 'info.fib2'
+                    var: info
+                    offset: 54
+                    size: 27
+                    fields: 
+                      - fib2
+            sign:
+              FuncExpr:
+                source: 'sign<Int>(nMinOne)'
+                name: sign_27
+                args:
+                - 
+                  SliceExpr:
+                    source: 'nMinOne'
+                    var: nMinOne
+                    offset: 0
+                    size: 27
+    return: 
+    # isPositive[info.sign] ? nextInfo : null
+      CondExpr:
+        source: 'isPositive[info.sign] ? nextInfo : null'
+        if: 
+          LutExpr:
+            name: isPositive
+            args: 
+              - 
+                SliceExpr:
+                  source: 'info.sign'
+                  var: info
+                  offset: 81
+                  size: 1
+                  fields: 
+                    - sign
+        then: 
+          SliceExpr:
+            source: 'nextInfo'
+            var: nextInfo
+            offset: 0
+            size: 82
+        else:
+          NullExpr: ''
+# 
+# func Int fibFilter<Int>(LoopInfo info) {
+#   join fibLoop
+#   affect fibResult
+#   return isZero[info.sign] ? info.fib1 : null
+# }
+  fibFilter_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Int
+        size: 27
+    params:
+      - 
+        argName: info
+        size: 82
+        type: 
+          ConstTypeName:
+            typeName: LoopInfo
+            size: 82
+            fields:
+              n: 
+                size: '27'
+                offset: '0'
+              fib1: 
+                size: '27'
+                offset: '27'
+              fib2: 
+                size: '27'
+                offset: '54'
+              sign: 
+                size: '1'
+                offset: '81'
+    env: 
+      - 
+        name: fibLoop
+        type: join
+      - 
+        name: fibResult
+        type: affect
+    return: 
+    # isZero[info.sign] ? info.fib1 : null
+      CondExpr:
+        source: 'isZero[info.sign] ? info.fib1 : null'
+        if: 
+          LutExpr:
+            name: isZero
+            args: 
+              - 
+                SliceExpr:
+                  source: 'info.sign'
+                  var: info
+                  offset: 81
+                  size: 1
+                  fields: 
+                    - sign
+        then: 
+          SliceExpr:
+            source: 'info.fib1'
+            var: info
+            offset: 27
+            size: 27
+            fields: 
+              - fib1
+        else:
+          NullExpr: ''
+# 
+# func Int fibResult<Int>(Int result) {
+#   join fibResult
+#   return print<Int>(result)
+# }
+  fibResult_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Int
+        size: 27
+    params:
+      - 
+        argName: result
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    env: 
+      - 
+        name: fibResult
+        type: join
+    return: 
+    # print<Int>(result)
+      FuncExpr:
+        source: 'print<Int>(result)'
+        name: print_27
+        args:
+        - 
+          SliceExpr:
+            source: 'result'
+            var: result
+            offset: 0
+            size: 27
+# 
+# func Int as<Int>(Int val) {
+#   return val
+# }
+  as_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Int
+        size: 27
+    params:
+      - 
+        argName: val
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    return: 
+    # val
+      SliceExpr:
+        source: 'val'
+        var: val
+        offset: 0
+        size: 27
+# 
+# func Int print<Int>(Int val) {
+#   return val
+# }
+  print_27:
+    returnType: 
+      ConstTypeName:
+        typeName: Int
+        size: 27
+    params:
+      - 
+        argName: val
+        size: 27
+        type: 
+          ConstTypeName:
+            typeName: Int
+            size: 27
+    return: 
+    # val
+      SliceExpr:
+        source: 'val'
+        var: val
+        offset: 0
+        size: 27
+# 
+# func Trit all<Trit>(Trit val) {
+#   return val
+# }
+  all_1:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: val
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+    return: 
+    # val
+      SliceExpr:
+        source: 'val'
+        var: val
+        offset: 0
+        size: 1
+# 
+# func Bool equal<Trit>(Trit lhs, Trit rhs) {
+#   return equal[lhs, rhs]
+# }
+  equal_1:
+    returnType: 
+      ConstTypeName:
+        typeName: Bool
+        size: 1
+    params:
+      - 
+        argName: lhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+      - 
+        argName: rhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+    return: 
+    # equal[lhs, rhs]
+      LutExpr:
+        name: equal
+        args: 
+          - 
+            SliceExpr:
+              source: 'lhs'
+              var: lhs
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'rhs'
+              var: rhs
+              offset: 0
+              size: 1
+# 
+# func Trit cmp<Trit>(Trit lhs, Trit rhs) {
+#   return cmp[lhs, rhs]
+# }
+  cmp_1:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: lhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+      - 
+        argName: rhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+    return: 
+    # cmp[lhs, rhs]
+      LutExpr:
+        name: cmp
+        args: 
+          - 
+            SliceExpr:
+              source: 'lhs'
+              var: lhs
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'rhs'
+              var: rhs
+              offset: 0
+              size: 1
+# 
+# func Bool even<Trit>(Trit val) {
+#   return even[val, 0, 0]
+# }
+  even_1:
+    returnType: 
+      ConstTypeName:
+        typeName: Bool
+        size: 1
+    params:
+      - 
+        argName: val
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+    return: 
+    # even[val, 0, 0]
+      LutExpr:
+        name: even
+        args: 
+          - 
+            SliceExpr:
+              source: 'val'
+              var: val
+              offset: 0
+              size: 1
+          - 
+            ValueExpr:
+                value: '0'
+                trits: '0'
+                trytes: '9'
+          - 
+            ValueExpr:
+                value: '0'
+                trits: '0'
+                trytes: '9'
+# 
+# func Bool even<Tryte>(Tryte val) {
+#   return even[val[0], val[1], val[2]]
+# }
+  even_3:
+    returnType: 
+      ConstTypeName:
+        typeName: Bool
+        size: 1
+    params:
+      - 
+        argName: val
+        size: 3
+        type: 
+          ConstTypeName:
+            typeName: Tryte
+            size: 3
+    return: 
+    # even[val[0], val[1], val[2]]
+      LutExpr:
+        name: even
+        args: 
+          - 
+            SliceExpr:
+              source: 'val[0]'
+              var: val
+              offset: 0
+              size: 1
+              start:
+                ConstNumber:
+                  value: 0
+          - 
+            SliceExpr:
+              source: 'val[1]'
+              var: val
+              offset: 1
+              size: 1
+              start:
+                ConstNumber:
+                  value: 1
+          - 
+            SliceExpr:
+              source: 'val[2]'
+              var: val
+              offset: 2
+              size: 1
+              start:
+                ConstNumber:
+                  value: 2
+# 
+# func TritCarry fullAdd<Trit>(Trit lhs, Trit rhs, Carry carry) {
+#   return fullAdd[lhs, rhs, carry]
+# }
+  fullAdd_1:
+    returnType: 
+      ConstTypeName:
+        typeName: TritCarry
+        size: 2
+        fields:
+          value: 
+            size: '1'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '1'
+    params:
+      - 
+        argName: lhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+      - 
+        argName: rhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    return: 
+    # fullAdd[lhs, rhs, carry]
+      LutExpr:
+        name: fullAdd
+        args: 
+          - 
+            SliceExpr:
+              source: 'lhs'
+              var: lhs
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'rhs'
+              var: rhs
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'carry'
+              var: carry
+              offset: 0
+              size: 1
+# 
+# func TritCarry fullMul<Trit>(Trit lhs, Trit rhs) {
+#   return fullMul[lhs, rhs] & 0
+# }
+  fullMul_1:
+    returnType: 
+      ConstTypeName:
+        typeName: TritCarry
+        size: 2
+        fields:
+          value: 
+            size: '1'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '1'
+    params:
+      - 
+        argName: lhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+      - 
+        argName: rhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+    return: 
+    # fullMul[lhs, rhs] & 0
+      ConcatExpr:
+        source: 'fullMul[lhs, rhs] & 0'
+        lhs: 
+          LutExpr:
+            name: fullMul
+            args: 
+              - 
+                SliceExpr:
+                  source: 'lhs'
+                  var: lhs
+                  offset: 0
+                  size: 1
+              - 
+                SliceExpr:
+                  source: 'rhs'
+                  var: rhs
+                  offset: 0
+                  size: 1
+        rhs: 
+          ValueExpr:
+              value: '0'
+              trits: '0'
+              trytes: '9'
+# 
+# func TritCarry fullMulNonZero<Trit>(Trit lhs, Trit rhs) {
+#   return fullMul[lhs, rhs] & 0
+# }
+  fullMulNonZero_1:
+    returnType: 
+      ConstTypeName:
+        typeName: TritCarry
+        size: 2
+        fields:
+          value: 
+            size: '1'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '1'
+    params:
+      - 
+        argName: lhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+      - 
+        argName: rhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+    return: 
+    # fullMul[lhs, rhs] & 0
+      ConcatExpr:
+        source: 'fullMul[lhs, rhs] & 0'
+        lhs: 
+          LutExpr:
+            name: fullMul
+            args: 
+              - 
+                SliceExpr:
+                  source: 'lhs'
+                  var: lhs
+                  offset: 0
+                  size: 1
+              - 
+                SliceExpr:
+                  source: 'rhs'
+                  var: rhs
+                  offset: 0
+                  size: 1
+        rhs: 
+          ValueExpr:
+              value: '0'
+              trits: '0'
+              trytes: '9'
+# 
+# func TritCarry halfAdd<Trit>(Trit val, Carry carry) {
+#   return halfAdd[val, carry]
+# }
+  halfAdd_1:
+    returnType: 
+      ConstTypeName:
+        typeName: TritCarry
+        size: 2
+        fields:
+          value: 
+            size: '1'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '1'
+    params:
+      - 
+        argName: val
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    return: 
+    # halfAdd[val, carry]
+      LutExpr:
+        name: halfAdd
+        args: 
+          - 
+            SliceExpr:
+              source: 'val'
+              var: val
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'carry'
+              var: carry
+              offset: 0
+              size: 1
+# 
+# func Trit neg<Trit>(Trit val) {
+#   return neg[val]
+# }
+  neg_1:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: val
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+    return: 
+    # neg[val]
+      LutExpr:
+        name: neg
+        args: 
+          - 
+            SliceExpr:
+              source: 'val'
+              var: val
+              offset: 0
+              size: 1
+# 
+# func Trit sign<Trit>(Trit val) {
+#   return val
+# }
+  sign_1:
+    returnType: 
+      ConstTypeName:
+        typeName: Trit
+        size: 1
+    params:
+      - 
+        argName: val
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+    return: 
+    # val
+      SliceExpr:
+        source: 'val'
+        var: val
+        offset: 0
+        size: 1
+# 
+# func Bool unequal<Trit>(Trit lhs, Trit rhs) {
+#   return unequal[lhs, rhs]
+# }
+  unequal_1:
+    returnType: 
+      ConstTypeName:
+        typeName: Bool
+        size: 1
+    params:
+      - 
+        argName: lhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+      - 
+        argName: rhs
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Trit
+            size: 1
+    return: 
+    # unequal[lhs, rhs]
+      LutExpr:
+        name: unequal
+        args: 
+          - 
+            SliceExpr:
+              source: 'lhs'
+              var: lhs
+              offset: 0
+              size: 1
+          - 
+            SliceExpr:
+              source: 'rhs'
+              var: rhs
+              offset: 0
+              size: 1
+execs: 
+  # test 0 = fibonacci1<Int>(0)
+  -
+    source: 'test 0 = fibonacci1<Int>(0)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '0'
+          trits: '000000000000000000000000000'
+          trytes: '999999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci1<Int>(0)'
+        name: fibonacci1_27
+        args:
+        - 
+          ValueExpr:
+              value: '0'
+              trits: '000000000000000000000000000'
+              trytes: '999999999'
+  # test 1 = fibonacci1<Int>(1)
+  -
+    source: 'test 1 = fibonacci1<Int>(1)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '1'
+          trits: '100000000000000000000000000'
+          trytes: 'A99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci1<Int>(1)'
+        name: fibonacci1_27
+        args:
+        - 
+          ValueExpr:
+              value: '1'
+              trits: '100000000000000000000000000'
+              trytes: 'A99999999'
+  # test 1 = fibonacci1<Int>(2)
+  -
+    source: 'test 1 = fibonacci1<Int>(2)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '1'
+          trits: '100000000000000000000000000'
+          trytes: 'A99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci1<Int>(2)'
+        name: fibonacci1_27
+        args:
+        - 
+          ValueExpr:
+              value: '2'
+              trits: '-10000000000000000000000000'
+              trytes: 'B99999999'
+  # test 2 = fibonacci1<Int>(3)
+  -
+    source: 'test 2 = fibonacci1<Int>(3)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '2'
+          trits: '-10000000000000000000000000'
+          trytes: 'B99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci1<Int>(3)'
+        name: fibonacci1_27
+        args:
+        - 
+          ValueExpr:
+              value: '3'
+              trits: '010000000000000000000000000'
+              trytes: 'C99999999'
+  # test 3 = fibonacci1<Int>(4)
+  -
+    source: 'test 3 = fibonacci1<Int>(4)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '3'
+          trits: '010000000000000000000000000'
+          trytes: 'C99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci1<Int>(4)'
+        name: fibonacci1_27
+        args:
+        - 
+          ValueExpr:
+              value: '4'
+              trits: '110000000000000000000000000'
+              trytes: 'D99999999'
+  # test 5 = fibonacci1<Int>(5)
+  -
+    source: 'test 5 = fibonacci1<Int>(5)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '5'
+          trits: '--1000000000000000000000000'
+          trytes: 'E99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci1<Int>(5)'
+        name: fibonacci1_27
+        args:
+        - 
+          ValueExpr:
+              value: '5'
+              trits: '--1000000000000000000000000'
+              trytes: 'E99999999'
+  # test 8 = fibonacci1<Int>(6)
+  -
+    source: 'test 8 = fibonacci1<Int>(6)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '8'
+          trits: '-01000000000000000000000000'
+          trytes: 'H99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci1<Int>(6)'
+        name: fibonacci1_27
+        args:
+        - 
+          ValueExpr:
+              value: '6'
+              trits: '0-1000000000000000000000000'
+              trytes: 'F99999999'
+  # test 55 = fibonacci1<Int>(10)
+  -
+    source: 'test 55 = fibonacci1<Int>(10)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '55'
+          trits: '100-10000000000000000000000'
+          trytes: 'AB9999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci1<Int>(10)'
+        name: fibonacci1_27
+        args:
+        - 
+          ValueExpr:
+              value: '10'
+              trits: '101000000000000000000000000'
+              trytes: 'J99999999'
+  # test 0 = fibonacci2<Int>(0)
+  -
+    source: 'test 0 = fibonacci2<Int>(0)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '0'
+          trits: '000000000000000000000000000'
+          trytes: '999999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci2<Int>(0)'
+        name: fibonacci2_27
+        args:
+        - 
+          ValueExpr:
+              value: '0'
+              trits: '000000000000000000000000000'
+              trytes: '999999999'
+  # test 1 = fibonacci2<Int>(1)
+  -
+    source: 'test 1 = fibonacci2<Int>(1)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '1'
+          trits: '100000000000000000000000000'
+          trytes: 'A99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci2<Int>(1)'
+        name: fibonacci2_27
+        args:
+        - 
+          ValueExpr:
+              value: '1'
+              trits: '100000000000000000000000000'
+              trytes: 'A99999999'
+  # test 1 = fibonacci2<Int>(2)
+  -
+    source: 'test 1 = fibonacci2<Int>(2)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '1'
+          trits: '100000000000000000000000000'
+          trytes: 'A99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci2<Int>(2)'
+        name: fibonacci2_27
+        args:
+        - 
+          ValueExpr:
+              value: '2'
+              trits: '-10000000000000000000000000'
+              trytes: 'B99999999'
+  # test 2 = fibonacci2<Int>(3)
+  -
+    source: 'test 2 = fibonacci2<Int>(3)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '2'
+          trits: '-10000000000000000000000000'
+          trytes: 'B99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci2<Int>(3)'
+        name: fibonacci2_27
+        args:
+        - 
+          ValueExpr:
+              value: '3'
+              trits: '010000000000000000000000000'
+              trytes: 'C99999999'
+  # test 3 = fibonacci2<Int>(4)
+  -
+    source: 'test 3 = fibonacci2<Int>(4)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '3'
+          trits: '010000000000000000000000000'
+          trytes: 'C99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci2<Int>(4)'
+        name: fibonacci2_27
+        args:
+        - 
+          ValueExpr:
+              value: '4'
+              trits: '110000000000000000000000000'
+              trytes: 'D99999999'
+  # test 5 = fibonacci2<Int>(5)
+  -
+    source: 'test 5 = fibonacci2<Int>(5)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '5'
+          trits: '--1000000000000000000000000'
+          trytes: 'E99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci2<Int>(5)'
+        name: fibonacci2_27
+        args:
+        - 
+          ValueExpr:
+              value: '5'
+              trits: '--1000000000000000000000000'
+              trytes: 'E99999999'
+  # test 8 = fibonacci2<Int>(6)
+  -
+    source: 'test 8 = fibonacci2<Int>(6)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '8'
+          trits: '-01000000000000000000000000'
+          trytes: 'H99999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci2<Int>(6)'
+        name: fibonacci2_27
+        args:
+        - 
+          ValueExpr:
+              value: '6'
+              trits: '0-1000000000000000000000000'
+              trytes: 'F99999999'
+  # test 55 = fibonacci2<Int>(10)
+  -
+    source: 'test 55 = fibonacci2<Int>(10)'
+    isFloat: false
+    expected: 
+      ValueExpr:
+          value: '55'
+          trits: '100-10000000000000000000000'
+          trytes: 'AB9999999'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci2<Int>(10)'
+        name: fibonacci2_27
+        args:
+        - 
+          ValueExpr:
+              value: '10'
+              trits: '101000000000000000000000000'
+              trytes: 'J99999999'
+  # eval fibonacci2<Huge>(180)
+  -
+    source: 'eval fibonacci2<Huge>(180)'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci2<Huge>(180)'
+        name: fibonacci2_81
+        args:
+        - 
+          ValueExpr:
+              value: '180'
+              trits: '00-1-1000000000000000000000000000000000000000000000000000000000000000000000000000'
+              trytes: 'RG9999999999999999999999999'
+  # eval fibonacci3<Int>(10)
+  -
+    source: 'eval fibonacci3<Int>(10)'
+    expr: 
+      FuncExpr:
+        source: 'fibonacci3<Int>(10)'
+        name: fibonacci3_27
+        args:
+        - 
+          ValueExpr:
+              value: '10'
+              trits: '101000000000000000000000000'
+              trytes: 'J99999999'

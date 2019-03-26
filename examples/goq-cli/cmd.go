@@ -61,7 +61,7 @@ func CmdDir(words []string) {
 	}
 }
 
-const fnamedefault = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
+const fnamedefault = "QuplaTests.yml"
 const testoutdef = "echotest.yml"
 
 func CmdLoadModule(words []string) {
