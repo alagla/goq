@@ -5,16 +5,10 @@ import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/goq/readyaml"
-	"github.com/lunfardo314/goq/utils"
 	"strings"
 )
 
-var pow3 = []int{1, 3, 9, 27}
-
 func AnalyzeLutDef(name string, defYAML *QuplaLutDefYAML, module *QuplaModule) error {
-	ret := &LutDef{
-		Name: name,
-	}
 	module.IncStat("numLUTDef")
 
 	if len(defYAML.LutTable) == 0 {
@@ -23,51 +17,42 @@ func AnalyzeLutDef(name string, defYAML *QuplaLutDefYAML, module *QuplaModule) e
 	if len(defYAML.LutTable) > 27 {
 		return fmt.Errorf("lut table can't have more than 27 entries")
 	}
-	inputs := make([]Trits, 0, len(defYAML.LutTable))
-	outputs := make([]Trits, 0, len(defYAML.LutTable))
-	ret.InputSize = 0
-	ret.OutputSize = 0
+	lutTable := make([]Trits, 27)
+
+	sides := strings.Split(defYAML.LutTable[0], "=")
+	sides[0] = strings.TrimSpace(sides[0])
+	sides[1] = strings.TrimSpace(sides[1])
+	inputSize := len(sides[0])
+	if inputSize != 1 && inputSize != 2 && inputSize != 3 {
+		return fmt.Errorf("lut input size can be 1, 2 or 3 only")
+	}
+	outputSize := len(sides[1])
+
+	var inTrits, outTrits Trits
+	var err error
+
 	for _, entry := range defYAML.LutTable {
-		sides := strings.Split(entry, "=")
+		sides = strings.Split(entry, "=")
 		if len(sides) != 2 {
 			return fmt.Errorf("wrong LUT entry: %v", entry)
 		}
 		sides[0] = strings.TrimSpace(sides[0])
 		sides[1] = strings.TrimSpace(sides[1])
 
-		if ret.InputSize == 0 {
-			ret.InputSize = len(sides[0])
-			ret.OutputSize = len(sides[1])
-			if ret.InputSize < 1 || ret.InputSize > 3 || ret.OutputSize < 1 {
-				return fmt.Errorf("wrong input or output size")
-			}
+		if inTrits, err = quplaTritStringToTrits(sides[0]); err != nil || len(inTrits) != inputSize {
+			return fmt.Errorf("wrong input trits in LUT entry: %v", entry)
+
 		}
-		if len(sides[0]) != ret.InputSize {
-			return fmt.Errorf("input len expected to be %v", ret.InputSize)
+		if outTrits, err = quplaTritStringToTrits(sides[1]); err != nil || len(outTrits) != outputSize {
+			return fmt.Errorf("wrong output trits in LUT entry: %v", entry)
 		}
-		if len(sides[1]) != ret.OutputSize {
-			return fmt.Errorf("ouput len expected to be %v", ret.OutputSize)
+		idx := Trits3ToLutIdx(inTrits)
+		if lutTable[idx] != nil {
+			return fmt.Errorf("duplicated LUT entry '%v' in LUT '%v'", entry, name)
 		}
-		inTrits, err := quplaTritStringToTrits(sides[0])
-		if err != nil {
-			return err
-		}
-		inputs = append(inputs, inTrits)
-		outTrits, err := quplaTritStringToTrits(sides[1])
-		if err != nil {
-			return err
-		}
-		outputs = append(outputs, outTrits)
+		lutTable[idx] = outTrits
 	}
-	// index it to the final table
-	ret.LutLookupTable = make([]Trits, pow3[ret.InputSize])
-	for i, inp := range inputs {
-		idx := utils.Trits3ToLutIdx(inp)
-		if ret.LutLookupTable[idx] != nil {
-			return fmt.Errorf("duplicated input in LUT table")
-		}
-		ret.LutLookupTable[idx] = outputs[i]
-	}
+	ret := NewLUTDef(name, inputSize, outputSize, lutTable)
 	module.AddLutDef(name, ret)
 	return nil
 }

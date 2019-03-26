@@ -46,9 +46,7 @@ func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
 	return ret
 }
 
-// most intensive calls
-func (frame *EvalFrame) EvalVar(idx int) (Trits, bool) {
-	vi, _ := frame.context.FuncDef.VarByIdx(idx)
+func (vi *VarInfo) Eval(frame *EvalFrame) (Trits, bool) {
 	result := frame.buffer[vi.Offset:vi.SliceEnd]
 	switch result[0] {
 	case evaluatedToNull:
