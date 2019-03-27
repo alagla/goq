@@ -77,21 +77,22 @@ func (vi *VarInfo) Eval(frame *EvalFrame) (Trits, bool) {
 				null = true
 			}
 		} else {
-			if vi.Assign.Eval(frame, result) {
-				result[0] = evaluatedToNull
-				null = true
+			if vi.IsState {
+				// for state variables (latches) we return value, retrieved from the key/value storage
+				// at the module level.
+				// the key is frame.getCallTrace(). It return all 0 f not present
+				// but calculated value stays in the buffer
+				result = frame.context.FuncDef.StateHashMap.getValue(frame.getCallTrace(), len(result))
+			} else {
+				if vi.Assign.Eval(frame, result) {
+					result[0] = evaluatedToNull
+					null = true
+				}
 			}
 		}
 
 	default: // evaluated, not null (must be valid trit, not checking)
 		cached = true
-	}
-	if vi.IsState {
-		// for state variables (latches) we return value, retrieved from the key/value storage
-		// at the module level.
-		// the key is frame.getCallTrace(). It return all 0 f not present
-		// but calculated value stays in the buffer
-		result = frame.context.FuncDef.StateHashMap.getValue(frame.getCallTrace(), len(result))
 	}
 
 	if frame.context.FuncDef.traceLevel > 1 {
@@ -122,17 +123,14 @@ func (frame *EvalFrame) SaveStateVariables() {
 		return
 	}
 	var val Trits
-	var null bool
 	for _, vi := range frame.context.FuncDef.LocalVars {
 		if !vi.IsState {
 			continue
 		}
-		_, null = vi.Eval(frame)
-		if null {
-			continue
+		val = make(Trits, vi.Assign.Size(), vi.Assign.Size())
+		if !vi.Assign.Eval(frame, val) {
+			frame.context.FuncDef.StateHashMap.storeValue(frame.getCallTrace(), val)
 		}
-		val = frame.buffer[vi.Offset:vi.SliceEnd]
-		frame.context.FuncDef.StateHashMap.storeValue(frame.getCallTrace(), val)
 	}
 }
 

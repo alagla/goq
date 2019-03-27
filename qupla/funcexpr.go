@@ -31,6 +31,9 @@ func (e *FunctionExpr) References(funName string) bool {
 }
 
 func (e *FunctionExpr) Eval(frame *EvalFrame, result Trits) bool {
+	//if frame != nil && strings.Contains(e.FuncDef.Name, "arcLeaf"){
+	//	logf(0, "+++++++++++++++++++ KUKU")
+	//}
 	newFrame := newEvalFrame(e, frame)
 	//return e.FuncDef.RetExpr.Eval(&newFrame, result) // - avoid unnecessary call
 	null := e.FuncDef.Eval(&newFrame, result)
