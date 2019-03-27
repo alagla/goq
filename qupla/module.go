@@ -15,6 +15,7 @@ type QuplaModule struct {
 	execs        []*ExecStmt
 	stats        map[string]int
 	Environments StringSet
+	stateHashMap *StateHashMap
 }
 
 type QuplaTypeField struct {
@@ -36,11 +37,16 @@ func NewQuplaModule(name string) *QuplaModule {
 		execs:        make([]*ExecStmt, 0, 10),
 		stats:        make(map[string]int),
 		Environments: make(StringSet),
+		stateHashMap: newStateHashMap(),
 	}
 }
 
 func (module *QuplaModule) GetName() string {
 	return module.name
+}
+
+func (module *QuplaModule) GetStateHashMap() *StateHashMap {
+	return module.stateHashMap
 }
 
 func (module *QuplaModule) GetTypeFieldInfo(typeName, fldName string) (int64, int64, error) {

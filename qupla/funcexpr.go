@@ -6,14 +6,16 @@ import (
 
 type FunctionExpr struct {
 	ExpressionBase
-	source  string
-	FuncDef *Function
+	source    string
+	FuncDef   *Function
+	callIndex uint8
 }
 
 func NewFunctionExpr(src string, funcDef *Function) *FunctionExpr {
 	return &FunctionExpr{
 		ExpressionBase: NewExpressionBase(src),
 		FuncDef:        funcDef,
+		callIndex:      funcDef.NextCallIndex(),
 	}
 }
 
@@ -31,7 +33,11 @@ func (e *FunctionExpr) References(funName string) bool {
 func (e *FunctionExpr) Eval(frame *EvalFrame, result Trits) bool {
 	newFrame := newEvalFrame(e, frame)
 	//return e.FuncDef.RetExpr.Eval(&newFrame, result) // - avoid unnecessary call
-	return e.FuncDef.Eval(&newFrame, result) //this is slower, did this way due to intercepted functions
+	null := e.FuncDef.Eval(&newFrame, result)
+	if !null {
+		frame.SaveStateVariables()
+	}
+	return null
 }
 
 func (e *FunctionExpr) HasState() bool {

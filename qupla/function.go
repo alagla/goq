@@ -21,6 +21,28 @@ type Function struct {
 	InSize            int
 	ParamSizes        []int
 	traceLevel        int
+	nextCallIndex     uint8
+	StateHashMap      *StateHashMap
+}
+
+func NewFunction(name string, size int) *Function {
+	return &Function{
+		Name:       name,
+		retSize:    size,
+		LocalVars:  make([]*VarInfo, 0, 10),
+		Joins:      make(map[string]int),
+		Affects:    make(map[string]int),
+		ParamSizes: make([]int, 0, 5),
+	}
+}
+
+func (def *Function) NextCallIndex() uint8 {
+	ret := def.nextCallIndex
+	if ret == 0xFF {
+		panic("can't be more than 256 function calls within function body")
+	}
+	def.nextCallIndex++
+	return ret
 }
 
 func (def *Function) SetTraceLevel(traceLevel int) {
@@ -38,17 +60,6 @@ func (def *Function) References(funName string) bool {
 		}
 	}
 	return def.RetExpr.References(funName)
-}
-
-func NewFunction(name string, size int) *Function {
-	return &Function{
-		Name:       name,
-		retSize:    size,
-		LocalVars:  make([]*VarInfo, 0, 10),
-		Joins:      make(map[string]int),
-		Affects:    make(map[string]int),
-		ParamSizes: make([]int, 0, 5),
-	}
 }
 
 func (def *Function) Size() int {

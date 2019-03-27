@@ -138,8 +138,12 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 		})
 	}
 	// the rest of indices belong to local vars (incl state)
+	if len(src.State) > 0 {
+		def.HasStateVariables = true
+		def.StateHashMap = module.GetStateHashMap()
+	}
+
 	var idx int
-	def.HasStateVariables = len(src.State) > 0
 	for name, s := range src.State {
 		idx = def.GetVarIdx(name)
 		if idx >= 0 {

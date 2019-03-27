@@ -19,10 +19,9 @@ type VarInfo struct {
 }
 
 type EvalFrame struct {
-	prev      *EvalFrame
-	buffer    Trits
-	context   *FunctionExpr
-	callTrace []uint8 // only used for stateful call path
+	prev    *EvalFrame
+	buffer  Trits
+	context *FunctionExpr
 }
 
 type ExpressionInterface interface {
@@ -39,17 +38,9 @@ const (
 
 func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
 	ret := EvalFrame{
-		prev:      prev,
-		buffer:    make(Trits, expr.FuncDef.BufLen, expr.FuncDef.BufLen),
-		context:   expr,
-		callTrace: nil,
-	}
-	if prev == nil {
-		if expr.HasState() {
-			ret.callTrace = make([]uint8, 0, 5)
-		}
-	} else {
-		ret.callTrace = prev.callTrace
+		prev:    prev,
+		buffer:  make(Trits, expr.FuncDef.BufLen, expr.FuncDef.BufLen),
+		context: expr,
 	}
 	for _, vi := range expr.FuncDef.LocalVars {
 		ret.buffer[vi.Offset] = notEvaluated
@@ -57,16 +48,13 @@ func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
 	return ret
 }
 
-func (frame *EvalFrame) push(stackIdx uint8) {
-	if frame.callTrace != nil {
-		frame.callTrace = append(frame.callTrace, stackIdx)
+func (frame *EvalFrame) getCallTrace() []uint8 {
+	ret := make([]uint8, 0, 10)
+	f := frame
+	for ; f != nil; f = f.prev {
+		ret = append(ret, f.context.callIndex)
 	}
-}
-
-func (frame *EvalFrame) pop() {
-	if frame.callTrace != nil {
-		frame.callTrace = frame.callTrace[:len(frame.callTrace)-1]
-	}
+	return ret
 }
 
 // TODO suboptimal with tracing code
@@ -98,6 +86,13 @@ func (vi *VarInfo) Eval(frame *EvalFrame) (Trits, bool) {
 	default: // evaluated, not null (must be valid trit, not checking)
 		cached = true
 	}
+	if vi.IsState {
+		// for state variables (latches) we return value, retrieved from the key/value storage
+		// at the module level.
+		// the key is frame.getCallTrace(). It return all 0 f not present
+		// but calculated value stays in the buffer
+		result = frame.context.FuncDef.StateHashMap.getValue(frame.getCallTrace(), len(result))
+	}
 
 	if frame.context.FuncDef.traceLevel > 1 {
 		var s string
@@ -112,10 +107,33 @@ func (vi *VarInfo) Eval(frame *EvalFrame) (Trits, bool) {
 			bi, _ := utils.TritsToBigInt(result)
 			s += fmt.Sprintf("%v, '%v'", bi, utils.TritsToString(result))
 		}
+		if vi.IsState {
+			s += fmt.Sprintf(" (state with call trace '%v)' ",
+				frame.getCallTrace())
+		}
 		logf(frame.context.FuncDef.traceLevel, "trace var %v.%v: %v",
 			frame.context.FuncDef.Name, vi.Name, s)
 	}
 	return result, null
+}
+
+func (frame *EvalFrame) SaveStateVariables() {
+	if frame == nil || !frame.context.FuncDef.HasStateVariables {
+		return
+	}
+	var val Trits
+	var null bool
+	for _, vi := range frame.context.FuncDef.LocalVars {
+		if !vi.IsState {
+			continue
+		}
+		_, null = vi.Eval(frame)
+		if null {
+			continue
+		}
+		val = frame.buffer[vi.Offset:vi.SliceEnd]
+		frame.context.FuncDef.StateHashMap.storeValue(frame.getCallTrace(), val)
+	}
 }
 
 func MatchSizes(e1, e2 ExpressionInterface) error {
