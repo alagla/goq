@@ -33,3 +33,7 @@ func (e *FunctionExpr) Eval(frame *EvalFrame, result Trits) bool {
 	//return e.FuncDef.RetExpr.Eval(&newFrame, result) // - avoid unnecessary call
 	return e.FuncDef.Eval(&newFrame, result) //this is slower, did this way due to intercepted functions
 }
+
+func (e *FunctionExpr) HasState() bool {
+	return e.FuncDef.hasState || e.hasStateSubexpr()
+}

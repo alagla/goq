@@ -31,8 +31,8 @@ func execBatch(cmdlist []string) {
 }
 
 var startupCmd = []string{
-	"load goq-cli/Examples.yml exitonfail",
-	"run 84",
+	"load goq-cli/QuplaTests.yml exitonfail",
+	"run all",
 	//"run 0-1",
 	//"run all",
 	//"run 0-10",

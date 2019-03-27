@@ -14,10 +14,10 @@ type Function struct {
 	retSize           int
 	RetExpr           ExpressionInterface
 	LocalVars         []*VarInfo
-	NumParams         int // idx < NumParams represents parameter, idx >= represents local var (assign)
-	BufLen            int // total length of the local var buffer
-	HasStateVariables bool
-	hasState          bool
+	NumParams         int  // idx < NumParams represents parameter, idx >= represents local var (assign)
+	BufLen            int  // total length of the local var buffer
+	HasStateVariables bool // if has state vars itself
+	hasState          bool // if directly or indirectly references those with state vars
 	InSize            int
 	ParamSizes        []int
 	traceLevel        int

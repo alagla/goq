@@ -28,6 +28,7 @@ type ExpressionInterface interface {
 	Size() int
 	Eval(*EvalFrame, Trits) bool
 	References(string) bool
+	HasState() bool
 }
 
 const (

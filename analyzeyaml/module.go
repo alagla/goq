@@ -42,6 +42,8 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 	}
 	logf(1, "Analyzed %v functions", len(ret.Functions))
 
+	// scans all functions, collects those, which has state vars themselves or dircetly/indirectly
+	// references those with state vars
 	numWithStateVars, numStateful := ret.MarkStateful()
 	logf(1, "Functions with state variables: %v", numWithStateVars)
 	logf(1, "Functions with state (which references functions with state variables): %v", numStateful)
