@@ -18,7 +18,6 @@ func AnalyzeLutExpr(exprYAML *QuplaLutExprYAML, module *QuplaModule, scope *Func
 	}
 	module.IncStat("numLUTExpr")
 
-	ret.ArgExpr = make([]ExpressionInterface, 0, len(exprYAML.Args))
 	for _, a := range exprYAML.Args {
 		ae, err = AnalyzeExpression(a, module, scope)
 		if err != nil {
@@ -27,9 +26,9 @@ func AnalyzeLutExpr(exprYAML *QuplaLutExprYAML, module *QuplaModule, scope *Func
 		if err = RequireSize(ae, 1); err != nil {
 			return nil, fmt.Errorf("LUT expression with '%v': %v", ret.LutDef.Name, err)
 		}
-		ret.ArgExpr = append(ret.ArgExpr, ae)
+		ret.AppendSubExpr(ae)
 	}
-	if ret.LutDef.InputSize != len(ret.ArgExpr) {
+	if ret.LutDef.InputSize != ret.NumSubExpr() {
 		return nil, fmt.Errorf("idx arg doesnt't match input dimension of the LUT %v", ret.LutDef.Name)
 	}
 	return ret, nil

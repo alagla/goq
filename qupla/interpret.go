@@ -19,9 +19,10 @@ type VarInfo struct {
 }
 
 type EvalFrame struct {
-	prev    *EvalFrame
-	buffer  Trits
-	context *FunctionExpr
+	prev      *EvalFrame
+	buffer    Trits
+	context   *FunctionExpr
+	callTrace []uint8 // only used for stateful call path
 }
 
 type ExpressionInterface interface {
@@ -38,14 +39,34 @@ const (
 
 func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
 	ret := EvalFrame{
-		prev:    prev,
-		buffer:  make(Trits, expr.FuncDef.BufLen, expr.FuncDef.BufLen),
-		context: expr,
+		prev:      prev,
+		buffer:    make(Trits, expr.FuncDef.BufLen, expr.FuncDef.BufLen),
+		context:   expr,
+		callTrace: nil,
+	}
+	if prev == nil {
+		if expr.HasState() {
+			ret.callTrace = make([]uint8, 0, 5)
+		}
+	} else {
+		ret.callTrace = prev.callTrace
 	}
 	for _, vi := range expr.FuncDef.LocalVars {
 		ret.buffer[vi.Offset] = notEvaluated
 	}
 	return ret
+}
+
+func (frame *EvalFrame) push(stackIdx uint8) {
+	if frame.callTrace != nil {
+		frame.callTrace = append(frame.callTrace, stackIdx)
+	}
+}
+
+func (frame *EvalFrame) pop() {
+	if frame.callTrace != nil {
+		frame.callTrace = frame.callTrace[:len(frame.callTrace)-1]
+	}
 }
 
 // TODO suboptimal with tracing code
