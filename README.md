@@ -76,7 +76,7 @@ Set `PATH` o your `GOPATH/bin`
 
 Run `go get github.com/lunfardo314/goq`
 
-### Run Supervisor tests
+### Run supervisor tests
 
 Make `GOPATH/src/lunfardo314/goq/supervisor` directory current.
 
