@@ -1,4 +1,4 @@
-# GOQ: IOTA Qubic library for Go
+# GOQ: Qupla library for Go
 
 This repository contains Go code for working with IOTA Qupla, a QUbic Programming Language 
 as it is defined in the [reference implementation](https://github.com/iotaledger/qupla).
