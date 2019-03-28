@@ -37,6 +37,9 @@ func NewFunction(name string, size int) *Function {
 }
 
 func (def *Function) NextCallIndex() uint8 {
+	if def == nil {
+		return 0
+	}
 	ret := def.nextCallIndex
 	if ret == 0xFF {
 		panic("can't be more than 256 function calls within function body")
@@ -116,8 +119,8 @@ func (def *Function) CheckArgSizes(args []ExpressionInterface) error {
 }
 
 // mock expression with all null arguments
-func (def *Function) NewFuncExpressionWithNulls() *FunctionExpr {
-	ret := NewFunctionExpr("", def)
+func (def *Function) NewFuncExpressionWithNulls(callIndex uint8) *FunctionExpr {
+	ret := NewFunctionExpr("", def, callIndex)
 
 	offset := 0
 	for _, sz := range def.ParamSizes {

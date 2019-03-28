@@ -122,6 +122,7 @@ func (frame *EvalFrame) SaveStateVariables() {
 	if frame == nil || !frame.context.FuncDef.HasStateVariables {
 		return
 	}
+	logf(7, "SaveStateVariables for '%v'", frame.context.FuncDef.Name)
 	var val Trits
 	for _, vi := range frame.context.FuncDef.LocalVars {
 		if !vi.IsState {

@@ -128,3 +128,8 @@ func (s StringSet) List() []string {
 func UnixMsNow() uint64 {
 	return uint64(time.Now().UnixNano()) / uint64(time.Millisecond)
 }
+
+func ReprTrits(t Trits) string {
+	bi, _ := TritsToBigInt(t)
+	return fmt.Sprintf("%v, '%.40s'..", bi, TritsToString(t))
+}
