@@ -46,19 +46,18 @@ Please find _goq-cli_ command reference below.
 
 - `verb` show verbosity level
 - `verb <verbosity_level>` set verbosity level. 2 is default, 3 is for debugging, >5 is tracing
-- runtime show memory usage
+- `runtime` show memory usage
 - `dir` show current directory
 - `dir <directory>` set current directory
 - `load <module yaml file>` load module form YAML file. Loading means reading module form YAML 
-file, anelyzing it and attaching to the supervisor bu 'joining' and 'affecting' respective 
+file, analyzing it and attaching to the supervisor by 'joining' and 'affecting' respective 
 environments, referenced from functions.
 - `save <file to save as yaml>` marshal module to YAML file (for echo testing)
 - `lexe <filter substring>` numbered list of `eval` and `test` statements of the loaded module
 - `lfun <filter substring>` list functions of the module, name of which contains substring.
 - `lenv` list environments joined and/or affected by module's functions
-- `trace [<filter substring> [<traceLevel>]]` set trace mode for all functions, names of which 
-- `trace stop` stop tracing all functions
-- 
+- `trace [<filter substring> [<traceLevel>]]` set trace mode for all functions, names of which contains substring 
+- `trace stop` stop tracing all functions 
 - `run all` run all `test` and `eval` statements of the module
 - `run <exec idx>` run specific statement by it's index in the numbered list
 - `run <from exec idx>-<to exec idx>` run range of executable stataments
