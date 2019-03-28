@@ -18,7 +18,7 @@ to read YAML representation of the Qupla module into static Go structures withou
 YAML representation of any Qupla module can be created by running [reference Qupla translator](https://github.com/iotaledger/qupla) 
 with _-yaml_ flag. Examples how to use this package in Go and how to load YAML file 
 into Python program can be found in [examples/readyaml](https://github.com/lunfardo314/goq/tree/master/examples/readyaml).
-It also contains YAML representations of `QuplaTests`, `Examples` and `Fibonacci` modules.
+It also contains YAML representations of `QuplaTests`, `Examples`, `Fibonacci` and `Curl` modules.
 
 - [analyzeyaml](https://github.com/lunfardo314/goq/tree/master/analyzeyaml) library to 
 convert YAML module representation into interpretable Qupla representation which is completely independent from 

@@ -109,19 +109,21 @@ func (sv *Supervisor) PostEffect(envName string, effect Trits, delay int) error 
 }
 
 // calls doFunct if supervisor becomes idle within 'timeout'
-// doFunct will be called upon release of the semaphore in the same goroutine.
-// The doFunct itself must take care about locking the supervisor if needed
-func (sv *Supervisor) DoIfIdle(timeout time.Duration, doFunct func()) bool {
+// doFunc will be called upon release of the semaphore in the same goroutine.
+// The doFunc itself must take care about locking the supervisor if needed
+
+func (sv *Supervisor) DoIfIdle(timeout time.Duration, doFunc func()) bool {
 	if !sv.accessLock.acquire(timeout) {
 		return false
 	}
 	sv.accessLock.release()
-	doFunct()
+	doFunc()
 	return true
 }
 
-func (sv *Supervisor) DoOnIdle(doFunct func()) {
-	for !sv.DoIfIdle(1*time.Second, doFunct) {
+// waits until becomes idle and calls doFunc
+func (sv *Supervisor) DoOnIdle(doFunc func()) {
+	for !sv.DoIfIdle(1*time.Second, doFunc) {
 	}
 }
 
