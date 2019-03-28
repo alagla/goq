@@ -76,7 +76,7 @@ Set `PATH` o your `GOPATH/bin`
 
 ### Download GOQ
 
-Run `go get github.com/lunfardo314/goq`
+Run `go get github.com/lunfardo314/goq/examples/goq-cli`
 
 ### Run supervisor tests
 
