@@ -46,7 +46,7 @@ Please find _goq-cli_ command reference below.
 
 - `verb` show verbosity level
 - `verb <verbosity_level>` set verbosity level. 2 is default, 3 is for debugging, >5 is tracing
-- runtime show memory usage
+- `runtime` show memory usage
 - `dir` show current directory
 - `dir <directory>` set current directory
 - `load <module yaml file>` load module form YAML file. Loading means reading module form YAML 
