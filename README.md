@@ -36,8 +36,8 @@ _Entity_ can be Qupla function interpreter or any other software agent able to c
 trit vector output or null value from trit vector input.
 
 - [examples/goq-cli](https://github.com/lunfardo314/goq/tree/dev/examples/goq-cli) contains 
-_goq-cli_, an implementation of simple CLI to Supervisor and Qupla. Primary purpose of 
-_goq-cli_ is testing of the library itself. It can be used to test and debug any Qupla modules.
+_goq-cli_, an implementation of a simple command line interface to Qupla and Supervisor. Primary purpose of 
+_goq-cli_ is testing of the library itself. It hopefully can be used to test and debug any Qupla modules.
 Please find _goq-cli_ command reference below.
 
 ## goq-cli commands
@@ -53,7 +53,7 @@ environments, referenced from functions.
 - `save <file to save as yaml>` marshal module to YAML file (for echo testing)
 - `lexe <filter substring>` numbered list of `eval` and `test` statements of the loaded module
 - `lfun <filter substring>` list functions of the module, name of which contains substring.
-- `lenv` list environments joined adn/or affected by module's functions
+- `lenv` list environments joined and/or affected by module's functions
 - `trace [<filter substring> [<traceLevel>]]` set trace mode for all functions, names of which 
 - `trace stop` stop tracing all functions
 - 
@@ -62,6 +62,10 @@ environments, referenced from functions.
 - `run <from exec idx>-<to exec idx>` run range of executable stataments
 - `repeat <exec idx> <repeat times>` run specific executable statement number of times
 - `post <effect decimal> <environment>` post effect to the environment
+
+# Installation
+
+TBD
 
 
 
