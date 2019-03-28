@@ -68,10 +68,10 @@ environments, referenced from functions.
 
 ### Install Go
 Follow the [instructions](https://golang.org/doc/install). 
-Make sure to define `GOPATH` environment variable to the root where all you Go project will be landed.
+Make sure to define `GOPATH` environment variable to the root where all your Go projects will land.
 The `GOPATH` directory should contain at least `src` (for sources) and `bin` 
 (for executable binaries) subdirectories. 
-Set `PATH` o your `GOPATH/bin`
+Set `PATH` to your `GOPATH/bin`
 
 ### Download GOQ
 
