@@ -63,9 +63,32 @@ environments, referenced from functions.
 - `repeat <exec idx> <repeat times>` run specific executable statement number of times
 - `post <effect decimal> <environment>` post effect to the environment
 
-# Installation
+# Getting started
 
-TBD
+### Install Go
+Follow the [instructions](https://golang.org/doc/install). 
+Make sure to define `GOPATH` environment variable to the root where all you Go project will be landed.
+The `GOPATH` directory should contain at least `src` (for sources) and `bin` 
+(for executable binaries) subdirectories. 
+Set `PATH` o your `GOPATH/bin`
+
+#### Download GOQ
+
+Run `go get github.com/lunfardo314/goq`
+
+#### Run Supervisor tests
+
+Make `GOPATH/src/lunfardo314/goq/supervisor` directory current.
+
+Run `go test`
+
+#### Run goq-cli
+
+Make `GOPATH/src/lunfardo314/goq/examples/goq-cli` directory current.
+
+Run `go install`
+
+Run `goq-cli`
 
 
 
