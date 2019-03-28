@@ -4,7 +4,7 @@ This repository contains Go code for working with IOTA Qupla, a QUbic Programmin
 as it is defined in the [reference implementation](https://github.com/iotaledger/qupla).
  
 Note 1: GOQ is work in progress therefore bugs and unexpected behavior is highly probable. 
-Please contact author at @lunfardo in IOTA Discord._
+Please contact author as @lunfardo in IOTA Discord.
 
 Note 2: I made efforts GOQ to be compatible with reference Abra spec and Qupla implementation.
 All Qupla tests pass.
@@ -12,32 +12,34 @@ However, sometimes behavior may be different from what is expected, with executi
 _eval_ and _test_ statements in particular.
 
 
-Repository contains following relatively independent packages:
+Repository contains the following packages:
 
 - [readyaml](https://github.com/lunfardo314/goq/tree/master/readyaml) library allows 
-to read YAML representation of the Qupla module into static Go structure without much parsing. 
+to read YAML representation of the Qupla module into static Go structures without much parsing. 
 Qupla YAML representation contains everything necessary to interpret the module.
 YAML representation of any Qupla module can be created by running [reference Qupla translator](https://github.com/iotaledger/qupla) 
 with _-yaml_ flag. Examples how to use this package in Go and how to load YAML file 
 into Python program can be found in [examples/readyaml](https://github.com/lunfardo314/goq/tree/master/examples/readyaml).
+It also contains YAML representations of `QuplaTests`, `Examples` and `Fibonacci` modules.
 
 - [analyzeyaml](https://github.com/lunfardo314/goq/tree/master/analyzeyaml) library to 
-convert module representation into interpretable Qupla representation which is completely independent from 
+convert YAML module representation into interpretable Qupla representation which is completely independent from 
 YAML source. It also performs necessary semantic analysis and checking.
 
 - [qupla](https://github.com/lunfardo314/goq/tree/master/qupla) library contains 
 Qupla runtime representations and Qupla interpreter
 
 - [supervisor](https://github.com/lunfardo314/goq/tree/master/supervisor) contains Qubic 
-Supervisor how it is defined in _Qubic Computational Model_ (QCM). 
-Supervisor library is completely independent from Abra/Qupla implementation. 
-Supervisor interacts with _entities_ using abstract _EntityCore_ interface. 
-_Entity_ can be Qupla function interpreter or any other software agent able to calculate 
-trit vector output or null value from trit vector input.
+Supervisor according to _Qubic Computational Model_ (QCM). 
+Supervisor is completely independent from Qupla/Abra. 
+It interacts with _entities_ using abstract `EntityCore` interface. 
+_Entity_ can be Qupla function with interpreter or any other software agent able to calculate 
+trit vector output (or null value) from trit vector input. 
+Supervisor API is defined in the file `api.go`.
 
 - [examples/goq-cli](https://github.com/lunfardo314/goq/tree/dev/examples/goq-cli) contains 
-_goq-cli_, an implementation of a simple command line interface to Qupla and Supervisor. Primary purpose of 
-_goq-cli_ is testing of the library itself. It hopefully can be used to test and debug any Qupla modules.
+_goq-cli_, an implementation of a simple command line interface to Qupla and supervisor. 
+Primary purpose of _goq-cli_ is testing of the library itself. It hopefully can be used to test and debug any Qupla modules.
 Please find _goq-cli_ command reference below.
 
 ## goq-cli commands
