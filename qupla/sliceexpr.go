@@ -6,19 +6,24 @@ import (
 
 type SliceExpr struct {
 	ExpressionBase
-	LocalVarIdx int
-	VarScope    *Function
-	offset      int
-	size        int
-	sliceEnd    int
+	//LocalVarIdx int
+	//VarScope    *Function
+	vi       *VarInfo
+	offset   int
+	size     int
+	sliceEnd int
+	noSlice  bool
 }
 
-func NewQuplaSliceExpr(src string, offset, size int) *SliceExpr {
+func NewQuplaSliceExpr(vi *VarInfo, src string, offset, size int) *SliceExpr {
+	noSlice := offset == 0 && size == vi.Size
 	return &SliceExpr{
 		ExpressionBase: NewExpressionBase(src),
+		vi:             vi,
 		offset:         offset,
 		size:           size,
 		sliceEnd:       offset + size,
+		noSlice:        noSlice,
 	}
 }
 
@@ -30,10 +35,13 @@ func (e *SliceExpr) Size() int {
 }
 
 func (e *SliceExpr) Eval(frame *EvalFrame, result Trits) bool {
-	restmp, null := frame.EvalVar(e.LocalVarIdx)
-	if null {
-		return true
+	restmp, null := e.vi.Eval(frame)
+	if !null {
+		if e.noSlice {
+			copy(result, restmp)
+		} else {
+			copy(result, restmp[e.offset:e.sliceEnd])
+		}
 	}
-	copy(result, restmp[e.offset:e.sliceEnd])
-	return false
+	return null
 }

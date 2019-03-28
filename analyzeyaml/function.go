@@ -18,7 +18,8 @@ func AnalyzeFunctionPreliminary(name string, defYAML *QuplaFuncDefYAML, module *
 	if sz, err = GetConstValue(ce); err != nil {
 		return err
 	}
-	def := NewQuplaFuncDef(name, sz)
+	def := NewFunction(name, sz)
+
 	if err = createVarScope(defYAML, def, module); err != nil {
 		return err
 	}
@@ -137,9 +138,12 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 		})
 	}
 	// the rest of indices belong to local vars (incl state)
-	// state variables
+	if len(src.State) > 0 {
+		def.HasStateVariables = true
+		def.StateHashMap = module.GetStateHashMap()
+	}
+
 	var idx int
-	def.HasStateVariables = len(src.State) > 0
 	for name, s := range src.State {
 		idx = def.GetVarIdx(name)
 		if idx >= 0 {

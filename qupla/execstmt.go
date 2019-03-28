@@ -39,7 +39,7 @@ func (ex *ExecStmt) GetIdx() int {
 }
 
 func (ex *ExecStmt) HasState() bool {
-	return ex.expr.FuncDef.hasState
+	return ex.expr.HasState()
 }
 
 func (ex *ExecStmt) evalEnvironmentName() string {

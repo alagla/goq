@@ -2,7 +2,8 @@ package qupla
 
 import (
 	"fmt"
-	"github.com/iotaledger/iota.go/trinary"
+	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/utils"
 )
 
 type Function struct {
@@ -13,12 +14,42 @@ type Function struct {
 	retSize           int
 	RetExpr           ExpressionInterface
 	LocalVars         []*VarInfo
-	NumParams         int // idx < NumParams represents parameter, idx >= represents local var (assign)
-	BufLen            int // total length of the local var buffer
-	HasStateVariables bool
-	hasState          bool
+	NumParams         int  // idx < NumParams represents parameter, idx >= represents local var (assign)
+	BufLen            int  // total length of the local var buffer
+	HasStateVariables bool // if has state vars itself
+	hasState          bool // if directly or indirectly references those with state vars
 	InSize            int
 	ParamSizes        []int
+	traceLevel        int
+	nextCallIndex     uint8
+	StateHashMap      *StateHashMap
+}
+
+func NewFunction(name string, size int) *Function {
+	return &Function{
+		Name:       name,
+		retSize:    size,
+		LocalVars:  make([]*VarInfo, 0, 10),
+		Joins:      make(map[string]int),
+		Affects:    make(map[string]int),
+		ParamSizes: make([]int, 0, 5),
+	}
+}
+
+func (def *Function) NextCallIndex() uint8 {
+	if def == nil {
+		return 0
+	}
+	ret := def.nextCallIndex
+	if ret == 0xFF {
+		panic("can't be more than 256 function calls within function body")
+	}
+	def.nextCallIndex++
+	return ret
+}
+
+func (def *Function) SetTraceLevel(traceLevel int) {
+	def.traceLevel = traceLevel
 }
 
 func (def *Function) HasState() bool {
@@ -32,17 +63,6 @@ func (def *Function) References(funName string) bool {
 		}
 	}
 	return def.RetExpr.References(funName)
-}
-
-func NewQuplaFuncDef(name string, size int) *Function {
-	return &Function{
-		Name:       name,
-		retSize:    size,
-		LocalVars:  make([]*VarInfo, 0, 10),
-		Joins:      make(map[string]int),
-		Affects:    make(map[string]int),
-		ParamSizes: make([]int, 0, 5),
-	}
 }
 
 func (def *Function) Size() int {
@@ -99,8 +119,8 @@ func (def *Function) CheckArgSizes(args []ExpressionInterface) error {
 }
 
 // mock expression with all null arguments
-func (def *Function) NewFuncExpressionWithNulls() *FunctionExpr {
-	ret := NewFunctionExpr("", def)
+func (def *Function) NewFuncExpressionWithNulls(callIndex uint8) *FunctionExpr {
+	ret := NewFunctionExpr("", def, callIndex)
 
 	offset := 0
 	for _, sz := range def.ParamSizes {
@@ -110,6 +130,16 @@ func (def *Function) NewFuncExpressionWithNulls() *FunctionExpr {
 	return ret
 }
 
-func (def *Function) Eval(frame *EvalFrame, result trinary.Trits) bool {
-	return def.RetExpr.Eval(frame, result)
+func (def *Function) Eval(frame *EvalFrame, result Trits) bool {
+	null := def.RetExpr.Eval(frame, result)
+	if def.traceLevel > 0 {
+		if !null {
+			bi, _ := utils.TritsToBigInt(result)
+			logf(def.traceLevel, "trace '%v': returned %v, '%v'",
+				def.Name, bi, utils.TritsToString(result))
+		} else {
+			logf(2+def.traceLevel, "trace '%v': returned null")
+		}
+	}
+	return null
 }

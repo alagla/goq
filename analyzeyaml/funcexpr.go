@@ -11,7 +11,7 @@ func AnalyzeFuncExpr(exprYAML *QuplaFuncExprYAML, module *QuplaModule, scope *Fu
 	if funcDef == nil {
 		return nil, fmt.Errorf("can't find function '%v'", exprYAML.Name)
 	}
-	ret := NewFunctionExpr(exprYAML.Source, funcDef)
+	ret := NewFunctionExpr(exprYAML.Source, funcDef, scope.NextCallIndex())
 	module.IncStat("numFuncExpr")
 
 	var tmpSubexpr = make([]ExpressionInterface, 0, len(exprYAML.Args))

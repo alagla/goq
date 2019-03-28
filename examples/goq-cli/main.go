@@ -31,17 +31,16 @@ func execBatch(cmdlist []string) {
 }
 
 var startupCmd = []string{
-	"load exitonfail",
-	//"run 0-1",
+	"load goq-cli/QuplaTests.yml exitonfail",
 	"run all",
+	//"run 0-1",
+	//"run all",
 	//"run 0-10",
 }
 
 func main() {
 	logf(0, "Welcome to GOQ-CLI: a simple Qubic Supervisor in Go Command Line Interface ver %v", cfg.Config.Version)
 	logf(0, "Now is %v", time.Now())
-	//logf(0, "Verbosity level is %v. Change with `verb <level>`", cfg.Config.Verbosity)
-	//logf(0, "Use TAB to select suggestion")
 	executor("dir")
 	executor("verb")
 

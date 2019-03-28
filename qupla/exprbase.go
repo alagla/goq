@@ -44,3 +44,16 @@ func (e *ExpressionBase) ReferencesSubExprs(funName string) bool {
 func (e *ExpressionBase) References(funName string) bool {
 	return e.ReferencesSubExprs(funName)
 }
+
+func (e *ExpressionBase) hasStateSubexpr() bool {
+	for _, se := range e.subexpr {
+		if se.HasState() {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *ExpressionBase) HasState() bool {
+	return e.hasStateSubexpr()
+}

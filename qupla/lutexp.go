@@ -6,8 +6,7 @@ import (
 
 type LutExpr struct {
 	ExpressionBase
-	ArgExpr []ExpressionInterface
-	LutDef  *LutDef
+	LutDef *LutDef
 }
 
 func (e *LutExpr) Size() int {
@@ -19,7 +18,7 @@ func (e *LutExpr) Size() int {
 
 func (e *LutExpr) Eval(frame *EvalFrame, result Trits) bool {
 	var buf [3]int8 // no more than 3 inputs
-	for i, a := range e.ArgExpr {
+	for i, a := range e.subexpr {
 		if a.Eval(frame, buf[i:i+1]) {
 			return true
 		}

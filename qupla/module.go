@@ -15,6 +15,7 @@ type QuplaModule struct {
 	execs        []*ExecStmt
 	stats        map[string]int
 	Environments StringSet
+	stateHashMap *StateHashMap
 }
 
 type QuplaTypeField struct {
@@ -36,11 +37,16 @@ func NewQuplaModule(name string) *QuplaModule {
 		execs:        make([]*ExecStmt, 0, 10),
 		stats:        make(map[string]int),
 		Environments: make(StringSet),
+		stateHashMap: newStateHashMap(),
 	}
 }
 
 func (module *QuplaModule) GetName() string {
 	return module.name
+}
+
+func (module *QuplaModule) GetStateHashMap() *StateHashMap {
+	return module.stateHashMap
 }
 
 func (module *QuplaModule) GetTypeFieldInfo(typeName, fldName string) (int64, int64, error) {
@@ -86,15 +92,34 @@ func (module *QuplaModule) FindLUTDef(name string) (*LutDef, error) {
 	return ret, nil
 }
 
-func (module *QuplaModule) FindExecs(substr string) []*ExecStmt {
+func (module *QuplaModule) FindExecs(filterSubstr string) []*ExecStmt {
 	ret := make([]*ExecStmt, 0)
 	for _, ex := range module.execs {
-		if strings.Contains(ex.GetName(), substr) {
+		if strings.Contains(ex.GetName(), filterSubstr) {
 			ret = append(ret, ex)
 		}
 	}
 	return ret
 }
+
+func (module *QuplaModule) FindFuncs(filterSubstr string) []*Function {
+	ret := make([]*Function, 0)
+	for _, fun := range module.Functions {
+		if strings.Contains(fun.Name, filterSubstr) {
+			ret = append(ret, fun)
+		}
+	}
+	return ret
+}
+
+func (module *QuplaModule) SetTraceLevel(traceLevel int, filterSubstr string) []*Function {
+	funcs := module.FindFuncs(filterSubstr)
+	for _, f := range funcs {
+		f.SetTraceLevel(traceLevel)
+	}
+	return funcs
+}
+
 func (module *QuplaModule) IncStat(key string) {
 	if _, ok := module.stats[key]; !ok {
 		module.stats[key] = 0

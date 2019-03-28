@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/supervisor"
+	"github.com/lunfardo314/goq/utils"
 	"time"
 )
 
@@ -29,10 +30,6 @@ func (module *QuplaModule) AttachExecs(disp *supervisor.Supervisor, fromIdx int,
 	var prev *ExecStmt
 	for idx := fromIdx; idx <= toIdx; idx++ {
 		exec = module.execs[idx]
-		if exec.HasState() {
-			logf(2, "skipped '%v'", exec.GetName())
-			continue
-		}
 		if err = exec.attach(disp, prev); err != nil {
 			logf(0, "can't attach executable '%v'", exec.GetName())
 		} else {
@@ -106,7 +103,6 @@ func (module *QuplaModule) RunExecs(disp *supervisor.Supervisor, fromIdx int, to
 	logf(0, "Running executable statements with indices between %v and %v", fromIdx, toIdx)
 	logf(0, "   total in the module: %v", len(module.execs))
 	logf(0, "   running: %v", len(attachedExecs))
-	logf(0, "   skipped: %v", len(module.execs)-len(attachedExecs))
 	cmode := "OFF"
 	if chain {
 		cmode = "ON"
@@ -147,10 +143,14 @@ func reportRunResults(execs []*ExecStmt, duration time.Duration) {
 			} else {
 				logf(0, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
 				logf(0, "     test FAILED")
+				logf(0, "     Result %v != expected %v",
+					utils.ReprTrits(summ.lastResult), utils.ReprTrits(ex.expected))
 			}
 			numTest++
 		} else {
 			logf(2, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
+			bi, _ := utils.TritsToBigInt(summ.lastResult)
+			logf(2, "   result: %v, '%v'", bi, utils.TritsToString(summ.lastResult))
 			numEvals++
 		}
 		if summ.testPassed {

@@ -1,15 +1,18 @@
 package main
 
 import (
+	"github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/analyzeyaml"
 	"github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/goq/readyaml"
+	"github.com/lunfardo314/goq/utils"
 	"math"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -23,8 +26,14 @@ import (
 //    load <module yaml file>
 //    save
 //    save <file to save as yaml>
-//    list
-//    list <substring>
+//    lexe
+//    lexe <filter substring>
+//    lfun
+//    lfun <filter substring>
+//    lenv
+//    trace stop
+//    trace <filter substring>
+//    trace <filter substring> <traceLevel>
 //    run
 //    run all
 //    run <exec idx>
@@ -32,6 +41,7 @@ import (
 //    repeat <exec idx> <repeat times>
 //    chain
 //    chain on|off
+//    post <effect decimal> <environment>
 
 func CmdVerbosity(words []string) {
 	if len(words) == 2 {
@@ -61,14 +71,14 @@ func CmdDir(words []string) {
 	}
 }
 
-const fnamedefault = "C:/Users/evaldas/Documents/proj/Java/github.com/qupla/src/main/resources/Qupla.yml"
+const fnamedefault = "QuplaTests.yml"
 const testoutdef = "echotest.yml"
 
 func CmdLoadModule(words []string) {
 	var err error
 
 	fname := fnamedefault
-	if len(words) == 2 && words[1] != "exitonfail" {
+	if len(words) >= 2 && words[1] != "exitonfail" {
 		fname = words[1]
 	}
 	logf(0, "Loading QuplaYAML module form file %v", fname)
@@ -114,13 +124,13 @@ func CmdSaveModule(words []string) {
 }
 
 func logExecs(list []*qupla.ExecStmt) {
-	logf(0, "Found %v executable statements:", len(list))
 	for _, ex := range list {
 		logf(0, "   #%v:  %v", ex.GetIdx(), ex.GetSource())
 	}
+	logf(0, "Found %v executable statements:", len(list))
 }
 
-func CmdList(words []string) {
+func CmdLexe(words []string) {
 	if moduleYAML == nil {
 		logf(0, "Error: module was not loaded")
 		return
@@ -131,6 +141,65 @@ func CmdList(words []string) {
 	}
 	execs := module.FindExecs(substr)
 	logExecs(execs)
+}
+
+func CmdTrace(words []string) {
+	if moduleYAML == nil {
+		logf(0, "Error: module was not loaded")
+		return
+	}
+	if len(words) < 2 {
+		logf(0, "usage: trace stop|<filter substr> [1|2]")
+		return
+	}
+	if words[1] == "stop" {
+		module.SetTraceLevel(0, "")
+		logf(0, "all tracing stopped")
+		return
+	}
+	traceLevel := 1
+	var err error
+	if len(words) == 3 {
+		traceLevel, err = strconv.Atoi(words[2])
+		if err != nil {
+			logf(0, "wrong command: %v", err)
+			return
+		}
+	}
+	funcs := module.SetTraceLevel(traceLevel, words[1])
+	logFuncs(funcs)
+	logf(0, "Set trace level = %v", traceLevel)
+}
+
+func logFuncs(list []*qupla.Function) {
+	for _, fun := range list {
+		logf(0, "   %v", fun.Name)
+	}
+	logf(0, "Found %v functions:", len(list))
+}
+
+func CmdLfun(words []string) {
+	if moduleYAML == nil {
+		logf(0, "Error: module was not loaded")
+		return
+	}
+	substr := ""
+	if len(words) == 2 {
+		substr = words[1]
+	}
+	funcs := module.FindFuncs(substr)
+	logFuncs(funcs)
+}
+
+func CmdLenv(words []string) {
+	if moduleYAML == nil {
+		logf(0, "Error: module was not loaded")
+		return
+	}
+	for env := range module.Environments {
+		logf(0, "    %v", env)
+	}
+	logf(0, "   Total %v environments found", len(module.Environments))
 }
 
 func stringIsInt(s string) bool {
@@ -231,4 +300,34 @@ func CmdRepeat(words []string) {
 	if err := module.RunExec(svisor, idx, repeat); err != nil {
 		logf(0, "%v", err)
 	}
+}
+
+func CmdPost(words []string) {
+	if module == nil {
+		logf(0, "Error: module not loaded")
+		return
+	}
+	if len(words) != 3 {
+		logf(0, "Usage: post <effect decimal> <environment>")
+		return
+	}
+	dec, err := strconv.Atoi(words[1])
+	if err != nil {
+		logf(0, "Usage: post <effect decimal> <environment>")
+		return
+	}
+	effect := trinary.IntToTrits(int64(dec))
+	logf(0, "Posting effect %v, '%v' to environment '%v'",
+		dec, utils.TritsToString(effect), words[2])
+
+	err = svisor.PostEffect(words[2], effect, 0)
+	if err != nil {
+		logf(0, "error: %v", err)
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	svisor.DoOnIdle(func() {
+		wg.Done()
+	})
+	wg.Wait()
 }

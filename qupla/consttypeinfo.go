@@ -55,3 +55,7 @@ func (e *ConstTypeInfo) GetFieldInfo(fldname string) (*ConstTypeFieldInfo, error
 	}
 	return fi, nil
 }
+
+func (e *ConstTypeInfo) HasState() bool {
+	return false
+}

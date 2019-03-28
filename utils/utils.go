@@ -129,8 +129,7 @@ func UnixMsNow() uint64 {
 	return uint64(time.Now().UnixNano()) / uint64(time.Millisecond)
 }
 
-var pow3 = []int{1, 3, 9, 27}
-
-func Trits3ToLutIdx(trits Trits) int64 {
-	return TritsToInt(trits) + int64(pow3[len(trits)]/2)
+func ReprTrits(t Trits) string {
+	bi, _ := TritsToBigInt(t)
+	return fmt.Sprintf("%v, '%.40s'..", bi, TritsToString(t))
 }
