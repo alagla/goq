@@ -35,5 +35,33 @@ Supervisor interacts with _entities_ using abstract _EntityCore_ interface.
 _Entity_ can be Qupla function interpreter or any other software agent able to calculate 
 trit vector output or null value from trit vector input.
 
+- [examples/goq-cli](https://github.com/lunfardo314/goq/tree/dev/examples/goq-cli) contains 
+_goq-cli_, an implementation of simple CLI to Supervisor and Qupla. Primary purpose of 
+_goq-cli_ is testing of the library itself. It can be used to test and debug any Qupla modules.
+Please find _goq-cli_ command reference below.
+
+## goq-cli commands
+
+- `verb` show verbosity level
+- `verb <verbosity_level>` set verbosity level. 2 is default, 3 is for debugging, >5 is tracing
+- runtime show memory usage
+- `dir` show current directory
+- `dir <directory>` set current directory
+- `load <module yaml file>` load module form YAML file. Loading means reading module form YAML 
+file, anelyzing it and attaching to the supervisor bu 'joining' and 'affecting' respective 
+environments, referenced from functions.
+- `save <file to save as yaml>` marshal module to YAML file (for echo testing)
+- `lexe <filter substring>` numbered list of `eval` and `test` statements of the loaded module
+- `lfun <filter substring>` list functions of the module, name of which contains substring.
+- `lenv` list environments joined adn/or affected by module's functions
+- `trace [<filter substring> [<traceLevel>]]` set trace mode for all functions, names of which 
+- `trace stop` stop tracing all functions
+- 
+- `run all` run all `test` and `eval` statements of the module
+- `run <exec idx>` run specific statement by it's index in the numbered list
+- `run <from exec idx>-<to exec idx>` run range of executable stataments
+- `repeat <exec idx> <repeat times>` run specific executable statement number of times
+- `post <effect decimal> <environment>` post effect to the environment
+
 
 
