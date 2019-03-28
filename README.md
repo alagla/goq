@@ -72,17 +72,17 @@ The `GOPATH` directory should contain at least `src` (for sources) and `bin`
 (for executable binaries) subdirectories. 
 Set `PATH` o your `GOPATH/bin`
 
-#### Download GOQ
+### Download GOQ
 
 Run `go get github.com/lunfardo314/goq`
 
-#### Run Supervisor tests
+### Run Supervisor tests
 
 Make `GOPATH/src/lunfardo314/goq/supervisor` directory current.
 
 Run `go test`
 
-#### Run goq-cli
+### Run goq-cli
 
 Make `GOPATH/src/lunfardo314/goq/examples/goq-cli` directory current.
 
