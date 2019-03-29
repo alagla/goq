@@ -33,7 +33,11 @@ Supervisor is completely independent from Qupla/Abra.
 It interacts with _entities_ using abstract `EntityCore` interface. 
 _Entity_ can be Qupla function with interpreter or any other software agent able to calculate 
 trit vector output (or null value) from trit vector input. 
-Exported supervisor API can be found in the file `api.go`.
+Each _Entity_ can join (subscribe) the environment and it can affect environment in the sense of Abra specification.
+Effects in the form of trit vectors can be sent to environment by placing message into the main input queue.
+Each externally placed effect starts a _quant_. During a _quant_ all entities are running in parallel until _quant_ is finished.
+Supervisor is locked for any changes during the quant.
+Exported supervisor API can be found in the file `api.go`. 
 
 - [examples/goq-cli](https://github.com/lunfardo314/goq/tree/dev/examples/goq-cli) contains 
 _goq-cli_, a simple command line interface to Qupla and supervisor. 
