@@ -72,8 +72,10 @@ func (sv *Supervisor) postEffect(envName string, env *environment, effect Trits,
 	if env != nil {
 		n = env.name
 	}
-	Logf(5, "posted effect '%v' (%v) to supervisor, environment '%v', delay %v. External = %v",
-		utils.TritsToString(effect), utils.MustTritsToBigInt(effect), n, delay, external)
+	LogDefer(5, func() {
+		Logf(5, "posted effect '%v' (%v) to supervisor, environment '%v', delay %v. External = %v",
+			utils.TritsToString(effect), utils.MustTritsToBigInt(effect), n, delay, external)
+	})
 
 	return sv.queue.Put(&quantMsg{
 		envName:          envName,

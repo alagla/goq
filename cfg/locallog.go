@@ -11,3 +11,9 @@ func Logf(minVerbosity int, format string, args ...interface{}) {
 		fmt.Printf(prefix+format+"\n", args...)
 	}
 }
+
+func LogDefer(minVerbosity int, fun func()) {
+	if Config.Verbosity >= minVerbosity {
+		fun()
+	}
+}

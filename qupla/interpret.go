@@ -58,8 +58,6 @@ func (frame *EvalFrame) getCallTrace() []uint8 {
 	return ret
 }
 
-// TODO suboptimal with tracing code
-
 func (vi *VarInfo) Eval(frame *EvalFrame) (Trits, bool) {
 	result := frame.buffer[vi.Offset:vi.SliceEnd]
 	null := false

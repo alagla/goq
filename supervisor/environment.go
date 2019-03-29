@@ -3,7 +3,7 @@ package supervisor
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/cfg"
-	. "github.com/lunfardo314/goq/utils"
+	"github.com/lunfardo314/goq/utils"
 )
 
 func newEnvironment(disp *Supervisor, name string) *environment {
@@ -42,9 +42,10 @@ func (env *environment) environmentLoop() {
 		if effect == nil {
 			panic("nil effect")
 		}
-		// TODO optimize logging in the loop
-		Logf(3, "effect '%v' (%v) -> environment '%v'",
-			TritsToString(effect), MustTritsToBigInt(effect), env.name)
+		LogDefer(3, func() {
+			Logf(3, "effect '%v' (%v) -> environment '%v'",
+				utils.TritsToString(effect), utils.MustTritsToBigInt(effect), env.name)
+		})
 		env.supervisor.quantWG.Add(len(env.joins))
 		for _, joinData := range env.joins {
 			joinData.count++

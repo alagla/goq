@@ -67,9 +67,11 @@ func (ent *Entity) entityLoop() {
 		if msg.effect == nil {
 			panic("entity loop: nil effect")
 		}
-		// TODO optimize logging in the loop
-		Logf(3, "effect '%v' (%v) -> entity '%v'",
-			utils.TritsToString(msg.effect), utils.MustTritsToBigInt(msg.effect), ent.name)
+
+		LogDefer(3, func() {
+			Logf(3, "effect '%v' (%v) -> entity '%v'",
+				utils.TritsToString(msg.effect), utils.MustTritsToBigInt(msg.effect), ent.name)
+		})
 
 		// calculate result by calling entity core
 		// memory allocation is inevitable this effect will travel along channels
