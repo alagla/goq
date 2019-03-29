@@ -2,12 +2,13 @@ package main
 
 import (
 	"github.com/c-bata/go-prompt"
+	. "github.com/lunfardo314/goq/cfg"
 	"os"
 	"strings"
 )
 
 func executor(in string) {
-	logf(5, "goq-cli cmd: '%v'", in)
+	Logf(5, "goq-cli cmd: '%v'", in)
 	in = strings.Trim(in, " \t\n")
 	words := strings.Split(in, " ")
 	if len(words) == 0 || words[0] == "" {
@@ -15,7 +16,7 @@ func executor(in string) {
 	}
 	switch words[0] {
 	case "exit", "quit":
-		logf(0, "Bye!")
+		Logf(0, "Bye!")
 		os.Exit(0)
 	case "verb":
 		CmdVerbosity(words)
@@ -45,7 +46,7 @@ func executor(in string) {
 		CmdPost(words)
 
 	default:
-		logf(0, "unknown command")
+		Logf(0, "unknown command")
 	}
 }
 

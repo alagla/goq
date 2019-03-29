@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"github.com/Workiva/go-datastructures/queue"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/cfg"
 	"time"
 )
 
 // Public supervisor API
+// It is thread safe
+
+// Create new instance of the supervisor
 
 func NewSupervisor(lockTimeout time.Duration) *Supervisor {
 	ret := &Supervisor{
@@ -21,12 +25,16 @@ func NewSupervisor(lockTimeout time.Duration) *Supervisor {
 	return ret
 }
 
+// options for entity
+
 type EntityOpts struct {
 	Name    string     // unique name
 	InSize  int        // size or concatenated args. 0 means entity accepts input of any size
 	OutSize int        // size of the output. Must be > 0
 	Core    EntityCore // core object which does the work of the entity with Call interface
 }
+
+// create instance of the Entity
 
 func (sv *Supervisor) NewEntity(opt EntityOpts) (*Entity, error) {
 	if opt.OutSize < 1 || opt.InSize < 0 {
@@ -44,11 +52,18 @@ func (sv *Supervisor) NewEntity(opt EntityOpts) (*Entity, error) {
 	return ret, nil
 }
 
+// return current quant count in thread safe manner
+// quant count changing in async way therefore makes sense only
+// when all quants are stopped
+// Used mainly for tests
+
 func (sv *Supervisor) GetQuantCount() int64 {
 	sv.quantCountMutex.RLock()
 	defer sv.quantCountMutex.RUnlock()
 	return sv.quantCount
 }
+
+// creates new environment is doesn't exist another with the same name
 
 func (sv *Supervisor) CreateEnvironment(name string) error {
 	if !sv.accessLock.acquire(sv.timeout) {
@@ -58,7 +73,11 @@ func (sv *Supervisor) CreateEnvironment(name string) error {
 	return sv.createEnvironment(name)
 }
 
-// executes 'join' and 'affect' of the entity
+// executes several 'joins' and 'affects' of the entity to environments
+// environments are created if necessary
+// for 'joins' and 'affects' params inout is map[string]int with respective environments names as keys.
+// int values of the map entry are interpreted as 'limit' for joins and 'delay' for affects
+
 func (sv *Supervisor) Attach(entity *Entity, joins, affects map[string]int) error {
 	if !sv.accessLock.acquire(sv.timeout) {
 		return fmt.Errorf("acquire lock timeout: can't attach entity to environment")
@@ -80,13 +99,20 @@ func (sv *Supervisor) Attach(entity *Entity, joins, affects map[string]int) erro
 	return nil
 }
 
+// shorter version for one 'join' only
 func (sv *Supervisor) Join(envName string, entity *Entity, limit int) error {
 	return sv.Attach(entity, map[string]int{envName: limit}, nil)
 }
 
+// shorter version for one 'affect' only
 func (sv *Supervisor) Affect(envName string, entity *Entity, delay int) error {
 	return sv.Attach(entity, nil, map[string]int{envName: delay})
 }
+
+// deletes environment from the supervisor.
+//    - stops environment loop goroutine,
+//    - "unjoins" and "unaffects" related entities (which may result in complete stop of the environment)
+//    - marks environment as invalid
 
 func (sv *Supervisor) DeleteEnvironment(envName string) error {
 	if !sv.accessLock.acquire(sv.timeout) {
@@ -100,9 +126,11 @@ func (sv *Supervisor) DeleteEnvironment(envName string) error {
 	}
 	env.invalidate()
 	delete(sv.environments, envName)
-	logf(5, "deleted environment '%v'", envName)
+	Logf(5, "deleted environment '%v'", envName)
 	return nil
 }
+
+// Posts effect to the main queue
 
 func (sv *Supervisor) PostEffect(envName string, effect Trits, delay int) error {
 	return sv.postEffect(envName, nil, effect, delay, true)
@@ -131,6 +159,8 @@ type EnvironmentInfo struct {
 	JoinedEntities []string
 	AffectedBy     []string
 }
+
+// returns info about current configuration of the supervisor
 
 func (sv *Supervisor) EnvironmentInfo() map[string]*EnvironmentInfo {
 	if !sv.accessLock.acquire(sv.timeout) {

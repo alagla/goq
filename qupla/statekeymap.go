@@ -35,8 +35,6 @@ func (hm *StateHashMap) getValue(key []uint8, nullSize int) Trits {
 
 	hash := hashCallTrace(key)
 	value, ok := hm.theMap[hash]
-	//logf(0, "+++++++++++++ getValue key = %v nullSize = %v -> %v",
-	//	key, nullSize, utils.ReprTrits(value))
 	if !ok {
 		return PadTrits(Trits{0}, nullSize)
 	}
@@ -49,5 +47,4 @@ func (hm *StateHashMap) storeValue(key []uint8, value Trits) {
 
 	hash := hashCallTrace(key)
 	hm.theMap[hash] = value
-	//logf(0, "+++++++++++++ storeValue key = %v value = %v",	key, utils.ReprTrits(value))
 }

@@ -3,6 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/utils"
 )
 
@@ -135,10 +136,10 @@ func (def *Function) Eval(frame *EvalFrame, result Trits) bool {
 	if def.traceLevel > 0 {
 		if !null {
 			bi, _ := utils.TritsToBigInt(result)
-			logf(def.traceLevel, "trace '%v': returned %v, '%v'",
+			Logf(def.traceLevel, "trace '%v': returned %v, '%v'",
 				def.Name, bi, utils.TritsToString(result))
 		} else {
-			logf(2+def.traceLevel, "trace '%v': returned null")
+			Logf(2+def.traceLevel, "trace '%v': returned null")
 		}
 	}
 	return null
