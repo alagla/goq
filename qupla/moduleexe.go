@@ -3,6 +3,7 @@ package qupla
 import (
 	"fmt"
 	"github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/supervisor"
 	"github.com/lunfardo314/goq/utils"
 	"time"
@@ -10,7 +11,7 @@ import (
 
 func (module *QuplaModule) AttachExecs(disp *supervisor.Supervisor, fromIdx int, toIdx int, chain bool) []*ExecStmt {
 	if len(module.execs) == 0 {
-		logf(0, "No executables to execute")
+		Logf(0, "No executables to execute")
 		return nil
 	}
 	if fromIdx < 0 || fromIdx >= len(module.execs) {
@@ -20,7 +21,7 @@ func (module *QuplaModule) AttachExecs(disp *supervisor.Supervisor, fromIdx int,
 		toIdx = len(module.execs) - 1
 	}
 	if fromIdx < 0 || fromIdx > toIdx {
-		logf(0, "Wrong range of indices: from %v to %v", fromIdx, toIdx)
+		Logf(0, "Wrong range of indices: from %v to %v", fromIdx, toIdx)
 		return nil
 	}
 	ret := make([]*ExecStmt, 0)
@@ -31,7 +32,7 @@ func (module *QuplaModule) AttachExecs(disp *supervisor.Supervisor, fromIdx int,
 	for idx := fromIdx; idx <= toIdx; idx++ {
 		exec = module.execs[idx]
 		if err = exec.attach(disp, prev); err != nil {
-			logf(0, "can't attach executable '%v'", exec.GetName())
+			Logf(0, "can't attach executable '%v'", exec.GetName())
 		} else {
 			ret = append(ret, exec)
 			if chain {
@@ -61,7 +62,7 @@ func (module *QuplaModule) runAttachedExecs(disp *supervisor.Supervisor, execs [
 	}
 	for _, exec := range execs {
 		if err := disp.PostEffect(exec.evalEnvironmentName(), effect, 0); err != nil {
-			logf(0, "%v", err)
+			Logf(0, "%v", err)
 		}
 	}
 	return nil
@@ -75,7 +76,7 @@ func (module *QuplaModule) RunExec(disp *supervisor.Supervisor, idx int, repeat 
 	if len(attachedExecs) != 1 {
 		return fmt.Errorf("inconsistency")
 	}
-	logf(0, "Running %v times: '%v'", repeat, attachedExecs[0].GetName())
+	Logf(0, "Running %v times: '%v'", repeat, attachedExecs[0].GetName())
 
 	start := time.Now()
 	for i := 0; i < repeat; i++ {
@@ -87,7 +88,7 @@ func (module *QuplaModule) RunExec(disp *supervisor.Supervisor, idx int, repeat 
 	onFinish := func() {
 		_ = module.detachExecs(disp, attachedExecs)
 		duration = time.Since(start)
-		logf(0, "Stop")
+		Logf(0, "Stop")
 	}
 
 	for !disp.DoIfIdle(5*time.Second, onFinish) {
@@ -100,14 +101,14 @@ func (module *QuplaModule) RunExec(disp *supervisor.Supervisor, idx int, repeat 
 func (module *QuplaModule) RunExecs(disp *supervisor.Supervisor, fromIdx int, toIdx int, chain bool) error {
 	attachedExecs := module.AttachExecs(disp, fromIdx, toIdx, chain)
 
-	logf(0, "Running executable statements with indices between %v and %v", fromIdx, toIdx)
-	logf(0, "   total in the module: %v", len(module.execs))
-	logf(0, "   running: %v", len(attachedExecs))
+	Logf(0, "Running executable statements with indices between %v and %v", fromIdx, toIdx)
+	Logf(0, "   total in the module: %v", len(module.execs))
+	Logf(0, "   running: %v", len(attachedExecs))
 	cmode := "OFF"
 	if chain {
 		cmode = "ON"
 	}
-	logf(0, "Chain mode is %v", cmode)
+	Logf(0, "Chain mode is %v", cmode)
 	start := time.Now()
 	if err := module.runAttachedExecs(disp, attachedExecs, chain); err != nil {
 		return err
@@ -117,7 +118,7 @@ func (module *QuplaModule) RunExecs(disp *supervisor.Supervisor, fromIdx int, to
 	onFinish := func() {
 		_ = module.detachExecs(disp, attachedExecs)
 		duration = time.Since(start)
-		logf(0, "Stop")
+		Logf(0, "Stop")
 	}
 
 	for !disp.DoIfIdle(5*time.Second, onFinish) {
@@ -128,8 +129,8 @@ func (module *QuplaModule) RunExecs(disp *supervisor.Supervisor, fromIdx int, to
 }
 
 func reportRunResults(execs []*ExecStmt, duration time.Duration) {
-	logf(0, "Run summary:")
-	logf(0, "   Executed %v executable statements in %v", len(execs), duration)
+	Logf(0, "Run summary:")
+	Logf(0, "   Executed %v executable statements in %v", len(execs), duration)
 	numTest := 0
 	numEvals := 0
 	numTestsPassed := 0
@@ -138,19 +139,19 @@ func reportRunResults(execs []*ExecStmt, duration time.Duration) {
 		summ = ex.GetRunResults()
 		if summ.isTest {
 			if summ.testPassed {
-				logf(2, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
-				logf(2, "     test PASSED")
+				Logf(2, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
+				Logf(2, "     test PASSED")
 			} else {
-				logf(0, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
-				logf(0, "     test FAILED")
-				logf(0, "     Result %v != expected %v",
+				Logf(0, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
+				Logf(0, "     test FAILED")
+				Logf(0, "     Result %v != expected %v",
 					utils.ReprTrits(summ.lastResult), utils.ReprTrits(ex.expected))
 			}
 			numTest++
 		} else {
-			logf(2, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
+			Logf(2, "evaluated %v %v time{s}. Avg duration: %v msec", ex.GetName(), summ.numRun, summ.avgDuration)
 			bi, _ := utils.TritsToBigInt(summ.lastResult)
-			logf(2, "   result: %v, '%v'", bi, utils.TritsToString(summ.lastResult))
+			Logf(2, "   result: %v, '%v'", bi, utils.TritsToString(summ.lastResult))
 			numEvals++
 		}
 		if summ.testPassed {
@@ -158,11 +159,11 @@ func reportRunResults(execs []*ExecStmt, duration time.Duration) {
 		}
 
 	}
-	logf(0, "Total evals: %v", numEvals)
-	logf(0, "Total test: %v", numTest)
+	Logf(0, "Total evals: %v", numEvals)
+	Logf(0, "Total test: %v", numTest)
 	percPassed := "n/a"
 	if numTest != 0 {
 		percPassed = fmt.Sprintf("%v%%", (numTestsPassed*100)/numTest)
 	}
-	logf(0, "Tests passed: %v (%v)", numTestsPassed, percPassed)
+	Logf(0, "Tests passed: %v (%v)", numTestsPassed, percPassed)
 }

@@ -2,6 +2,7 @@ package qupla
 
 import (
 	"fmt"
+	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/supervisor"
 	. "github.com/lunfardo314/goq/utils"
 	"strings"
@@ -128,10 +129,10 @@ func (module *QuplaModule) IncStat(key string) {
 }
 
 func (module *QuplaModule) PrintStats() {
-	logf(2, "Module statistics:")
-	logf(2, "  module name: '%v'", module.name)
+	Logf(2, "Module statistics:")
+	Logf(2, "  module name: '%v'", module.name)
 	for k, v := range module.stats {
-		logf(2, "  %v : %v", k, v)
+		Logf(2, "  %v : %v", k, v)
 	}
 }
 
@@ -179,12 +180,12 @@ func (module *QuplaModule) AttachToSupervisor(sv *supervisor.Supervisor) bool {
 		}
 		entity, err := NewFunctionEntity(sv, funcdef)
 		if err != nil {
-			logf(0, "can't create entity: %v", err)
+			Logf(0, "can't create entity: %v", err)
 			ret = false
 			continue
 		}
 		if err = sv.Attach(entity, funcdef.GetJoinEnv(), funcdef.GetAffectEnv()); err != nil {
-			logf(0, "error while attaching entity to dispatcher: %v", err)
+			Logf(0, "error while attaching entity to dispatcher: %v", err)
 			ret = false
 		}
 	}

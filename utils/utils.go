@@ -64,6 +64,14 @@ func TritsToBigInt(t Trits) (*big.Int, error) {
 	return ret, nil
 }
 
+func MustTritsToBigInt(t Trits) *big.Int {
+	bi, err := TritsToBigInt(t)
+	if err != nil {
+		panic(err)
+	}
+	return bi
+}
+
 type StringSet map[string]struct{}
 
 func (s StringSet) Contains(el string) bool {

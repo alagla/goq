@@ -33,13 +33,13 @@ func TestPostEffect0(t *testing.T) {
 		}
 	}
 	if durationSec := float64(utils.UnixMsNow()-start) / 1000; durationSec > 0.01 {
-		fmt.Printf("Posting %v posts per second\n", int(postTimes0/durationSec))
+		fmt.Printf("Posting %v effects per second\n", int(postTimes0/durationSec))
 	}
 
 	core := entity.GetCore().(*mockEntityCore)
 	dispatcher.DoOnIdle(func() {
 		if durationSec := float64(utils.UnixMsNow()-start) / 1000; durationSec > 0.01 {
-			fmt.Printf("Processing speed %v waves per second\n", int(postTimes0/durationSec))
+			fmt.Printf("Processing %v waves per second\n", int(postTimes0/durationSec))
 		}
 
 		if core.state != 1 {

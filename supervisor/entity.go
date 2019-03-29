@@ -2,6 +2,7 @@ package supervisor
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/utils"
 )
 
@@ -26,7 +27,7 @@ func (ent *Entity) stopListeningToEnvironment(env *environment) {
 	}
 	ent.joined = newList
 	if ent.checkStop() {
-		logf(5, "stopped entity '%v'", ent.name)
+		Logf(5, "stopped entity '%v'", ent.name)
 	}
 }
 
@@ -58,34 +59,43 @@ func (ent *Entity) checkStart() {
 	}
 }
 
-func (ent *Entity) entityLoop() {
-	//logf(7, "entity '%v' loop STARTED", ent.name)
-	//defer logf(7, "entity '%v'loop STOPPED", ent.name)
+// main loop of the entity
 
+func (ent *Entity) entityLoop() {
 	var null bool
 	for msg := range ent.inChan {
 		if msg.effect == nil {
 			panic("entity loop: nil effect")
 		}
-		dec, _ := utils.TritsToBigInt(msg.effect)
-		logf(3, "effect '%v' (%v) -> entity '%v'", utils.TritsToString(msg.effect), dec, ent.name)
+		// TODO optimize logging in the loop
+		Logf(3, "effect '%v' (%v) -> entity '%v'",
+			utils.TritsToString(msg.effect), utils.MustTritsToBigInt(msg.effect), ent.name)
 
-		// calculate result
+		// calculate result by calling entity core
+		// memory allocation is inevitable this effect will travel along channels
+		// to environments and other entities
 		result := make(Trits, ent.outSize)
 		null = ent.core.Call(msg.effect, result)
 
 		if !null {
 			if msg.lastWithinLimit {
-				// postpone to new quant
+				// if effect message is marked as last in the quant for this entity, it means
+				// join limit is reached for this entity.
+				// The effect is postponed to new quant by resending effect to the main queue of the supervisor
 				for _, affectInfo := range ent.affecting {
 					_ = ent.supervisor.postEffect("", affectInfo.environment, result, affectInfo.delay, false)
 				}
 			} else {
+				// otherwise the effect can be processed with current quant and therefore is
+				// posted to the each environment of affected environments with respective delay
 				for _, affectInfo := range ent.affecting {
+					// if there's no delay, effect is sent directly to the environment's channel
+					// in the current quant
 					if affectInfo.delay == 0 {
 						ent.supervisor.quantWG.Add(1)
 						affectInfo.environment.effectChan <- result
 					} else {
+						// otherwise effect is posted to the main input queue
 						_ = ent.supervisor.postEffect("", affectInfo.environment, result, affectInfo.delay, false)
 					}
 				}

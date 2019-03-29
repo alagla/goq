@@ -3,6 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/utils"
 )
 
@@ -112,7 +113,7 @@ func (vi *VarInfo) Eval(frame *EvalFrame) (Trits, bool) {
 			s += fmt.Sprintf(" (state with call trace '%v)' ",
 				frame.getCallTrace())
 		}
-		logf(frame.context.FuncDef.traceLevel, "trace var %v.%v: %v",
+		Logf(frame.context.FuncDef.traceLevel, "trace var %v.%v: %v",
 			frame.context.FuncDef.Name, vi.Name, s)
 	}
 	return result, null
@@ -122,7 +123,7 @@ func (frame *EvalFrame) SaveStateVariables() {
 	if frame == nil || !frame.context.FuncDef.HasStateVariables {
 		return
 	}
-	logf(7, "SaveStateVariables for '%v'", frame.context.FuncDef.Name)
+	Logf(7, "SaveStateVariables for '%v'", frame.context.FuncDef.Name)
 	var val Trits
 	for _, vi := range frame.context.FuncDef.LocalVars {
 		if !vi.IsState {

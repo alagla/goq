@@ -4,18 +4,12 @@ import (
 	"fmt"
 	"github.com/Workiva/go-datastructures/queue"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/utils"
-	"sync"
 	"time"
 )
 
 // TODO dispose supervisor ???
-
-func (sv *Supervisor) incQuantCount() {
-	sv.quantCountMutex.Lock()
-	defer sv.quantCountMutex.Unlock()
-	sv.quantCount++
-}
 
 func (sv *Supervisor) getEnvironment_(name string) *environment {
 	env, ok := sv.environments[name]
@@ -50,17 +44,17 @@ func (sv *Supervisor) resetCallCounters() {
 	}
 }
 
-func (sv *Supervisor) quantStart(env *environment, effect Trits, onQuantFinish func()) error {
+// perform a quant in sync way
+// effect is sent to the channel of the environment
+// and its waited until all waves settled down
+
+func (sv *Supervisor) doQuant(env *environment, effect Trits) {
+	// reset call counters for joined entites (needed to handle join limits)
 	sv.resetCallCounters()
+
 	sv.quantWG.Add(1)
 	env.effectChan <- effect
-	go func() {
-		env.supervisor.quantWG.Wait()
-		if onQuantFinish != nil {
-			onQuantFinish()
-		}
-	}()
-	return nil
+	sv.quantWG.Wait()
 }
 
 type quantMsg struct {
@@ -70,14 +64,16 @@ type quantMsg struct {
 	doNotStartBefore int64
 }
 
+// posts (internal) the effect to the main queue
+// TODO not much use of the 'external' parameter
+
 func (sv *Supervisor) postEffect(envName string, env *environment, effect Trits, delay int, external bool) error {
-	dec, _ := utils.TritsToBigInt(effect)
 	n := envName
 	if env != nil {
 		n = env.name
 	}
-	logf(5, "posted effect '%v' (%v) to supervisor, environment '%v', delay %v",
-		utils.TritsToString(effect), dec, n, delay)
+	Logf(5, "posted effect '%v' (%v) to supervisor, environment '%v', delay %v. External = %v",
+		utils.TritsToString(effect), utils.MustTritsToBigInt(effect), n, delay, external)
 
 	return sv.queue.Put(&quantMsg{
 		envName:          envName,
@@ -87,10 +83,15 @@ func (sv *Supervisor) postEffect(envName string, env *environment, effect Trits,
 	})
 }
 
+// main supervisor input loop
+// one message read from the queue means one quant
+// supervisor is locked during processing of the quant
+// It starts in locked state and the this loop doing 100 millisecond idle loops
+// while queue is empty
+
 func (sv *Supervisor) supervisorInputLoop() {
 	var tmpItems []interface{}
 	var msg *quantMsg
-	var quantWG sync.WaitGroup
 	var err error
 	var env *environment
 
@@ -98,50 +99,66 @@ func (sv *Supervisor) supervisorInputLoop() {
 		tmpItems, err = sv.queue.Poll(1, 100*time.Millisecond)
 		if err != nil {
 			if err == queue.ErrTimeout {
-				sv.setIdle(true)
+				sv.setIdle(true) // unlock
 				continue
 			} else {
 				panic(err)
 			}
 		}
-		sv.setIdle(false)
+		sv.setIdle(false) // lock
 
 		msg = tmpItems[0].(*quantMsg)
-		//logf(5, "supervisorInputLoop: received %+v", msg)
 
 		if msg.doNotStartBefore > sv.GetQuantCount() {
-			// delayed: put it back to queue
+			// the effect is delayed: put it back to queue
 			_ = sv.queue.Put(tmpItems[0])
 			sv.incQuantCount()
 			continue
 		}
 
+		// if environment is not given by pointer, find it by name
 		if msg.environment == nil {
 			env = sv.getEnvironment_(msg.envName)
 		} else {
 			env = msg.environment
 		}
 		if env == nil || env.invalid {
-			logf(5, "supervisorInputLoop: can't find valid environment '%v'", msg.envName)
+			// environment can be invalid also in case it was deleted
+			// from the supervisor while some pending effects were still in the queue
+			Logf(5, "supervisorInputLoop: can't find valid environment '%v'", msg.envName)
 			continue
 		}
-		quantWG.Add(1)
-		_ = sv.quantStart(env, msg.effect, func() {
-			sv.incQuantCount()
-			quantWG.Done()
-		})
-		quantWG.Wait()
+		// perform a quant
+		sv.doQuant(env, msg.effect)
+		sv.incQuantCount()
 	}
 }
+
+// Increases quant counter.
+// Supervisor level quant counter is needed to handle affect delays and join limits for entities
+
+func (sv *Supervisor) incQuantCount() {
+	sv.quantCountMutex.Lock()
+	defer sv.quantCountMutex.Unlock()
+	sv.quantCount++
+}
+
+// setIdle is called from within supervisor input loop
+// supervisor is idle only if there's no messages in the inpout queue and therefore
+// it is not processing a quant.
+// Within the quant supervisor is locked for any calls from outside which change configuration of
+// environments and entities
 
 func (sv *Supervisor) setIdle(idle bool) {
 	switch {
 	case !sv.idle && idle:
 		// is locked here
+		// toggle to 'idle' state
 		sv.idle = true
 		sv.accessLock.release()
 	case sv.idle && !idle:
 		// is released here
+		// toggle to 'busy' state
 		sv.accessLock.acquire(-1)
 		sv.idle = false
 	}

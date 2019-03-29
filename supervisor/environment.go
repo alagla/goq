@@ -2,6 +2,7 @@ package supervisor
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/utils"
 )
 
@@ -34,15 +35,16 @@ func (env *environment) affect(entity *Entity, delay int) error {
 
 // main loop of the environment
 func (env *environment) environmentLoop() {
-	logf(7, "environment '%v': loop START", env.name)
-	defer logf(7, "environment '%v': loop STOP", env.name)
+	Logf(7, "environment '%v': loop START", env.name)
+	defer Logf(7, "environment '%v': loop STOP", env.name)
 
 	for effect := range env.effectChan {
 		if effect == nil {
 			panic("nil effect")
 		}
-		dec, _ := TritsToBigInt(effect)
-		logf(3, "effect '%v' (%v) -> environment '%v'", TritsToString(effect), dec, env.name)
+		// TODO optimize logging in the loop
+		Logf(3, "effect '%v' (%v) -> environment '%v'",
+			TritsToString(effect), MustTritsToBigInt(effect), env.name)
 		env.supervisor.quantWG.Add(len(env.joins))
 		for _, joinData := range env.joins {
 			joinData.count++
