@@ -88,7 +88,7 @@ func (module *QuplaModule) RunExec(disp *supervisor.Supervisor, idx int, repeat 
 	onFinish := func() {
 		_ = module.detachExecs(disp, attachedExecs)
 		duration = time.Since(start)
-		Logf(0, "Stop")
+		Logf(0, "Stop running")
 	}
 
 	for !disp.DoIfIdle(5*time.Second, onFinish) {
@@ -101,14 +101,14 @@ func (module *QuplaModule) RunExec(disp *supervisor.Supervisor, idx int, repeat 
 func (module *QuplaModule) RunExecs(disp *supervisor.Supervisor, fromIdx int, toIdx int, chain bool) error {
 	attachedExecs := module.AttachExecs(disp, fromIdx, toIdx, chain)
 
-	Logf(0, "Running executable statements with indices between %v and %v", fromIdx, toIdx)
-	Logf(0, "   total in the module: %v", len(module.execs))
-	Logf(0, "   running: %v", len(attachedExecs))
+	Logf(1, "Running executable statements with indices between %v and %v", fromIdx, toIdx)
+	Logf(1, "   total in the module: %v", len(module.execs))
+	Logf(1, "   running: %v", len(attachedExecs))
 	cmode := "OFF"
 	if chain {
 		cmode = "ON"
 	}
-	Logf(0, "Chain mode is %v", cmode)
+	Logf(1, "Chain mode is %v", cmode)
 	start := time.Now()
 	if err := module.runAttachedExecs(disp, attachedExecs, chain); err != nil {
 		return err
@@ -118,7 +118,7 @@ func (module *QuplaModule) RunExecs(disp *supervisor.Supervisor, fromIdx int, to
 	onFinish := func() {
 		_ = module.detachExecs(disp, attachedExecs)
 		duration = time.Since(start)
-		Logf(0, "Stop")
+		Logf(1, "Stop")
 	}
 
 	for !disp.DoIfIdle(5*time.Second, onFinish) {

@@ -11,7 +11,7 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 	ret := NewQuplaModule(name)
 
 	retSucc := true
-	logf(0, "Analyzing LUTs..")
+	logf(1, "Analyzing LUTs..")
 	numLuts := 0
 	for name, lutDefYAML := range moduleYAML.Luts {
 		numLuts++
@@ -25,7 +25,7 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 
 	retSucc = true
 
-	logf(0, "Analyzing functions..")
+	logf(1, "Analyzing functions..")
 	for funName, funDefYAML := range moduleYAML.Functions {
 		if err := AnalyzeFunctionPreliminary(funName, funDefYAML, ret); err != nil {
 			ret.IncStat("numErr")
@@ -70,7 +70,7 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 		logf(1, "Environments: none")
 	}
 
-	logf(0, "Analyzing execs (tests and evals)..")
+	logf(1, "Analyzing execs (tests and evals)..")
 	numExec := 0
 	for _, execYAML := range moduleYAML.Execs {
 		err := AnalyzeExecStmt(execYAML, ret)
