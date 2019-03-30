@@ -8,8 +8,7 @@ import (
 	"time"
 )
 
-// Public supervisor API
-// It is thread safe
+// Public thread safe supervisor API
 
 // Create new instance of the supervisor
 
@@ -25,29 +24,20 @@ func NewSupervisor(lockTimeout time.Duration) *Supervisor {
 	return ret
 }
 
-// options for entity
+// create new Entity
 
-type EntityOpts struct {
-	Name    string     // unique name
-	InSize  int        // size or concatenated args. 0 means entity accepts input of any size
-	OutSize int        // size of the output. Must be > 0
-	Core    EntityCore // core object which does the work of the entity with Call interface
-}
-
-// create instance of the Entity
-
-func (sv *Supervisor) NewEntity(opt EntityOpts) (*Entity, error) {
-	if opt.OutSize < 1 || opt.InSize < 0 {
+func (sv *Supervisor) NewEntity(name string, inSize, outSize int, core EntityCore) (*Entity, error) {
+	if outSize < 1 || inSize < 0 {
 		return nil, fmt.Errorf("must be: output size > 0, input size >= 0")
 	}
 	ret := &Entity{
 		supervisor: sv,
-		name:       opt.Name,
-		inSize:     opt.InSize,
-		outSize:    opt.OutSize,
+		name:       name,
+		inSize:     inSize,
+		outSize:    outSize,
 		affecting:  make([]*affectEntData, 0),
 		joined:     make([]*environment, 0),
-		core:       opt.Core,
+		core:       core,
 	}
 	return ret, nil
 }
@@ -136,8 +126,8 @@ func (sv *Supervisor) PostEffect(envName string, effect Trits, delay int) error 
 	return sv.postEffect(envName, nil, effect, delay, true)
 }
 
-// calls doFunct if supervisor becomes idle within 'timeout'
-// doFunc will be called upon release of the semaphore in the same goroutine.
+// calls doFunct if supervisor becomes idle (= releases lock) within 'timeout'
+// doFunc will be called upon release of the semaphore outside the locked section.
 // The doFunc itself must take care about locking the supervisor if needed
 
 func (sv *Supervisor) DoIfIdle(timeout time.Duration, doFunc func()) bool {
@@ -149,7 +139,7 @@ func (sv *Supervisor) DoIfIdle(timeout time.Duration, doFunc func()) bool {
 	return true
 }
 
-// waits until becomes idle and calls doFunc
+// loops until supervisor becomes idle and calls doFunc
 func (sv *Supervisor) DoOnIdle(doFunc func()) {
 	for !sv.DoIfIdle(1*time.Second, doFunc) {
 	}

@@ -134,12 +134,7 @@ func (ec *execEvalCore) Call(_ Trits, result Trits) bool {
 func (ex *ExecStmt) newEvalEntity(sv *Supervisor) (*Entity, error) {
 	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.expr.GetSource())
 	core := &execEvalCore{exec: ex}
-	return sv.NewEntity(EntityOpts{
-		Name:    name,
-		InSize:  0,
-		OutSize: ex.expr.Size(),
-		Core:    core,
-	})
+	return sv.NewEntity(name, 0, ex.expr.Size(), core)
 }
 
 type runSummary struct {

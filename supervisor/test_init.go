@@ -27,12 +27,7 @@ func newMockEntityCore(name string, maxWaves int64) *mockEntityCore {
 func newMockEntity(id int, maxCount int64) (*Entity, error) {
 	name := fmt.Sprintf("mock_%v", id)
 	core := newMockEntityCore(name, maxCount)
-	ret, err := dispatcher.NewEntity(EntityOpts{
-		Name:    name,
-		InSize:  81,
-		OutSize: 81,
-		Core:    core,
-	})
+	ret, err := dispatcher.NewEntity(name, 81, 81, core)
 	if err != nil {
 		return nil, err
 	}

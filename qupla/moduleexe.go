@@ -88,7 +88,7 @@ func (module *QuplaModule) RunExec(disp *supervisor.Supervisor, idx int, repeat 
 	onFinish := func() {
 		_ = module.detachExecs(disp, attachedExecs)
 		duration = time.Since(start)
-		Logf(0, "Stop")
+		Logf(0, "Stop running")
 	}
 
 	for !disp.DoIfIdle(5*time.Second, onFinish) {

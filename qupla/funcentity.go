@@ -15,12 +15,12 @@ type FunctionCalculator struct {
 }
 
 func NewFunctionEntity(sv *Supervisor, function *Function) (*Entity, error) {
-	return sv.NewEntity(EntityOpts{
-		Name:    function.Name,
-		InSize:  function.ArgSize(),
-		OutSize: function.Size(),
-		Core:    &functionEntityCore{functionCalc: NewFunctionCalculator(function)},
-	})
+	return sv.NewEntity(
+		function.Name,
+		function.ArgSize(),
+		function.Size(),
+		&functionEntityCore{functionCalc: NewFunctionCalculator(function)},
+	)
 }
 
 func (fc *functionEntityCore) Call(args Trits, result Trits) bool {
