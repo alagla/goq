@@ -81,13 +81,13 @@ Run `go get github.com/lunfardo314/goq/examples/goq-cli`
 
 ### Run supervisor and Qupla tests
 
-Make `GOPATH/src/lunfardo314/goq/tests` directory current.
+Make directory `GOPATH/src/lunfardo314/goq/tests` current.
 
 Run `go test`
 
 ### Run goq-cli
 
-Make `GOPATH/src/lunfardo314/goq/examples/goq-cli` directory current.
+Make directory `GOPATH/src/lunfardo314/goq/examples/goq-cli` current.
 
 Run `go install`
 
