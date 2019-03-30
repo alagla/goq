@@ -93,5 +93,8 @@ Run `go install`
 
 Run `goq-cli`
 
+`>>> load ../modules/QuplaTest.yml`
+`>>> run all`
+
 
 

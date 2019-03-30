@@ -22,7 +22,7 @@ func execBatch(cmdlist []string) {
 }
 
 var startupCmd = []string{
-	"load goq-cli/QuplaTests.yml exitonfail",
+	"load modules/QuplaTests.yml exitonfail",
 	"run all",
 	//"run 0-1",
 	//"run all",
