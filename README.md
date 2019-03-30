@@ -87,7 +87,7 @@ Run `go test`
 
 ### Run goq-cli
 
-Make directory `GOPATH/src/lunfardo314/goq/examples/goq-cli` directory current.
+Make directory `GOPATH/src/lunfardo314/goq/examples/goq-cli` current.
 
 Run `go install`
 
