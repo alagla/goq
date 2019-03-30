@@ -1,12 +1,20 @@
-package supervisor
+package tests
 
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/cfg"
+	. "github.com/lunfardo314/goq/supervisor"
+	"testing"
 	"time"
 )
 
-var dispatcher = NewSupervisor(1 * time.Second)
+var sv *Supervisor
+
+func init() {
+	cfg.Config.Verbosity = 0
+	sv = NewSupervisor(1 * time.Second)
+}
 
 type mockEntityCore struct {
 	name      string
@@ -27,7 +35,7 @@ func newMockEntityCore(name string, maxWaves int64) *mockEntityCore {
 func newMockEntity(id int, maxCount int64) (*Entity, error) {
 	name := fmt.Sprintf("mock_%v", id)
 	core := newMockEntityCore(name, maxCount)
-	ret, err := dispatcher.NewEntity(name, 81, 81, core)
+	ret, err := sv.NewEntity(name, 81, 81, core)
 	if err != nil {
 		return nil, err
 	}
@@ -45,4 +53,11 @@ func (core *mockEntityCore) Call(args Trits, res Trits) bool {
 
 func envName(id int) string {
 	return fmt.Sprintf("mock_environment_#%v", id)
+}
+
+func test0environments(t *testing.T) {
+	if len(sv.EnvironmentInfo()) != 0 {
+		t.Errorf("expected 0 environments, found %v", len(sv.EnvironmentInfo()))
+	}
+
 }

@@ -120,6 +120,22 @@ func (sv *Supervisor) DeleteEnvironment(envName string) error {
 	return nil
 }
 
+// delete all environments. Useful when reloading module
+
+func (sv *Supervisor) ClearEnvironments() error {
+	if !sv.accessLock.acquire(sv.timeout) {
+		return fmt.Errorf("request lock timeout: can't delete environment")
+	}
+	defer sv.accessLock.release()
+
+	for _, env := range sv.environments {
+		env.invalidate()
+	}
+	sv.environments = make(map[string]*environment)
+	Logf(5, "supervisor: all environments were deleted")
+	return nil
+}
+
 // Posts effect to the main queue
 
 func (sv *Supervisor) PostEffect(envName string, effect Trits, delay int) error {

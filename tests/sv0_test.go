@@ -1,8 +1,9 @@
-package supervisor
+package tests
 
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	. "github.com/lunfardo314/goq/supervisor"
 	"github.com/lunfardo314/goq/utils"
 	"testing"
 )
@@ -10,8 +11,10 @@ import (
 const postTimes0 = 100000
 
 func TestPostEffect0(t *testing.T) {
-	fmt.Printf("\nTest 0: posting %v effects to one mock environment\n", postTimes0)
-	if err := dispatcher.CreateEnvironment(envName(0)); err != nil {
+	fmt.Printf("----------------\nSupervisor test 0: posting %v effects to one mock environment\n", postTimes0)
+	test0environments(t)
+
+	if err := sv.CreateEnvironment(envName(0)); err != nil {
 		t.Errorf("%v", err)
 		return
 	}
@@ -20,14 +23,14 @@ func TestPostEffect0(t *testing.T) {
 		t.Errorf("%v", err)
 		return
 	}
-	if err := dispatcher.Attach(entity, map[string]int{envName(0): 1}, nil); err != nil {
+	if err := sv.Attach(entity, map[string]int{envName(0): 1}, nil); err != nil {
 		t.Errorf("%v", err)
 		return
 	}
 
 	start := utils.UnixMsNow()
 	for i := 0; i < postTimes0; i++ {
-		if err := dispatcher.PostEffect(envName(0), Trits{0}, 0); err != nil {
+		if err := sv.PostEffect(envName(0), Trits{0}, 0); err != nil {
 			t.Errorf("%v", err)
 			return
 		}
@@ -37,7 +40,7 @@ func TestPostEffect0(t *testing.T) {
 	}
 
 	core := entity.GetCore().(*mockEntityCore)
-	dispatcher.DoOnIdle(func() {
+	sv.DoOnIdle(func() {
 		if durationSec := float64(utils.UnixMsNow()-start) / 1000; durationSec > 0.01 {
 			fmt.Printf("Processing %v waves per second\n", int(postTimes0/durationSec))
 		}
@@ -45,11 +48,8 @@ func TestPostEffect0(t *testing.T) {
 		if core.state != 1 {
 			t.Errorf("failed with wrong state %v != expected %v", core.state, postTimes0)
 		}
-		if err := dispatcher.DeleteEnvironment(envName(0)); err != nil {
+		if err := sv.DeleteEnvironment(envName(0)); err != nil {
 			t.Errorf("failed while deleting environment: %v", err)
-		}
-		if len(dispatcher.EnvironmentInfo()) != 0 {
-			t.Errorf("expected 0 environments left")
 		}
 	})
 }
@@ -58,7 +58,8 @@ const postTimes1 = 100
 const chainLen1 = 500
 
 func TestPostEffect1(t *testing.T) {
-	fmt.Printf("\nTest 1: posting %v effects to %v environments chained in a line\n", postTimes1, chainLen1)
+	fmt.Printf("-----------------\nSupervisor test 1: posting %v effects to %v environments chained in a line\n", postTimes1, chainLen1)
+	test0environments(t)
 
 	var prev *Entity
 	cores := make([]*mockEntityCore, 0, chainLen1)
@@ -72,12 +73,12 @@ func TestPostEffect1(t *testing.T) {
 			return
 		}
 
-		if err := dispatcher.Attach(entity, map[string]int{envName(i): 1}, nil); err != nil {
+		if err := sv.Attach(entity, map[string]int{envName(i): 1}, nil); err != nil {
 			t.Errorf("%v", err)
 			return
 		}
 		if prev != nil {
-			if err := dispatcher.Attach(prev, nil, map[string]int{envName(i): 0}); err != nil {
+			if err := sv.Attach(prev, nil, map[string]int{envName(i): 0}); err != nil {
 				t.Errorf("%v", err)
 				return
 			}
@@ -87,7 +88,7 @@ func TestPostEffect1(t *testing.T) {
 	}
 	start := utils.UnixMsNow()
 	for i := 0; i < postTimes1; i++ {
-		if err := dispatcher.PostEffect(envName(0), Trits{0}, 0); err != nil {
+		if err := sv.PostEffect(envName(0), Trits{0}, 0); err != nil {
 			t.Errorf("%v", err)
 			return
 		}
@@ -96,7 +97,7 @@ func TestPostEffect1(t *testing.T) {
 		fmt.Printf("Posting %v posts per second\n", int(postTimes1/durationSec))
 	}
 
-	dispatcher.DoOnIdle(func() {
+	sv.DoOnIdle(func() {
 		if durationSec := float64(utils.UnixMsNow()-start) / 1000; durationSec > 0.01 {
 			fmt.Printf("Processing speed %v waves per second\n", int(postTimes1*chainLen1/durationSec))
 		}
@@ -106,12 +107,9 @@ func TestPostEffect1(t *testing.T) {
 			}
 		}
 		for i := 0; i < chainLen1; i++ {
-			if err := dispatcher.DeleteEnvironment(envName(i)); err != nil {
+			if err := sv.DeleteEnvironment(envName(i)); err != nil {
 				t.Errorf("failed while deleting environment '%v': %v", envName(i), err)
 			}
-		}
-		if len(dispatcher.EnvironmentInfo()) != 0 {
-			t.Errorf("expected 0 environments left")
 		}
 	})
 }
@@ -124,8 +122,9 @@ const chainLen2 = 500
 const maxCount = chainLen2 + 100000 // must be maxCount >= chainLen2 for test to be correct
 
 func TestPostEffect2(t *testing.T) {
-	fmt.Printf("\nTest 2: posting 1 effect to environment '%v'.\n%v environments connected in cycle. Max count: %v '\n",
+	fmt.Printf("-----------------\nSupervisor test 2: posting 1 effect to environment '%v'.\n%v environments connected in cycle. Max count: %v '\n",
 		envName(0), chainLen2, maxCount)
+	test0environments(t)
 
 	var prev *Entity
 	cores := make([]*mockEntityCore, 0, chainLen2)
@@ -142,12 +141,12 @@ func TestPostEffect2(t *testing.T) {
 			return
 		}
 
-		if err := dispatcher.Attach(entity, map[string]int{envName(i): maxCount}, nil); err != nil {
+		if err := sv.Attach(entity, map[string]int{envName(i): maxCount}, nil); err != nil {
 			t.Errorf("%v", err)
 			return
 		}
 		if prev != nil {
-			if err := dispatcher.Attach(prev, nil, map[string]int{envName(i): 0}); err != nil {
+			if err := sv.Attach(prev, nil, map[string]int{envName(i): 0}); err != nil {
 				t.Errorf("%v", err)
 				return
 			}
@@ -156,17 +155,17 @@ func TestPostEffect2(t *testing.T) {
 		prev = entity
 	}
 	// connecting last will affect first
-	if err := dispatcher.Attach(entity, nil, map[string]int{envName(0): 0}); err != nil {
+	if err := sv.Attach(entity, nil, map[string]int{envName(0): 0}); err != nil {
 		t.Errorf("%v", err)
 		return
 	}
 
 	start := utils.UnixMsNow()
-	if err := dispatcher.PostEffect(envName(0), Trits{0}, 0); err != nil {
+	if err := sv.PostEffect(envName(0), Trits{0}, 0); err != nil {
 		t.Errorf("%v", err)
 		return
 	}
-	dispatcher.DoOnIdle(func() {
+	sv.DoOnIdle(func() {
 		durationSec := float64(utils.UnixMsNow()-start) / 1000
 		fmt.Printf("Processing speed %v waves per second\n", int(maxCount/durationSec))
 
@@ -194,12 +193,12 @@ func TestPostEffect2(t *testing.T) {
 
 		}
 		for i := 0; i < chainLen2; i++ {
-			if err := dispatcher.DeleteEnvironment(envName(i)); err != nil {
+			if err := sv.DeleteEnvironment(envName(i)); err != nil {
 				t.Errorf("failed while deleting environment '%v': %v", envName(i), err)
 			}
 		}
-		if len(dispatcher.EnvironmentInfo()) != 0 {
-			t.Errorf("expected 0 environments left")
+		if len(sv.EnvironmentInfo()) != 0 {
+			t.Errorf("expected 0 environments left %v", len(sv.EnvironmentInfo()))
 		}
 	})
 }
