@@ -79,9 +79,9 @@ Set `PATH` to your `GOPATH/bin`
 
 Run `go get github.com/lunfardo314/goq/examples/goq-cli`
 
-### Run supervisor tests
+### Run supervisor and Qupla tests
 
-Make `GOPATH/src/lunfardo314/goq/supervisor` directory current.
+Make `GOPATH/src/lunfardo314/goq/tests` directory current.
 
 Run `go test`
 
