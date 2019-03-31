@@ -18,7 +18,7 @@ func (e *LutExpr) Size() int {
 
 func (e *LutExpr) Eval(frame *EvalFrame, result Trits) bool {
 	var buf [3]int8 // no more than 3 inputs
-	for i, a := range e.subexpr {
+	for i, a := range e.subExpr {
 		if a.Eval(frame, buf[i:i+1]) {
 			return true
 		}

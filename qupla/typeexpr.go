@@ -30,7 +30,7 @@ func (e *TypeExpr) Size() int {
 }
 
 func (e *TypeExpr) Eval(frame *EvalFrame, result Trits) bool {
-	for idx, subExpr := range e.subexpr {
+	for idx, subExpr := range e.subExpr {
 		if subExpr.Eval(frame, result[e.Fields[idx].Offset:e.Fields[idx].Offset+e.Fields[idx].Size]) {
 			return true
 		}

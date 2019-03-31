@@ -59,6 +59,7 @@ func (frame *EvalFrame) getCallTrace() []uint8 {
 }
 
 func (vi *VarInfo) Eval(frame *EvalFrame) (Trits, bool) {
+	// TODO optimize pass-through params/slice expressions
 	result := frame.buffer[vi.Offset:vi.SliceEnd]
 	null := false
 	cached := false
@@ -70,8 +71,8 @@ func (vi *VarInfo) Eval(frame *EvalFrame) (Trits, bool) {
 
 	case notEvaluated:
 		if vi.IsParam {
-			// evaluated in the context of previous call
-			if frame.context.subexpr[vi.Idx].Eval(frame.prev, result) {
+			// evaluate in the context of the previous call
+			if frame.context.subExpr[vi.Idx].Eval(frame.prev, result) {
 				result[0] = evaluatedToNull
 				null = true
 			}
