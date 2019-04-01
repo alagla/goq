@@ -12,13 +12,13 @@ func (e *ConcatExpr) Size() int {
 	if e == nil {
 		return 0
 	}
-	return e.subexpr[0].Size() + e.subexpr[1].Size()
+	return e.subExpr[0].Size() + e.subExpr[1].Size()
 }
 
 func (e *ConcatExpr) Eval(frame *EvalFrame, result Trits) bool {
-	null := e.subexpr[0].Eval(frame, result)
+	null := e.subExpr[0].Eval(frame, result)
 	if null {
 		return true
 	}
-	return e.subexpr[1].Eval(frame, result[e.subexpr[0].Size():])
+	return e.subExpr[1].Eval(frame, result[e.subExpr[0].Size():])
 }

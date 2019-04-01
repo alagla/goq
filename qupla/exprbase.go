@@ -2,13 +2,13 @@ package qupla
 
 type ExpressionBase struct {
 	source  string
-	subexpr []ExpressionInterface
+	subExpr []ExpressionInterface
 }
 
 func NewExpressionBase(source string) ExpressionBase {
 	return ExpressionBase{
 		source:  source,
-		subexpr: make([]ExpressionInterface, 0, 5),
+		subExpr: make([]ExpressionInterface, 0, 5),
 	}
 }
 
@@ -17,23 +17,23 @@ func (e *ExpressionBase) GetSource() string {
 }
 
 func (e *ExpressionBase) GetSubExpr(idx int) ExpressionInterface {
-	return e.subexpr[idx]
+	return e.subExpr[idx]
 }
 
 func (e *ExpressionBase) NumSubExpr() int {
-	return len(e.subexpr)
+	return len(e.subExpr)
 }
 
 func (e *ExpressionBase) AppendSubExpr(se ExpressionInterface) {
-	e.subexpr = append(e.subexpr, se)
+	e.subExpr = append(e.subExpr, se)
 }
 
 func (e *ExpressionBase) HasSubExpr() bool {
-	return len(e.subexpr) > 0
+	return len(e.subExpr) > 0
 }
 
 func (e *ExpressionBase) ReferencesSubExprs(funName string) bool {
-	for _, se := range e.subexpr {
+	for _, se := range e.subExpr {
 		if se.References(funName) {
 			return true
 		}
@@ -46,7 +46,7 @@ func (e *ExpressionBase) References(funName string) bool {
 }
 
 func (e *ExpressionBase) hasStateSubexpr() bool {
-	for _, se := range e.subexpr {
+	for _, se := range e.subExpr {
 		if se.HasState() {
 			return true
 		}

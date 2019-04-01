@@ -7,7 +7,7 @@ import (
 	"github.com/lunfardo314/goq/utils"
 )
 
-type VarInfo struct {
+type QuplaSite struct {
 	Name     string
 	Analyzed bool
 	Idx      int
@@ -58,63 +58,74 @@ func (frame *EvalFrame) getCallTrace() []uint8 {
 	return ret
 }
 
-func (vi *VarInfo) Eval(frame *EvalFrame) (Trits, bool) {
+func (vi *QuplaSite) Eval(frame *EvalFrame) (Trits, bool) {
 	result := frame.buffer[vi.Offset:vi.SliceEnd]
-	null := false
-	cached := false
-
-	switch result[0] {
-	case evaluatedToNull:
-		null = true
-		cached = true
-
-	case notEvaluated:
-		if vi.IsParam {
-			// evaluated in the context of previous call
-			if frame.context.subexpr[vi.Idx].Eval(frame.prev, result) {
-				result[0] = evaluatedToNull
-				null = true
-			}
-		} else {
-			if vi.IsState {
-				// for state variables (latches) we return value, retrieved from the key/value storage
-				// at the module level.
-				// the key is frame.getCallTrace(). It return all 0 f not present
-				// but calculated value stays in the buffer
-				result = frame.context.FuncDef.StateHashMap.getValue(frame.getCallTrace(), len(result))
-			} else {
-				if vi.Assign.Eval(frame, result) {
-					result[0] = evaluatedToNull
-					null = true
-				}
-			}
+	if result[0] == evaluatedToNull {
+		if frame.context.FuncDef.traceLevel > 1 {
+			vi.trace(frame, nil, true, true)
 		}
-
-	default: // evaluated, not null (must be valid trit, not checking)
-		cached = true
+		return nil, true
 	}
-
+	if result[0] != notEvaluated {
+		if frame.context.FuncDef.traceLevel > 1 {
+			vi.trace(frame, result, true, false)
+		}
+		return result, false
+	}
+	if vi.IsParam {
+		// evaluate in the context of the previous call
+		if frame.context.subExpr[vi.Idx].Eval(frame.prev, result) {
+			result[0] = evaluatedToNull
+			if frame.context.FuncDef.traceLevel > 1 {
+				vi.trace(frame, nil, false, true)
+			}
+			return nil, true
+		}
+		return result, false
+	}
+	if vi.IsState {
+		// for state variables (latches) we return value, retrieved from the key/value storage
+		// at the module level.
+		// the key is frame.getCallTrace(). It return all 0 f not present
+		// but calculated value stays in the buffer
+		result = frame.context.FuncDef.StateHashMap.getValue(frame.getCallTrace(), len(result))
+		if frame.context.FuncDef.traceLevel > 1 {
+			vi.trace(frame, result, false, false)
+		}
+		return result, false
+	}
+	if vi.Assign.Eval(frame, result) {
+		result[0] = evaluatedToNull
+		if frame.context.FuncDef.traceLevel > 1 {
+			vi.trace(frame, nil, false, true)
+		}
+		return nil, true
+	}
 	if frame.context.FuncDef.traceLevel > 1 {
-		var s string
-		if cached {
-			s = "cached value "
-		} else {
-			s = "evaluated value "
-		}
-		if null {
-			s += "null"
-		} else {
-			bi, _ := utils.TritsToBigInt(result)
-			s += fmt.Sprintf("%v, '%v'", bi, utils.TritsToString(result))
-		}
-		if vi.IsState {
-			s += fmt.Sprintf(" (state with call trace '%v)' ",
-				frame.getCallTrace())
-		}
-		Logf(frame.context.FuncDef.traceLevel, "trace var %v.%v: %v",
-			frame.context.FuncDef.Name, vi.Name, s)
+		vi.trace(frame, result, false, false)
 	}
-	return result, null
+	return result, false
+}
+
+func (vi *QuplaSite) trace(frame *EvalFrame, result Trits, cached, null bool) {
+	var s string
+	if cached {
+		s = "cached value "
+	} else {
+		s = "evaluated value "
+	}
+	if null {
+		s += "null"
+	} else {
+		bi, _ := utils.TritsToBigInt(result)
+		s += fmt.Sprintf("%v, '%v'", bi, utils.TritsToString(result))
+	}
+	if vi.IsState {
+		s += fmt.Sprintf(" (state with call trace '%v)' ",
+			frame.getCallTrace())
+	}
+	Logf(frame.context.FuncDef.traceLevel, "trace var %v.%v: %v",
+		frame.context.FuncDef.Name, vi.Name, s)
 }
 
 func (frame *EvalFrame) SaveStateVariables() {

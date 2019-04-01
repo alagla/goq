@@ -92,7 +92,7 @@ func analyzeEnvironmentStatements(defYAML *QuplaFuncDefYAML, def *Function, modu
 	return nil
 }
 
-func AnalyzeVar(vi *VarInfo, defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
+func AnalyzeVar(vi *QuplaSite, defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
 	if vi.Analyzed {
 		return nil
 		//panic(fmt.Errorf("attempt to analyze variable '%v' twice in '%v'", vi.Name, def.Name))
@@ -128,7 +128,7 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 		if def.GetVarIdx(arg.ArgName) >= 0 {
 			return fmt.Errorf("duplicate arg Name '%v'", arg.ArgName)
 		}
-		def.LocalVars = append(def.LocalVars, &VarInfo{
+		def.LocalVars = append(def.LocalVars, &QuplaSite{
 			Idx:      idx,
 			Name:     arg.ArgName,
 			Size:     arg.Size,
@@ -150,7 +150,7 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 			return fmt.Errorf("wrong declared state variable: '%v' in '%v'", name, def.Name)
 		} else {
 			// for old value
-			def.LocalVars = append(def.LocalVars, &VarInfo{
+			def.LocalVars = append(def.LocalVars, &QuplaSite{
 				Idx:     len(def.LocalVars),
 				Name:    name,
 				Size:    s.Size,
@@ -160,7 +160,7 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 		module.IncStat("numStateVars")
 	}
 	// variables defined by assigns
-	var vi *VarInfo
+	var vi *QuplaSite
 	for name := range src.Assigns {
 		vi, _ = def.VarByName(name)
 		if vi != nil {
@@ -171,7 +171,7 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 				return fmt.Errorf("several assignment to the same var '%v' in '%v' is not allowed", name, def.Name)
 			}
 		} else {
-			def.LocalVars = append(def.LocalVars, &VarInfo{
+			def.LocalVars = append(def.LocalVars, &QuplaSite{
 				Idx:     len(def.LocalVars),
 				Name:    name,
 				Size:    0, // unknown yet
