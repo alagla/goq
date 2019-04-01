@@ -14,7 +14,7 @@ type Function struct {
 	Name              string
 	retSize           int
 	RetExpr           ExpressionInterface
-	LocalVars         []*VarInfo
+	LocalVars         []*QuplaSite
 	NumParams         int  // idx < NumParams represents parameter, idx >= represents local var (assign)
 	BufLen            int  // total length of the local var buffer
 	HasStateVariables bool // if has state vars itself
@@ -30,7 +30,7 @@ func NewFunction(name string, size int) *Function {
 	return &Function{
 		Name:       name,
 		retSize:    size,
-		LocalVars:  make([]*VarInfo, 0, 10),
+		LocalVars:  make([]*QuplaSite, 0, 10),
 		Joins:      make(map[string]int),
 		Affects:    make(map[string]int),
 		ParamSizes: make([]int, 0, 5),
@@ -95,14 +95,14 @@ func (def *Function) GetVarIdx(name string) int {
 	return -1
 }
 
-func (def *Function) VarByIdx(idx int) (*VarInfo, error) {
+func (def *Function) VarByIdx(idx int) (*QuplaSite, error) {
 	if idx < 0 || idx >= len(def.LocalVars) {
 		return nil, fmt.Errorf("worng var idx %v", idx)
 	}
 	return def.LocalVars[idx], nil
 }
 
-func (def *Function) VarByName(name string) (*VarInfo, error) {
+func (def *Function) VarByName(name string) (*QuplaSite, error) {
 	idx := def.GetVarIdx(name)
 	if idx < 0 {
 		return nil, fmt.Errorf("can't finc variabe with name '%v'", name)

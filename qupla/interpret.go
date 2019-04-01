@@ -7,7 +7,7 @@ import (
 	"github.com/lunfardo314/goq/utils"
 )
 
-type VarInfo struct {
+type QuplaSite struct {
 	Name     string
 	Analyzed bool
 	Idx      int
@@ -58,7 +58,7 @@ func (frame *EvalFrame) getCallTrace() []uint8 {
 	return ret
 }
 
-func (vi *VarInfo) Eval(frame *EvalFrame) (Trits, bool) {
+func (vi *QuplaSite) Eval(frame *EvalFrame) (Trits, bool) {
 	// TODO optimize pass-through params/slice expressions
 	result := frame.buffer[vi.Offset:vi.SliceEnd]
 	null := false

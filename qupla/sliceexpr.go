@@ -8,14 +8,14 @@ type SliceExpr struct {
 	ExpressionBase
 	//LocalVarIdx int
 	//VarScope    *Function
-	vi       *VarInfo
+	vi       *QuplaSite
 	offset   int
 	size     int
 	sliceEnd int
 	noSlice  bool
 }
 
-func NewQuplaSliceExpr(vi *VarInfo, src string, offset, size int) *SliceExpr {
+func NewQuplaSliceExpr(vi *QuplaSite, src string, offset, size int) *SliceExpr {
 	noSlice := offset == 0 && size == vi.Size
 	return &SliceExpr{
 		ExpressionBase: NewExpressionBase(src),
