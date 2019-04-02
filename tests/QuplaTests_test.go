@@ -42,16 +42,24 @@ func Test_CurlChain(t *testing.T) {
 func moduleTest(fname string, chain bool, t *testing.T) {
 
 	cfg.Logf(0, "---------------------------\nTesting QuplaYAML module %v. Chain mode = %v", fname, chain)
-	test0environments(t)
+	if !check0environments(t) {
+		return
+	}
 
 	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(fname)
 	if err != nil {
 		t.Errorf("%v", err)
 		return
 	}
+	if cfg.Config.OptimizeInline {
+		cfg.Logf(0, "Call inline optimisation is ON")
+	} else {
+		cfg.Logf(0, "Call inline optimisation is OFF")
+	}
 
 	module, succ := analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
 	if succ {
+		cfg.Logf(0, "Inlined function calls: %v", module.GetStat("numInlined"))
 		succ = module.AttachToSupervisor(sv)
 	} else {
 		t.Errorf("Failed to load module from '%v'", fname)

@@ -21,6 +21,13 @@ func IsNullExpr(e interface{}) bool {
 	return ok
 }
 
+func (e *NullExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+	return &NullExpr{
+		ExpressionBase: e.inlineCopyBase(funExpr),
+		size:           e.size,
+	}
+}
+
 func (e *NullExpr) Size() int {
 	return e.size
 }

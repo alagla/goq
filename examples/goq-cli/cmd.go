@@ -143,6 +143,22 @@ func CmdLexe(words []string) {
 	logExecs(execs)
 }
 
+func CmdInline(words []string) {
+	if len(words) == 2 {
+		switch words[1] {
+		case "on":
+			Config.OptimizeInline = true
+		default:
+			Config.OptimizeInline = false
+		}
+	}
+	if Config.OptimizeInline {
+		Logf(0, "Inline call optimization is ON")
+	} else {
+		Logf(0, "Inline call optimization is OFF")
+	}
+}
+
 func CmdTrace(words []string) {
 	if moduleYAML == nil {
 		Logf(0, "Error: module was not loaded")
@@ -189,6 +205,25 @@ func CmdLfun(words []string) {
 	}
 	funcs := module.FindFuncs(substr)
 	Logfuncs(funcs)
+}
+
+func CmdPassparam(words []string) {
+	if moduleYAML == nil {
+		Logf(0, "Error: module was not loaded")
+		return
+	}
+	substr := ""
+	if len(words) == 2 {
+		substr = words[1]
+	}
+	funcs := module.FindFuncs(substr)
+	lfun := make([]*qupla.Function, 0)
+	for _, f := range funcs {
+		if f.IsPassingParams() {
+			lfun = append(lfun, f)
+		}
+	}
+	Logfuncs(lfun)
 }
 
 func CmdLenv(words []string) {

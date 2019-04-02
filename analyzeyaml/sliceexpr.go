@@ -13,6 +13,7 @@ func AnalyzeSliceExpr(exprYAML *QuplaSliceExprYAML, module *QuplaModule, scope *
 		return nil, fmt.Errorf("'%v': %v", scope.Name, err)
 	}
 	ret := NewQuplaSliceExpr(vi, exprYAML.Source, exprYAML.Offset, exprYAML.SliceSize)
+	vi.IncNumUses()
 
 	// can't do it because in recursive situations var can be not analysed yet
 	//if ret.offset+ret.size > vi.Size {

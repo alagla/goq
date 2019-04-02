@@ -22,3 +22,9 @@ func (e *ConcatExpr) Eval(frame *EvalFrame, result Trits) bool {
 	}
 	return e.subExpr[1].Eval(frame, result[e.subExpr[0].Size():])
 }
+
+func (e *ConcatExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+	return &ConcatExpr{
+		ExpressionBase: e.inlineCopyBase(funExpr),
+	}
+}

@@ -8,6 +8,7 @@ import (
 )
 
 type Function struct {
+	module            *QuplaModule
 	Analyzed          bool // finished analysis
 	Joins             map[string]int
 	Affects           map[string]int
@@ -19,6 +20,7 @@ type Function struct {
 	BufLen            int  // total length of the local var buffer
 	HasStateVariables bool // if has state vars itself
 	hasState          bool // if directly or indirectly references those with state vars
+	isRecursive       bool // is directly or indirectly recursive
 	InSize            int
 	ParamSizes        []int
 	traceLevel        int
@@ -26,8 +28,9 @@ type Function struct {
 	StateHashMap      *StateHashMap
 }
 
-func NewFunction(name string, size int) *Function {
+func NewFunction(name string, size int, module *QuplaModule) *Function {
 	return &Function{
+		module:     module,
 		Name:       name,
 		retSize:    size,
 		LocalVars:  make([]*QuplaSite, 0, 10),
@@ -35,6 +38,10 @@ func NewFunction(name string, size int) *Function {
 		Affects:    make(map[string]int),
 		ParamSizes: make([]int, 0, 5),
 	}
+}
+
+func (def *Function) IsPassingParams() bool {
+	return def.NumParams == len(def.LocalVars)
 }
 
 func (def *Function) NextCallIndex() uint8 {

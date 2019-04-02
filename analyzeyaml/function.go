@@ -18,7 +18,7 @@ func AnalyzeFunctionPreliminary(name string, defYAML *QuplaFuncDefYAML, module *
 	if sz, err = GetConstValue(ce); err != nil {
 		return err
 	}
-	def := NewFunction(name, sz)
+	def := NewFunction(name, sz, module)
 
 	if err = createVarScope(defYAML, def, module); err != nil {
 		return err
@@ -58,6 +58,9 @@ func AnalyzeFunction(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule
 		return fmt.Errorf("in funcdef '%v': return expression can't be nil", def.Name)
 	}
 	def.Analyzed = true
+	if def.IsPassingParams() {
+		module.IncStat("numPassParams")
+	}
 	return nil
 }
 func analyzeEnvironmentStatements(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {

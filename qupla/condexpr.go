@@ -33,3 +33,9 @@ func (e *CondExpr) Eval(frame *EvalFrame, result Trits) bool {
 	}
 	panic(Sprintf("trit value in cond expr '%v'", e.source))
 }
+
+func (e *CondExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+	return &CondExpr{
+		ExpressionBase: e.inlineCopyBase(funExpr),
+	}
+}

@@ -20,3 +20,10 @@ func (e *QuplaFieldExpr) Size() int {
 func (e *QuplaFieldExpr) Eval(_ *EvalFrame, _ Trits) bool {
 	return true
 }
+
+func (e *QuplaFieldExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+	return &QuplaFieldExpr{
+		ExpressionBase: e.inlineCopyBase(funExpr),
+		CondExpr:       e.CondExpr.InlineCopy(funExpr),
+	}
+}

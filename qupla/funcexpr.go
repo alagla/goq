@@ -6,7 +6,6 @@ import (
 
 type FunctionExpr struct {
 	ExpressionBase
-	source    string
 	FuncDef   *Function
 	callIndex uint8
 }
@@ -42,4 +41,27 @@ func (e *FunctionExpr) Eval(frame *EvalFrame, result Trits) bool {
 
 func (e *FunctionExpr) HasState() bool {
 	return e.FuncDef.hasState || e.hasStateSubexpr()
+}
+
+func (e *FunctionExpr) Inline() ExpressionInterface {
+	if !e.FuncDef.IsPassingParams() || e.FuncDef.isRecursive {
+		return e
+	}
+	//cfg.Logf(0, "+++++++++++++++++++ %v", e.GetSource())
+	//if strings.Contains(e.GetSource(), "lshift<Tryte>(0)"){
+	//	cfg.Logf(0, "kuku")
+	//}
+	e.FuncDef.module.IncStat("numInlined")
+
+	ret := e.FuncDef.RetExpr.InlineCopy(e)
+	return ret
+}
+
+func (e *FunctionExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+	ret := &FunctionExpr{
+		ExpressionBase: e.inlineCopyBase(funExpr),
+		FuncDef:        e.FuncDef,
+		callIndex:      e.callIndex,
+	}
+	return ret.Inline()
 }

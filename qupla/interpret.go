@@ -13,10 +13,11 @@ type QuplaSite struct {
 	Idx      int
 	Offset   int
 	Size     int
-	SliceEnd int
+	SliceEnd int // offset + size precalculated
 	IsState  bool
 	IsParam  bool
 	Assign   ExpressionInterface
+	numUses  int // number of times referenced in the scope (by slice expressions)
 }
 
 type EvalFrame struct {
@@ -30,6 +31,7 @@ type ExpressionInterface interface {
 	Eval(*EvalFrame, Trits) bool
 	References(string) bool
 	HasState() bool
+	InlineCopy(funExpr *FunctionExpr) ExpressionInterface
 }
 
 const (
@@ -47,6 +49,10 @@ func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
 		ret.buffer[vi.Offset] = notEvaluated
 	}
 	return ret
+}
+
+func (vi *QuplaSite) IncNumUses() {
+	vi.numUses++
 }
 
 func (frame *EvalFrame) getCallTrace() []uint8 {
@@ -163,27 +169,3 @@ func RequireSize(e ExpressionInterface, size int) error {
 	}
 	return nil
 }
-
-//type growingBuffer struct {
-//	arr Trits
-//}
-//
-//const segmentSize = 1024
-//
-//func newGrowingBuffer(size int) *growingBuffer {
-//	alloc := (size/segmentSize + 1) * segmentSize
-//	return &growingBuffer{
-//		arr: make(Trits, alloc, alloc),
-//	}
-//}
-//
-//func (b *growingBuffer) growTo(size int) *growingBuffer {
-//	if size <= len(b.arr) {
-//		return b // no need to grow
-//	}
-//	alloc := (size/segmentSize + 1) * segmentSize
-//	newArr := make(Trits, alloc, alloc)
-//	copy(newArr, b.arr)
-//	b.arr = newArr
-//	return b
-//}

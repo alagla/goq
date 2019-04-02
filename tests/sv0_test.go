@@ -12,7 +12,9 @@ const postTimes0 = 100000
 
 func TestPostEffect0(t *testing.T) {
 	fmt.Printf("----------------\nSupervisor test 0: posting %v effects to one mock environment\n", postTimes0)
-	test0environments(t)
+	if !check0environments(t) {
+		return
+	}
 
 	if err := sv.CreateEnvironment(envName(0)); err != nil {
 		t.Errorf("%v", err)
@@ -59,7 +61,9 @@ const chainLen1 = 500
 
 func TestPostEffect1(t *testing.T) {
 	fmt.Printf("-----------------\nSupervisor test 1: posting %v effects to %v environments chained in a line\n", postTimes1, chainLen1)
-	test0environments(t)
+	if !check0environments(t) {
+		return
+	}
 
 	var prev *Entity
 	cores := make([]*mockEntityCore, 0, chainLen1)
@@ -124,7 +128,9 @@ const maxCount = chainLen2 + 100000 // must be maxCount >= chainLen2 for test to
 func TestPostEffect2(t *testing.T) {
 	fmt.Printf("-----------------\nSupervisor test 2: posting 1 effect to environment '%v'.\n%v environments connected in cycle. Max count: %v '\n",
 		envName(0), chainLen2, maxCount)
-	test0environments(t)
+	if !check0environments(t) {
+		return
+	}
 
 	var prev *Entity
 	cores := make([]*mockEntityCore, 0, chainLen2)

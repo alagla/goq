@@ -15,6 +15,12 @@ func (e *MergeExpr) Size() int {
 	return e.subExpr[0].Size()
 }
 
+func (e *MergeExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+	return &MergeExpr{
+		ExpressionBase: e.inlineCopyBase(funExpr),
+	}
+}
+
 func (e *MergeExpr) Eval(frame *EvalFrame, result Trits) bool {
 	if e.subExpr[0].Eval(frame, result) {
 		return e.subExpr[1].Eval(frame, result)
