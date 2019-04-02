@@ -11,7 +11,9 @@ func TestAffectDelay3(t *testing.T) {
 	const delayOnStart = 5
 	const delayAffect = 1000
 	fmt.Printf("--------------\nSupervisor test 3: testing affect with delay on start = %v, delay affect = %v\n", delayOnStart, delayAffect)
-	test0environments(t)
+	if !check0environments(t) {
+		return
+	}
 
 	entity0, err := newMockEntity(0, -1)
 	if err != nil {
@@ -76,7 +78,9 @@ func TestJoinLimit4(t *testing.T) {
 	const maxCount = 22
 	fmt.Printf("----------------\nSupervisor test 4: test join limit. Post 1 effect to %v environments connected in cycle. Max count = %v '. Join limit = %v\n",
 		chainLen, maxCount, joinLimit)
-	test0environments(t)
+	if !check0environments(t) {
+		return
+	}
 
 	var prev *Entity
 	cores := make([]*mockEntityCore, 0, chainLen)

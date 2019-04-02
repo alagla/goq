@@ -83,7 +83,11 @@ Run `go get github.com/lunfardo314/goq/examples/goq-cli`
 
 Make directory `GOPATH/src/lunfardo314/goq/tests` current.
 
-Run `go test`
+Run test:
+
+- without optimization of function calls `go test`
+
+- with expanding inline function calls wherever possible `go test -args - inline`
 
 ### Run goq-cli
 

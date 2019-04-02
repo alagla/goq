@@ -2,6 +2,7 @@ package analyzeyaml
 
 import (
 	"fmt"
+	"github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/goq/readyaml"
 	. "github.com/lunfardo314/goq/utils"
@@ -48,6 +49,9 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 	logf(1, "Functions with state variables: %v", numWithStateVars)
 	logf(1, "Functions with state (which references functions with state variables): %v", numStateful)
 
+	numRecursive := ret.MarkRecursive()
+	logf(1, "Recursive functions (directly or indirectly): %v", numRecursive)
+
 	for funname, fundef := range ret.Functions {
 		if fundef.HasEnvStmt() {
 			joins := StringSet{}
@@ -71,6 +75,7 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 	}
 
 	logf(1, "Analyzing execs (tests and evals)..")
+	logf(1, "Inline call optimisation = %v", cfg.Config.OptimizeInline)
 	numExec := 0
 	for _, execYAML := range moduleYAML.Execs {
 		err := AnalyzeExecStmt(execYAML, ret)

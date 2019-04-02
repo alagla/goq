@@ -42,6 +42,7 @@ func AnalyzeExecStmt(execStmtYAML *QuplaExecStmtYAML, module *QuplaModule) error
 		module.IncStat("numEval")
 	}
 	exec := NewExecStmt(execStmtYAML.Source, funcExpr, isTest, isFloat, expected, module)
+
 	module.AddExec(exec)
 	if exec.HasState() {
 		module.IncStat("numExecsWithState")

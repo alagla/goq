@@ -27,6 +27,10 @@ func NewQuplaSliceExpr(vi *QuplaSite, src string, offset, size int) *SliceExpr {
 	}
 }
 
+func (e *SliceExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+	return NewSliceInline(e, funExpr.subExpr[e.vi.Idx])
+}
+
 func (e *SliceExpr) Size() int {
 	if e == nil {
 		return 0

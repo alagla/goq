@@ -3,23 +3,30 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/supervisor"
 	"time"
 )
 
 type ExecStmt struct {
 	ExpressionBase
-	isTest   bool
-	isFloat  bool // needed for float comparison
-	expected Trits
-
-	expr       *FunctionExpr
+	isTest     bool
+	isFloat    bool // needed for float comparison
+	expected   Trits
+	expr       ExpressionInterface // *FunctionExpr
 	module     *QuplaModule
 	idx        int
 	evalEntity *Entity
 }
 
-func NewExecStmt(src string, expr *FunctionExpr, isTest, isFloat bool, expected Trits, module *QuplaModule) *ExecStmt {
+func NewExecStmt(src string, expr ExpressionInterface, isTest, isFloat bool, expected Trits, module *QuplaModule) *ExecStmt {
+	if cfg.Config.OptimizeInline {
+		inline := expr.InlineCopy(nil)
+		//if inline.Size() != expr.Size(){
+		//	panic(fmt.Errorf("size mismatch in %v: orig %v != inline %v", src, expr.Size(), inline.Size()))
+		//}
+		expr = inline
+	}
 	return &ExecStmt{
 		ExpressionBase: NewExpressionBase(src),
 		isTest:         isTest,
@@ -125,14 +132,19 @@ func (ec *execEvalCore) Call(_ Trits, result Trits) bool {
 	ec.numRun++
 	ec.totalDurationMsec += unixMsNow() - start
 	ec.lastResult = result
-	if ec.exec.isTest && ec.exec.resultIsExpected(result) {
-		ec.numTestPassed++
+	if ec.exec.isTest {
+		if ec.exec.resultIsExpected(result) {
+			ec.numTestPassed++
+		} else {
+			fmt.Println("kuku")
+		}
 	}
 	return null
 }
 
 func (ex *ExecStmt) newEvalEntity(sv *Supervisor) (*Entity, error) {
-	name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.expr.GetSource())
+	//name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.expr.GetSource())
+	name := fmt.Sprintf("#%v-EVAL", ex.idx)
 	core := &execEvalCore{exec: ex}
 	return sv.NewEntity(name, 0, ex.expr.Size(), core)
 }

@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"flag"
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/cfg"
@@ -14,6 +15,9 @@ var sv *Supervisor
 func init() {
 	cfg.Config.Verbosity = 0
 	sv = NewSupervisor(1 * time.Second)
+	pinline := flag.Bool("inline", false, "use inline call optimisation")
+	flag.Parse()
+	cfg.Config.OptimizeInline = *pinline
 }
 
 type mockEntityCore struct {
@@ -55,9 +59,10 @@ func envName(id int) string {
 	return fmt.Sprintf("mock_environment_#%v", id)
 }
 
-func test0environments(t *testing.T) {
+func check0environments(t *testing.T) bool {
 	if len(sv.EnvironmentInfo()) != 0 {
 		t.Errorf("expected 0 environments, found %v", len(sv.EnvironmentInfo()))
+		return false
 	}
-
+	return true
 }

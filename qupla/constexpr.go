@@ -18,8 +18,17 @@ type ConstValue struct {
 	size  int
 }
 
+func (e *ConstValue) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+	return &ConstValue{
+		ExpressionBase: e.inlineCopyBase(funExpr),
+		value:          e.value,
+		name:           e.name,
+		size:           e.size,
+	}
+}
+
 func (e *ConstValue) Size() int {
-	return 0 //todo ??
+	return 0
 }
 
 func (_ *ConstValue) Eval(_ *EvalFrame, _ Trits) bool {

@@ -128,6 +128,14 @@ func (module *QuplaModule) IncStat(key string) {
 	module.stats[key]++
 }
 
+func (module *QuplaModule) GetStat(key string) int {
+	ret, ok := module.stats[key]
+	if !ok {
+		return 0
+	}
+	return ret
+}
+
 func (module *QuplaModule) PrintStats() {
 	Logf(2, "Module statistics:")
 	Logf(2, "  module name: '%v'", module.name)
@@ -154,6 +162,16 @@ func (module *QuplaModule) MarkStateful() (int, int) {
 	return hasStateVars, len(stateful)
 }
 
+func (module *QuplaModule) MarkRecursive() int {
+	var ret int
+	for _, fd := range module.Functions {
+		fd.isRecursive = module.checkIsRecursive(fd)
+		ret++
+		module.IncStat("numRecursive")
+	}
+	return ret
+}
+
 func (module *QuplaModule) collectReferencingFuncs(nameSet StringSet) int {
 	tmpList := make([]string, 0)
 	for name := range nameSet {
@@ -170,6 +188,37 @@ func (module *QuplaModule) collectReferencingFuncs(nameSet StringSet) int {
 		}
 	}
 	return ret
+}
+
+func (module *QuplaModule) checkIsRecursive(funDef *Function) bool {
+	refSet := make(StringSet)
+
+	chg := false
+	for name, fd := range module.Functions {
+		if fd.References(funDef.Name) {
+			if name == funDef.Name {
+				return true
+			}
+			refSet.Append(name)
+			chg = true
+		}
+	}
+	for chg {
+		chg = false
+		tmpRefSet := make(StringSet)
+		for _, fd := range module.Functions {
+			for name := range refSet {
+				if fd.References(name) {
+					if name == funDef.Name {
+						return true
+					}
+					tmpRefSet.Append(fd.Name)
+				}
+			}
+		}
+		chg = refSet.AppendAll(tmpRefSet) > 0
+	}
+	return false
 }
 
 func (module *QuplaModule) AttachToSupervisor(sv *supervisor.Supervisor) bool {
