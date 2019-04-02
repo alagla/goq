@@ -10,7 +10,7 @@ import (
 
 // Public thread safe supervisor API
 
-// Create new instance of the supervisor
+// Creates new instance of the supervisor
 
 func NewSupervisor(lockTimeout time.Duration) *Supervisor {
 	ret := &Supervisor{
@@ -25,6 +25,11 @@ func NewSupervisor(lockTimeout time.Duration) *Supervisor {
 }
 
 // create new Entity
+// Params:
+//    - name, used only for tracing
+//    - inSize, expected size of input trit vector. O means any not nil
+//    - outSize, size of output trit vector
+//    - core, and object which implement EntityCore interface. It calculates output trits from inputs
 
 func (sv *Supervisor) NewEntity(name string, inSize, outSize int, core EntityCore) (*Entity, error) {
 	if outSize < 1 || inSize < 0 {
@@ -42,10 +47,10 @@ func (sv *Supervisor) NewEntity(name string, inSize, outSize int, core EntityCor
 	return ret, nil
 }
 
-// return current quant count in thread safe manner
-// quant count changing in async way therefore makes sense only
-// when all quants are stopped
-// Used mainly for tests
+// returns current quant count.
+// Quant count is changing in async way therefore makes sense only
+// when supervisor is in idle state, i e input queue is empty
+// Used when delay is posted with effect and for testing
 
 func (sv *Supervisor) GetQuantCount() int64 {
 	sv.quantCountMutex.RLock()
@@ -53,7 +58,7 @@ func (sv *Supervisor) GetQuantCount() int64 {
 	return sv.quantCount
 }
 
-// creates new environment is doesn't exist another with the same name
+// creates new environment if doesn't exist another with the same name
 
 func (sv *Supervisor) CreateEnvironment(name string) error {
 	if !sv.accessLock.acquire(sv.timeout) {
@@ -64,8 +69,8 @@ func (sv *Supervisor) CreateEnvironment(name string) error {
 }
 
 // executes several 'joins' and 'affects' of the entity to environments
-// environments are created if necessary
-// for 'joins' and 'affects' params inout is map[string]int with respective environments names as keys.
+// Environments are created if necessary
+// Params 'joins' and 'affects' expect map[string]int with respective environments names as keys.
 // int values of the map entry are interpreted as 'limit' for joins and 'delay' for affects
 
 func (sv *Supervisor) Attach(entity *Entity, joins, affects map[string]int) error {
@@ -89,20 +94,25 @@ func (sv *Supervisor) Attach(entity *Entity, joins, affects map[string]int) erro
 	return nil
 }
 
-// shorter version for one 'join' only
+// shorter version for one 'join' only: entity is joined (subscribes) to the environment 'envName'
+// Entity automatically starts it's input loop/goroutine upon first join
+
 func (sv *Supervisor) Join(envName string, entity *Entity, limit int) error {
 	return sv.Attach(entity, map[string]int{envName: limit}, nil)
 }
 
-// shorter version for one 'affect' only
+// shorter version for one 'affect' only: entity starts to 'affect' (post results to) the environment 'envName'
+
 func (sv *Supervisor) Affect(envName string, entity *Entity, delay int) error {
 	return sv.Attach(entity, nil, map[string]int{envName: delay})
 }
 
 // deletes environment from the supervisor.
 //    - stops environment loop goroutine,
-//    - "unjoins" and "unaffects" related entities (which may result in complete stop of the environment)
-//    - marks environment as invalid
+//    - "unjoins" and "unaffects" related entities.
+//    - marks environment as invalid. Any effects for this environment which may remain in the queue will be ignored
+// After environment is deleted, some entities may become completely detached from the supervisor.
+// Input loop and go routine of such an entity is automatically stopped.
 
 func (sv *Supervisor) DeleteEnvironment(envName string) error {
 	if !sv.accessLock.acquire(sv.timeout) {
@@ -120,7 +130,7 @@ func (sv *Supervisor) DeleteEnvironment(envName string) error {
 	return nil
 }
 
-// delete all environments. Useful when reloading module
+// delete all environments. Useful when reloading a module
 
 func (sv *Supervisor) ClearEnvironments() error {
 	if !sv.accessLock.acquire(sv.timeout) {
@@ -136,15 +146,15 @@ func (sv *Supervisor) ClearEnvironments() error {
 	return nil
 }
 
-// Posts effect to the main queue
+// Posts effect to the main queue. This can be done by any code, not only from entity
 
 func (sv *Supervisor) PostEffect(envName string, effect Trits, delay int) error {
 	return sv.postEffect(envName, nil, effect, delay, true)
 }
 
-// calls doFunct if supervisor becomes idle (= releases lock) within 'timeout'
-// doFunc will be called upon release of the semaphore outside the locked section.
-// The doFunc itself must take care about locking the supervisor if needed
+// executes `doFunct` if supervisor becomes idle (= releases lock) within 'timeout'
+// `doFunc` will be called upon release of the semaphore outside of the locked section.
+// Note, that there's no guarantee that supervisor will be idle (unlocked) during execution of `doFunc`
 
 func (sv *Supervisor) DoIfIdle(timeout time.Duration, doFunc func()) bool {
 	if !sv.accessLock.acquire(timeout) {
@@ -199,7 +209,7 @@ func (ent *Entity) GetCore() EntityCore {
 	return ent.core
 }
 
-// for calls from within entity core. For debugging
+// for calls from within entity core. For testing/debugging
 func (ent *Entity) GetQuantCount() int64 {
 	return ent.supervisor.GetQuantCount()
 }
