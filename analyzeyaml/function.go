@@ -2,6 +2,7 @@ package analyzeyaml
 
 import (
 	"fmt"
+	"github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/goq/readyaml"
 	"strconv"
@@ -58,8 +59,14 @@ func AnalyzeFunction(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule
 		return fmt.Errorf("in funcdef '%v': return expression can't be nil", def.Name)
 	}
 	def.Analyzed = true
-	if def.IsPassingParams() {
+	if def.ZeroInternalSites() {
 		module.IncStat("numPassParams")
+	}
+
+	if cfg.Config.OptimizeOneTimeSites {
+		def.OptimizeOneTimeSites()
+		_, _, _, numVars, numUnusedVars := def.NumSites()
+		logf(5, "Optimized %v sites out of %v in '%v'", numUnusedVars, numVars, def.Name)
 	}
 	return nil
 }

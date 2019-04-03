@@ -40,7 +40,7 @@ func NewFunction(name string, size int, module *QuplaModule) *Function {
 	}
 }
 
-func (def *Function) IsPassingParams() bool {
+func (def *Function) ZeroInternalSites() bool {
 	return def.NumParams == len(def.LocalVars)
 }
 
@@ -150,4 +150,49 @@ func (def *Function) Eval(frame *EvalFrame, result Trits) bool {
 		}
 	}
 	return null
+}
+
+func (def *Function) OptimizeOneTimeSites() {
+	def.RetExpr = def.optimizeOneTimeSites(def.RetExpr)
+}
+
+func (def *Function) optimizeOneTimeSites(expr ExpressionInterface) ExpressionInterface {
+	sliceExpr, ok := expr.(*SliceExpr)
+	if !ok {
+		subExpr := make([]ExpressionInterface, 0)
+		for _, se := range expr.GetSubexpressions() {
+			opt := def.optimizeOneTimeSites(se)
+			subExpr = append(subExpr, opt)
+		}
+		expr.SetSubexpressions(subExpr)
+		return expr
+	}
+	if sliceExpr.vi.IsState || sliceExpr.vi.IsParam || sliceExpr.vi.numUses > 1 {
+		return expr
+	}
+	// slice expressions optimized to SliceInline
+	opt := def.optimizeOneTimeSites(def.LocalVars[sliceExpr.vi.Idx].Assign)
+	sliceExpr.vi.notUsed = true
+	return NewSliceInline(sliceExpr, opt)
+}
+
+// returns numSites, numParam, numState, numVars, numUnusedVars
+func (def *Function) NumSites() (int, int, int, int, int) {
+	var numSites, numParam, numState, numVars, numUnusedVars int
+	for _, vi := range def.LocalVars {
+		numSites++
+		if vi.IsParam {
+			numParam++
+		}
+		if vi.IsState {
+			numState++
+		}
+		if !vi.IsParam && !vi.IsState {
+			numVars++
+			if vi.notUsed {
+				numUnusedVars++
+			}
+		}
+	}
+	return numSites, numParam, numState, numVars, numUnusedVars
 }

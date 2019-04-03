@@ -219,7 +219,7 @@ func CmdPassparam(words []string) {
 	funcs := module.FindFuncs(substr)
 	lfun := make([]*qupla.Function, 0)
 	for _, f := range funcs {
-		if f.IsPassingParams() {
+		if f.ZeroInternalSites() {
 			lfun = append(lfun, f)
 		}
 	}

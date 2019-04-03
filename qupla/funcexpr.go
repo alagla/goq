@@ -44,13 +44,9 @@ func (e *FunctionExpr) HasState() bool {
 }
 
 func (e *FunctionExpr) Inline() ExpressionInterface {
-	if !e.FuncDef.IsPassingParams() || e.FuncDef.isRecursive {
+	if !e.FuncDef.ZeroInternalSites() || e.FuncDef.isRecursive {
 		return e
 	}
-	//cfg.Logf(0, "+++++++++++++++++++ %v", e.GetSource())
-	//if strings.Contains(e.GetSource(), "lshift<Tryte>(0)"){
-	//	cfg.Logf(0, "kuku")
-	//}
 	e.FuncDef.module.IncStat("numInlined")
 
 	ret := e.FuncDef.RetExpr.InlineCopy(e)

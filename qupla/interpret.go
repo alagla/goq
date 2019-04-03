@@ -17,7 +17,8 @@ type QuplaSite struct {
 	IsState  bool
 	IsParam  bool
 	Assign   ExpressionInterface
-	numUses  int // number of times referenced in the scope (by slice expressions)
+	numUses  int  // number of times referenced in the scope (by slice expressions)
+	notUsed  bool // optimized away
 }
 
 type EvalFrame struct {
@@ -32,6 +33,8 @@ type ExpressionInterface interface {
 	References(string) bool
 	HasState() bool
 	InlineCopy(funExpr *FunctionExpr) ExpressionInterface
+	GetSubexpressions() []ExpressionInterface
+	SetSubexpressions([]ExpressionInterface)
 }
 
 const (

@@ -23,6 +23,14 @@ func (e *ExpressionBase) inlineCopyBase(funcExpr *FunctionExpr) ExpressionBase {
 	return ret
 }
 
+func (e *ExpressionBase) GetSubexpressions() []ExpressionInterface {
+	return e.subExpr
+}
+
+func (e *ExpressionBase) SetSubexpressions(subExpr []ExpressionInterface) {
+	e.subExpr = subExpr
+}
+
 func (e *ExpressionBase) GetSource() string {
 	return e.source
 }
