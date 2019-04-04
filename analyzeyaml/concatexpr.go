@@ -7,19 +7,13 @@ import (
 
 func AnalyzeConcatExpr(exprYAML *QuplaConcatExprYAML, module *QuplaModule, scope *Function) (*ConcatExpr, error) {
 	module.IncStat("numConcat")
-
-	ret := &ConcatExpr{
-		ExpressionBase: NewExpressionBase(exprYAML.Source),
-	}
-	if lhsExpr, err := AnalyzeExpression(exprYAML.Lhs, module, scope); err != nil {
+	lhsExpr, err := AnalyzeExpression(exprYAML.Lhs, module, scope)
+	if err != nil {
 		return nil, err
-	} else {
-		ret.AppendSubExpr(lhsExpr)
 	}
-	if rhsExpr, err := AnalyzeExpression(exprYAML.Rhs, module, scope); err != nil {
+	rhsExpr, err := AnalyzeExpression(exprYAML.Rhs, module, scope)
+	if err != nil {
 		return nil, err
-	} else {
-		ret.AppendSubExpr(rhsExpr)
 	}
-	return ret, nil
+	return NewConcatExpression(exprYAML.Source, []ExpressionInterface{lhsExpr, rhsExpr}), nil
 }
