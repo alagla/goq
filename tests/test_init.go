@@ -17,7 +17,7 @@ func init() {
 	sv = NewSupervisor(1 * time.Second)
 	pinline := flag.Bool("inline", false, "use inline call optimisation")
 	flag.Parse()
-	cfg.Config.OptimizeInline = *pinline
+	cfg.Config.OptimizeFunCallsInline = *pinline
 }
 
 type mockEntityCore struct {

@@ -2,7 +2,6 @@ package analyzeyaml
 
 import (
 	"fmt"
-	"github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/goq/readyaml"
 	"strconv"
@@ -63,11 +62,7 @@ func AnalyzeFunction(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule
 		module.IncStat("numPassParams")
 	}
 
-	if cfg.Config.OptimizeOneTimeSites {
-		def.OptimizeOneTimeSites()
-		_, _, _, numVars, numUnusedVars := def.NumSites()
-		logf(5, "Optimized %v sites out of %v in '%v'", numUnusedVars, numVars, def.Name)
-	}
+	def.Optimize()
 	return nil
 }
 func analyzeEnvironmentStatements(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {

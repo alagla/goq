@@ -13,6 +13,7 @@ type SliceExpr struct {
 	size     int
 	sliceEnd int
 	noSlice  bool
+	oneTrit  bool
 }
 
 func NewQuplaSliceExpr(vi *QuplaSite, src string, offset, size int) *SliceExpr {
@@ -24,6 +25,7 @@ func NewQuplaSliceExpr(vi *QuplaSite, src string, offset, size int) *SliceExpr {
 		size:           size,
 		sliceEnd:       offset + size,
 		noSlice:        noSlice,
+		oneTrit:        size == 1,
 	}
 }
 
@@ -41,10 +43,14 @@ func (e *SliceExpr) Size() int {
 func (e *SliceExpr) Eval(frame *EvalFrame, result Trits) bool {
 	restmp, null := e.vi.Eval(frame)
 	if !null {
-		if e.noSlice {
-			copy(result, restmp)
+		if e.oneTrit {
+			result[0] = restmp[e.offset] // optimization ????
 		} else {
-			copy(result, restmp[e.offset:e.sliceEnd])
+			if e.noSlice {
+				copy(result, restmp)
+			} else {
+				copy(result, restmp[e.offset:e.sliceEnd])
+			}
 		}
 	}
 	return null

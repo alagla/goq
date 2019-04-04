@@ -2,6 +2,7 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/cfg"
 )
 
 type FunctionExpr struct {
@@ -48,7 +49,7 @@ func (e *FunctionExpr) Inline() ExpressionInterface {
 		return e
 	}
 	e.FuncDef.module.IncStat("numInlined")
-
+	cfg.Logf(5, "inlined '%v' in %v", e.GetSource(), e.FuncDef.Name)
 	ret := e.FuncDef.RetExpr.InlineCopy(e)
 	return ret
 }

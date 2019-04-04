@@ -51,7 +51,7 @@ func moduleTest(fname string, chain bool, t *testing.T) {
 		t.Errorf("%v", err)
 		return
 	}
-	if cfg.Config.OptimizeInline {
+	if cfg.Config.OptimizeFunCallsInline {
 		cfg.Logf(0, "Call inline optimisation is ON")
 	} else {
 		cfg.Logf(0, "Call inline optimisation is OFF")

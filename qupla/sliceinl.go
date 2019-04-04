@@ -11,6 +11,7 @@ type SliceInline struct {
 	size     int
 	sliceEnd int
 	noSlice  bool
+	oneTrit  bool
 }
 
 func NewSliceInline(sliceExpr *SliceExpr, expr ExpressionInterface) *SliceInline {
@@ -21,6 +22,7 @@ func NewSliceInline(sliceExpr *SliceExpr, expr ExpressionInterface) *SliceInline
 		size:           sliceExpr.size,
 		sliceEnd:       sliceExpr.sliceEnd,
 		noSlice:        sliceExpr.noSlice,
+		oneTrit:        sliceExpr.oneTrit,
 	}
 }
 
@@ -55,4 +57,25 @@ func (e *SliceInline) Eval(frame *EvalFrame, result Trits) bool {
 
 	copy(result, resTmp[e.offset:e.sliceEnd])
 	return false
+}
+
+func optimizeInlineSlicesExpr(expr ExpressionInterface) ExpressionInterface {
+	inlineSlice, ok := expr.(*SliceInline)
+	if !ok {
+		subExpr := make([]ExpressionInterface, 0)
+		for _, se := range expr.GetSubexpressions() {
+			opt := optimizeInlineSlicesExpr(se)
+			subExpr = append(subExpr, opt)
+		}
+		expr.SetSubexpressions(subExpr)
+		return expr
+	}
+	if inlineSlice.noSlice {
+		return inlineSlice.expr
+	}
+	valueExpr, ok := inlineSlice.expr.(*ValueExpr)
+	if !ok {
+		return inlineSlice
+	}
+	return NewValueExpr(valueExpr.TritValue[inlineSlice.offset:inlineSlice.sliceEnd])
 }
