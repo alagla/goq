@@ -2,6 +2,7 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/cfg"
 )
 
 type FunctionExpr struct {
@@ -44,15 +45,11 @@ func (e *FunctionExpr) HasState() bool {
 }
 
 func (e *FunctionExpr) Inline() ExpressionInterface {
-	if !e.FuncDef.IsPassingParams() || e.FuncDef.isRecursive {
+	if !e.FuncDef.ZeroInternalSites() || e.FuncDef.isRecursive {
 		return e
 	}
-	//cfg.Logf(0, "+++++++++++++++++++ %v", e.GetSource())
-	//if strings.Contains(e.GetSource(), "lshift<Tryte>(0)"){
-	//	cfg.Logf(0, "kuku")
-	//}
 	e.FuncDef.module.IncStat("numInlined")
-
+	cfg.Logf(5, "inlined '%v' in %v", e.GetSource(), e.FuncDef.Name)
 	ret := e.FuncDef.RetExpr.InlineCopy(e)
 	return ret
 }

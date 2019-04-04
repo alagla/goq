@@ -67,3 +67,10 @@ func (e *ConstTypeInfo) GetFieldInfo(fldname string) (*ConstTypeFieldInfo, error
 func (e *ConstTypeInfo) HasState() bool {
 	return false
 }
+
+func (e *ConstTypeInfo) GetSubexpressions() []ExpressionInterface {
+	return nil
+}
+
+func (e *ConstTypeInfo) SetSubexpressions(_ []ExpressionInterface) {
+}

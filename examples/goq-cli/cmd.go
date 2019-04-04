@@ -147,12 +147,12 @@ func CmdInline(words []string) {
 	if len(words) == 2 {
 		switch words[1] {
 		case "on":
-			Config.OptimizeInline = true
+			Config.OptimizeFunCallsInline = true
 		default:
-			Config.OptimizeInline = false
+			Config.OptimizeFunCallsInline = false
 		}
 	}
-	if Config.OptimizeInline {
+	if Config.OptimizeFunCallsInline {
 		Logf(0, "Inline call optimization is ON")
 	} else {
 		Logf(0, "Inline call optimization is OFF")
@@ -219,7 +219,7 @@ func CmdPassparam(words []string) {
 	funcs := module.FindFuncs(substr)
 	lfun := make([]*qupla.Function, 0)
 	for _, f := range funcs {
-		if f.IsPassingParams() {
+		if f.ZeroInternalSites() {
 			lfun = append(lfun, f)
 		}
 	}
