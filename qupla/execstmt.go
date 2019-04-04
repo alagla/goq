@@ -21,12 +21,13 @@ type ExecStmt struct {
 
 func NewExecStmt(src string, expr ExpressionInterface, isTest, isFloat bool, expected Trits, module *QuplaModule) *ExecStmt {
 	if cfg.Config.OptimizeFunCallsInline {
-		inline := expr.InlineCopy(nil)
-		inline = optimizeInlineSlicesExpr(inline)
-		//if inline.Size() != expr.Size(){
-		//	panic(fmt.Errorf("size mismatch in %v: orig %v != inline %v", src, expr.Size(), inline.Size()))
-		//}
-		expr = inline
+		expr = expr.InlineCopy(nil)
+	}
+	if cfg.Config.OptimizeOneTimeSites {
+		expr = optimizeInlineSlicesExpr(expr)
+	}
+	if cfg.Config.OptimizeConcats {
+		expr = optimizeConcatExpr(expr)
 	}
 	return &ExecStmt{
 		ExpressionBase: NewExpressionBase(src),

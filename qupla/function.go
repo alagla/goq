@@ -163,6 +163,9 @@ func (def *Function) Optimize() {
 	if Config.OptimizeInlineSlices {
 		def.RetExpr = def.optimizeInlineSlices(def.RetExpr)
 	}
+	if Config.OptimizeConcats {
+		def.RetExpr = optimizeConcatExpr(def.RetExpr)
+	}
 }
 
 func (def *Function) optimizeOneTimeSites(expr ExpressionInterface) ExpressionInterface {

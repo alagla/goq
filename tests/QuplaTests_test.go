@@ -52,10 +52,13 @@ func moduleTest(fname string, chain bool, t *testing.T) {
 		return
 	}
 	if cfg.Config.OptimizeFunCallsInline {
-		cfg.Logf(0, "Call inline optimisation is ON")
 	} else {
 		cfg.Logf(0, "Call inline optimisation is OFF")
 	}
+	cfg.Logf(0, "Call inline optimisation = %v", cfg.Config.OptimizeFunCallsInline)
+	cfg.Logf(0, "Inline slice optimisation = %v", cfg.Config.OptimizeInlineSlices)
+	cfg.Logf(0, "One time site optimisation = %v", cfg.Config.OptimizeOneTimeSites)
+	cfg.Logf(0, "Concat optimisation = %v", cfg.Config.OptimizeConcats)
 
 	module, succ := analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
 	if succ {
