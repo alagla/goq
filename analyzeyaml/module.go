@@ -76,6 +76,10 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 
 	logf(1, "Analyzing execs (tests and evals)..")
 	logf(1, "Inline call optimisation = %v", cfg.Config.OptimizeFunCallsInline)
+	logf(1, "Inline slice optimisation = %v", cfg.Config.OptimizeInlineSlices)
+	logf(1, "One time site optimisation = %v", cfg.Config.OptimizeOneTimeSites)
+	logf(1, "Concat optimisation = %v", cfg.Config.OptimizeConcats)
+
 	numExec := 0
 	for _, execYAML := range moduleYAML.Execs {
 		err := AnalyzeExecStmt(execYAML, ret)

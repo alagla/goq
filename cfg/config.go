@@ -6,6 +6,7 @@ type ConfigStruct struct {
 	OptimizeFunCallsInline bool
 	OptimizeOneTimeSites   bool
 	OptimizeInlineSlices   bool
+	OptimizeConcats        bool
 }
 
 var Config = &ConfigStruct{
@@ -14,4 +15,5 @@ var Config = &ConfigStruct{
 	OptimizeFunCallsInline: true,
 	OptimizeOneTimeSites:   true,
 	OptimizeInlineSlices:   true,
+	OptimizeConcats:        true,
 }
