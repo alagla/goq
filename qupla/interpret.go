@@ -13,12 +13,12 @@ type QuplaSite struct {
 	Idx      int
 	Offset   int
 	Size     int
-	SliceEnd int // offset + size precalculated
+	SliceEnd int // Offset + size precalculated
 	IsState  bool
 	IsParam  bool
 	Assign   ExpressionInterface
-	numUses  int  // number of times referenced in the scope (by slice expressions)
-	notUsed  bool // optimized away
+	NumUses  int  // number of times referenced in the scope (by slice expressions)
+	NotUsed  bool // optimized away
 }
 
 type EvalFrame struct {
@@ -55,7 +55,7 @@ func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
 }
 
 func (vi *QuplaSite) IncNumUses() {
-	vi.numUses++
+	vi.NumUses++
 }
 
 func (frame *EvalFrame) getCallTrace() []uint8 {

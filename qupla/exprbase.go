@@ -12,6 +12,16 @@ func NewExpressionBase(source string) ExpressionBase {
 	}
 }
 
+func (e *ExpressionBase) TransformSubxpressions(transformFun func(ExpressionInterface) ExpressionInterface) {
+	subExpr := make([]ExpressionInterface, 0)
+	var opt ExpressionInterface
+	for _, se := range e.subExpr {
+		opt = transformFun(se)
+		subExpr = append(subExpr, opt)
+	}
+	e.subExpr = subExpr
+}
+
 func (e *ExpressionBase) inlineCopyBase(funcExpr *FunctionExpr) ExpressionBase {
 	ret := ExpressionBase{
 		source:  e.source,

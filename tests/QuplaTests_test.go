@@ -3,6 +3,7 @@ package tests
 import (
 	"github.com/lunfardo314/goq/analyzeyaml"
 	"github.com/lunfardo314/goq/cfg"
+	"github.com/lunfardo314/goq/optimize"
 	"github.com/lunfardo314/goq/readyaml"
 	"testing"
 )
@@ -51,18 +52,11 @@ func moduleTest(fname string, chain bool, t *testing.T) {
 		t.Errorf("%v", err)
 		return
 	}
-	if cfg.Config.OptimizeFunCallsInline {
-	} else {
-		cfg.Logf(0, "Call inline optimisation is OFF")
-	}
-	cfg.Logf(0, "Call inline optimisation = %v", cfg.Config.OptimizeFunCallsInline)
-	cfg.Logf(0, "Inline slice optimisation = %v", cfg.Config.OptimizeInlineSlices)
-	cfg.Logf(0, "One time site optimisation = %v", cfg.Config.OptimizeOneTimeSites)
-	cfg.Logf(0, "Concat optimisation = %v", cfg.Config.OptimizeConcats)
 
 	module, succ := analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
+
 	if succ {
-		cfg.Logf(0, "Inlined function calls: %v", module.GetStat("numInlined"))
+		optimize.OptimizeModule(module)
 		succ = module.AttachToSupervisor(sv)
 	} else {
 		t.Errorf("Failed to load module from '%v'", fname)

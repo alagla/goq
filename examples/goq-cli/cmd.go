@@ -4,6 +4,7 @@ import (
 	"github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/analyzeyaml"
 	. "github.com/lunfardo314/goq/cfg"
+	"github.com/lunfardo314/goq/optimize"
 	"github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/goq/readyaml"
 	"github.com/lunfardo314/goq/utils"
@@ -90,6 +91,8 @@ func CmdLoadModule(words []string) {
 	}
 	var succ bool
 	module, succ = analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
+	optimize.OptimizeModule(module)
+
 	module.PrintStats()
 	if succ {
 		succ = module.AttachToSupervisor(svisor)

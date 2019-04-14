@@ -6,22 +6,22 @@ import (
 
 type SliceInline struct {
 	ExpressionBase
-	expr     ExpressionInterface
-	offset   int
+	Expr     ExpressionInterface
+	Offset   int
 	size     int
-	sliceEnd int
-	noSlice  bool
+	SliceEnd int
+	NoSlice  bool
 	oneTrit  bool
 }
 
 func NewSliceInline(sliceExpr *SliceExpr, expr ExpressionInterface) *SliceInline {
 	return &SliceInline{
 		ExpressionBase: NewExpressionBase(sliceExpr.GetSource()),
-		expr:           expr,
-		offset:         sliceExpr.offset,
+		Expr:           expr,
+		Offset:         sliceExpr.offset,
 		size:           sliceExpr.size,
-		sliceEnd:       sliceExpr.sliceEnd,
-		noSlice:        sliceExpr.noSlice,
+		SliceEnd:       sliceExpr.sliceEnd,
+		NoSlice:        sliceExpr.noSlice,
 		oneTrit:        sliceExpr.oneTrit,
 	}
 }
@@ -29,11 +29,11 @@ func NewSliceInline(sliceExpr *SliceExpr, expr ExpressionInterface) *SliceInline
 func (e *SliceInline) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
 	return &SliceInline{
 		ExpressionBase: NewExpressionBase(e.GetSource()),
-		expr:           e.expr.InlineCopy(funExpr),
-		offset:         e.offset,
+		Expr:           e.Expr.InlineCopy(funExpr),
+		Offset:         e.Offset,
 		size:           e.size,
-		sliceEnd:       e.sliceEnd,
-		noSlice:        e.noSlice,
+		SliceEnd:       e.SliceEnd,
+		NoSlice:        e.NoSlice,
 	}
 }
 
@@ -46,36 +46,15 @@ func (e *SliceInline) Size() int {
 
 func (e *SliceInline) Eval(frame *EvalFrame, result Trits) bool {
 	var resTmp Trits
-	if e.noSlice {
-		return e.expr.Eval(frame, result)
+	if e.NoSlice {
+		return e.Expr.Eval(frame, result)
 	}
-	resTmp = make(Trits, e.expr.Size(), e.expr.Size())
+	resTmp = make(Trits, e.Expr.Size(), e.Expr.Size())
 
-	if e.expr.Eval(frame, resTmp) {
+	if e.Expr.Eval(frame, resTmp) {
 		return true
 	}
 
-	copy(result, resTmp[e.offset:e.sliceEnd])
+	copy(result, resTmp[e.Offset:e.SliceEnd])
 	return false
-}
-
-func optimizeInlineSlicesExpr(expr ExpressionInterface) ExpressionInterface {
-	inlineSlice, ok := expr.(*SliceInline)
-	if !ok {
-		subExpr := make([]ExpressionInterface, 0)
-		for _, se := range expr.GetSubexpressions() {
-			opt := optimizeInlineSlicesExpr(se)
-			subExpr = append(subExpr, opt)
-		}
-		expr.SetSubexpressions(subExpr)
-		return expr
-	}
-	if inlineSlice.noSlice {
-		return inlineSlice.expr
-	}
-	valueExpr, ok := inlineSlice.expr.(*ValueExpr)
-	if !ok {
-		return inlineSlice
-	}
-	return NewValueExpr(valueExpr.TritValue[inlineSlice.offset:inlineSlice.sliceEnd])
 }

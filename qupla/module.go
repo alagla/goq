@@ -13,7 +13,7 @@ type QuplaModule struct {
 	types        map[string]*QuplaTypeDef
 	luts         map[string]*LutDef
 	Functions    map[string]*Function
-	execs        []*ExecStmt
+	Execs        []*ExecStmt
 	stats        map[string]int
 	Environments StringSet
 	stateHashMap *StateHashMap
@@ -35,7 +35,7 @@ func NewQuplaModule(name string) *QuplaModule {
 		types:        make(map[string]*QuplaTypeDef),
 		luts:         make(map[string]*LutDef),
 		Functions:    make(map[string]*Function),
-		execs:        make([]*ExecStmt, 0, 10),
+		Execs:        make([]*ExecStmt, 0, 10),
 		stats:        make(map[string]int),
 		Environments: make(StringSet),
 		stateHashMap: newStateHashMap(),
@@ -62,8 +62,8 @@ func (module *QuplaModule) GetTypeFieldInfo(typeName, fldName string) (int64, in
 }
 
 func (module *QuplaModule) AddExec(exec *ExecStmt) {
-	exec.idx = len(module.execs)
-	module.execs = append(module.execs, exec)
+	exec.idx = len(module.Execs)
+	module.Execs = append(module.Execs, exec)
 }
 
 func (module *QuplaModule) AddFuncDef(name string, funcDef *Function) error {
@@ -95,7 +95,7 @@ func (module *QuplaModule) FindLUTDef(name string) (*LutDef, error) {
 
 func (module *QuplaModule) FindExecs(filterSubstr string) []*ExecStmt {
 	ret := make([]*ExecStmt, 0)
-	for _, ex := range module.execs {
+	for _, ex := range module.Execs {
 		if strings.Contains(ex.GetName(), filterSubstr) {
 			ret = append(ret, ex)
 		}
@@ -242,10 +242,10 @@ func (module *QuplaModule) AttachToSupervisor(sv *supervisor.Supervisor) bool {
 }
 
 func (module *QuplaModule) ExecByIdx(idx int) *ExecStmt {
-	if idx < 0 || idx >= len(module.execs) {
+	if idx < 0 || idx >= len(module.Execs) {
 		return nil
 	}
-	return module.execs[idx]
+	return module.Execs[idx]
 }
 
 //func (module *QuplaModule) AnalyzeType(Name string, src *QuplaTypeDefYAML) bool {

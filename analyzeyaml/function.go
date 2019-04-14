@@ -61,8 +61,6 @@ func AnalyzeFunction(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule
 	if def.ZeroInternalSites() {
 		module.IncStat("numPassParams")
 	}
-
-	def.Optimize()
 	return nil
 }
 func analyzeEnvironmentStatements(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
