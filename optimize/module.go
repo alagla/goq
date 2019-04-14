@@ -13,7 +13,9 @@ func OptimizeModule(module *QuplaModule) {
 	Logf(1, "Concat optimisation = %v", Config.OptimizeConcats)
 
 	for _, fun := range module.Functions {
-		optimizeFunction(fun)
+		// optimize while there's something to optimize
+		for optimizeFunction(fun) {
+		}
 	}
 	for _, exec := range module.Execs {
 		OptimizeExecStmt(exec)

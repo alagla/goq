@@ -7,13 +7,15 @@ import . "github.com/lunfardo314/goq/qupla"
 // if it is slicing of Value expression (constant trit vector)
 // optimize the value expression
 
-func optimizeInlineSlices(expr ExpressionInterface) ExpressionInterface {
+func optimizeInlineSlices(expr ExpressionInterface, numOptimized *int) ExpressionInterface {
 	inlineSlice, ok := expr.(*SliceInline)
 	if !ok {
 		return optimizeSubxpressions(expr, func(se ExpressionInterface) ExpressionInterface {
-			return optimizeInlineSlices(se)
+			return optimizeInlineSlices(se, numOptimized)
 		})
 	}
+	*numOptimized++
+
 	if inlineSlice.NoSlice {
 		return inlineSlice.Expr
 	}

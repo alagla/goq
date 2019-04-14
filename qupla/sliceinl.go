@@ -6,7 +6,6 @@ import (
 
 type SliceInline struct {
 	ExpressionBase
-	Expr     ExpressionInterface
 	Offset   int
 	size     int
 	SliceEnd int
@@ -15,26 +14,28 @@ type SliceInline struct {
 }
 
 func NewSliceInline(sliceExpr *SliceExpr, expr ExpressionInterface) *SliceInline {
-	return &SliceInline{
+	ret := &SliceInline{
 		ExpressionBase: NewExpressionBase(sliceExpr.GetSource()),
-		Expr:           expr,
 		Offset:         sliceExpr.offset,
 		size:           sliceExpr.size,
 		SliceEnd:       sliceExpr.sliceEnd,
 		NoSlice:        sliceExpr.noSlice,
 		oneTrit:        sliceExpr.oneTrit,
 	}
+	ret.AppendSubExpr(expr)
+	return ret
 }
 
 func (e *SliceInline) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
-	return &SliceInline{
+	ret := &SliceInline{
 		ExpressionBase: NewExpressionBase(e.GetSource()),
-		Expr:           e.Expr.InlineCopy(funExpr),
 		Offset:         e.Offset,
 		size:           e.size,
 		SliceEnd:       e.SliceEnd,
 		NoSlice:        e.NoSlice,
 	}
+	ret.AppendSubExpr(e.subExpr[0].InlineCopy(funExpr))
+	return ret
 }
 
 func (e *SliceInline) Size() int {
@@ -47,11 +48,11 @@ func (e *SliceInline) Size() int {
 func (e *SliceInline) Eval(frame *EvalFrame, result Trits) bool {
 	var resTmp Trits
 	if e.NoSlice {
-		return e.Expr.Eval(frame, result)
+		return e.subExpr[0].Eval(frame, result)
 	}
-	resTmp = make(Trits, e.Expr.Size(), e.Expr.Size())
+	resTmp = make(Trits, e.subExpr[0].Size(), e.subExpr[0].Size())
 
-	if e.Expr.Eval(frame, resTmp) {
+	if e.subExpr[0].Eval(frame, resTmp) {
 		return true
 	}
 

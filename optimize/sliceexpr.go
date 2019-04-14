@@ -7,11 +7,11 @@ import . "github.com/lunfardo314/goq/qupla"
 // within function will be replaced by SliceInline
 // This will eliminate unnecessary call Eval call and unnecessary caching
 
-func optimizeSlices(def *Function, expr ExpressionInterface) ExpressionInterface {
+func optimizeSlices(def *Function, expr ExpressionInterface, numOptimized *int) ExpressionInterface {
 	sliceExpr, ok := expr.(*SliceExpr)
 	if !ok {
 		return optimizeSubxpressions(expr, func(se ExpressionInterface) ExpressionInterface {
-			return optimizeSlices(def, se)
+			return optimizeSlices(def, se, numOptimized)
 		})
 	}
 	site := sliceExpr.Site()
@@ -19,7 +19,8 @@ func optimizeSlices(def *Function, expr ExpressionInterface) ExpressionInterface
 		return expr
 	}
 	// slice expressions optimize along chain of assignments
-	opt := optimizeSlices(def, def.LocalVars[site.Idx].Assign)
+	opt := optimizeSlices(def, def.LocalVars[site.Idx].Assign, numOptimized)
 	site.NotUsed = true
+	*numOptimized++
 	return NewSliceInline(sliceExpr, opt)
 }

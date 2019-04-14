@@ -5,22 +5,35 @@ import (
 	. "github.com/lunfardo314/goq/qupla"
 )
 
-func optimizeFunction(def *Function) {
-	if Config.OptimizeOneTimeSites {
-		before := def.ZeroInternalSites()
-		def.RetExpr = optimizeSlices(def, def.RetExpr)
+func optimizeFunction(def *Function) bool {
+	var numOptimizedSlices, numOptimizedInlineSlices, numOptimizedConcat int
 
-		_, _, _, numVars, numUnusedVars := def.NumSites()
-		Logf(5, "Optimized %v sites out of %v in '%v'", numUnusedVars, numVars, def.Name)
-		after := def.ZeroInternalSites()
-		if !before && after {
-			Logf(5, "'%v' became inlineable", def.Name)
-		}
+	if Config.OptimizeOneTimeSites {
+		def.RetExpr = optimizeSlices(def, def.RetExpr, &numOptimizedSlices)
 	}
 	if Config.OptimizeInlineSlices {
-		def.RetExpr = optimizeInlineSlices(def.RetExpr)
+		def.RetExpr = optimizeInlineSlices(def.RetExpr, &numOptimizedInlineSlices)
 	}
 	if Config.OptimizeConcats {
-		def.RetExpr = optimizeConcatExpr(def.RetExpr)
+		def.RetExpr = optimizeConcatExpr(def.RetExpr, &numOptimizedConcat)
 	}
+	return numOptimizedSlices+numOptimizedInlineSlices+numOptimizedConcat > 0
+}
+
+func InlineExpression(expr ExpressionInterface, def *Function) ExpressionInterface {
+	switch e := expr.(type) {
+	case *SliceExpr:
+		panic("can't inline slice expression")
+	case *FunctionExpr:
+		return InlineFunctionCall(e, def)
+	}
+}
+
+func InlineFunctionCall(funExpr *FunctionExpr, def *Function) ExpressionInterface {
+	if !funExpr.FuncDef.ZeroInternalSites() || funExpr.FuncDef == def {
+		// inline only if there's no internal sites
+		// don't do recursive inlining
+		return funExpr
+	}
+	return funExpr.FuncDef.RetExpr.InlineCopy(funExpr)
 }

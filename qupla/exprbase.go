@@ -12,7 +12,7 @@ func NewExpressionBase(source string) ExpressionBase {
 	}
 }
 
-func (e *ExpressionBase) TransformSubxpressions(transformFun func(ExpressionInterface) ExpressionInterface) {
+func (e *ExpressionBase) TransformCopy(transformFun func(ExpressionInterface) ExpressionInterface) {
 	subExpr := make([]ExpressionInterface, 0)
 	var opt ExpressionInterface
 	for _, se := range e.subExpr {
