@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/goq/readyaml"
+	"sort"
 	"strconv"
 )
 
@@ -147,7 +148,16 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 	}
 
 	var idx int
-	for name, s := range src.State {
+
+	// sort state vars
+
+	tmpKeys := make([]string, 0)
+	for name := range src.State {
+		tmpKeys = append(tmpKeys, name)
+	}
+	sort.Strings(tmpKeys)
+
+	for _, name := range tmpKeys {
 		idx = def.GetVarIdx(name)
 		if idx >= 0 {
 			return fmt.Errorf("wrong declared state variable: '%v' in '%v'", name, def.Name)
@@ -156,15 +166,23 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 			def.LocalVars = append(def.LocalVars, &QuplaSite{
 				Idx:     len(def.LocalVars),
 				Name:    name,
-				Size:    s.Size,
+				Size:    src.State[name].Size,
 				IsState: true,
 			})
 		}
 		module.IncStat("numStateVars")
 	}
+
 	// variables defined by assigns
-	var vi *QuplaSite
+	// sort by names
+	tmpKeys = make([]string, 0)
 	for name := range src.Assigns {
+		tmpKeys = append(tmpKeys, name)
+	}
+	sort.Strings(tmpKeys)
+
+	var vi *QuplaSite
+	for _, name := range tmpKeys {
 		vi, _ = def.VarByName(name)
 		if vi != nil {
 			if vi.IsParam {

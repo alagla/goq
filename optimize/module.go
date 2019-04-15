@@ -3,6 +3,7 @@ package optimize
 import (
 	. "github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/qupla"
+	"sort"
 )
 
 func OptimizeModule(module *QuplaModule) {
@@ -12,12 +13,24 @@ func OptimizeModule(module *QuplaModule) {
 	Logf(1, "One time site optimisation = %v", Config.OptimizeOneTimeSites)
 	Logf(1, "Concat optimisation = %v", Config.OptimizeConcats)
 
-	for _, fun := range module.Functions {
+	stats := make(map[string]int)
+	tmpKeys := make([]string, 0, len(module.Functions))
+
+	for k := range module.Functions {
+		tmpKeys = append(tmpKeys, k)
+	}
+
+	sort.Strings(tmpKeys)
+
+	for _, funName := range tmpKeys {
 		// optimize while there's something to optimize
-		for optimizeFunction(fun) {
+		Logf(2, "Optimizing function '%v'", funName)
+		for optimizeFunction(module.Functions[funName], stats) {
 		}
 	}
-	for _, exec := range module.Execs {
-		OptimizeExecStmt(exec)
-	}
+	LogStats(0, stats)
+
+	//for _, exec := range module.Execs {
+	//	OptimizeExecStmt(exec)
+	//}
 }

@@ -127,15 +127,12 @@ func (ec *execEvalCore) Call(_ Trits, result Trits) bool {
 	if ec.exec.isTest {
 		if ec.exec.resultIsExpected(result) {
 			ec.numTestPassed++
-		} else {
-			fmt.Println("kuku")
 		}
 	}
 	return null
 }
 
 func (ex *ExecStmt) newEvalEntity(sv *Supervisor) (*Entity, error) {
-	//name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.Expr.GetSource())
 	name := fmt.Sprintf("#%v-EVAL", ex.idx)
 	core := &execEvalCore{exec: ex}
 	return sv.NewEntity(name, 0, ex.Expr.Size(), core)

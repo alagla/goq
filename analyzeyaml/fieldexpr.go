@@ -6,12 +6,12 @@ import (
 )
 
 func AnalyzeFieldExpr(exprYAML *QuplaFieldExprYAML, module *QuplaModule, scope *Function) (*QuplaFieldExpr, error) {
-	var err error
 	module.IncStat("numFieldExpr")
 	ret := &QuplaFieldExpr{}
-	ret.CondExpr, err = AnalyzeExpression(exprYAML.CondExpr, module, scope)
+	condExpr, err := AnalyzeExpression(exprYAML.CondExpr, module, scope)
 	if err != nil {
 		return nil, err
 	}
+	ret.AppendSubExpr(condExpr)
 	return ret, nil
 }

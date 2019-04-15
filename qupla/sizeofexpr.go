@@ -17,9 +17,9 @@ func NewQuplaSizeofExpr(value int64, tritValue Trits) *SizeofExpr {
 	}
 }
 
-func (e *SizeofExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *SizeofExpr) Copy() ExpressionInterface {
 	return &SizeofExpr{
-		ExpressionBase: e.inlineCopyBase(funExpr),
+		ExpressionBase: e.copyBase(),
 		Value:          e.Value,
 		TritValue:      e.TritValue,
 	}

@@ -2,16 +2,27 @@ package optimize
 
 import . "github.com/lunfardo314/goq/qupla"
 
-// expression 'expr' must be within context of the function 'def'
 // All non param and non state slices which are used only once
 // within function will be replaced by SliceInline
-// This will eliminate unnecessary call Eval call and unnecessary caching
+// This will eliminate unnecessary Eval call and unnecessary caching
 
-func optimizeSlices(def *Function, expr ExpressionInterface, numOptimized *int) ExpressionInterface {
+func optimizeSlices(def *Function, stats map[string]int) bool {
+	before := StatValue("numOptimizedSlices", stats)
+	for _, site := range def.LocalVars {
+		if site.NotUsed || site.IsState || site.IsParam || site.NumUses > 1 {
+			continue
+		}
+		site.Assign = optimizeSlicesInExpr(site.Assign, stats)
+	}
+	def.RetExpr = optimizeSlicesInExpr(def.RetExpr, stats)
+	return before != StatValue("numOptimizedSlices", stats)
+}
+
+func optimizeSlicesInExpr(expr ExpressionInterface, stats map[string]int) ExpressionInterface {
 	sliceExpr, ok := expr.(*SliceExpr)
 	if !ok {
-		return optimizeSubxpressions(expr, func(se ExpressionInterface) ExpressionInterface {
-			return optimizeSlices(def, se, numOptimized)
+		return transformSubexpressions(expr, func(se ExpressionInterface) ExpressionInterface {
+			return optimizeSlicesInExpr(se, stats)
 		})
 	}
 	site := sliceExpr.Site()
@@ -19,8 +30,8 @@ func optimizeSlices(def *Function, expr ExpressionInterface, numOptimized *int) 
 		return expr
 	}
 	// slice expressions optimize along chain of assignments
-	opt := optimizeSlices(def, def.LocalVars[site.Idx].Assign, numOptimized)
+	opt := optimizeSlicesInExpr(site.Assign, stats)
 	site.NotUsed = true
-	*numOptimized++
+	IncStat("numOptimizedSlices", stats)
 	return NewSliceInline(sliceExpr, opt)
 }

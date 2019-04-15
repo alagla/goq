@@ -15,9 +15,9 @@ func NewValueExpr(t Trits) *ValueExpr {
 	}
 }
 
-func (e *ValueExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *ValueExpr) Copy() ExpressionInterface {
 	return &ValueExpr{
-		ExpressionBase: e.inlineCopyBase(nil),
+		ExpressionBase: e.copyBase(),
 		TritValue:      e.TritValue,
 	}
 }

@@ -41,9 +41,9 @@ func (e *ConcatExpr) Eval(frame *EvalFrame, result Trits) bool {
 	return false
 }
 
-func (e *ConcatExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *ConcatExpr) Copy() ExpressionInterface {
 	return &ConcatExpr{
-		ExpressionBase: e.inlineCopyBase(funExpr),
+		ExpressionBase: e.copyBase(),
 		size:           e.size,
 		offset:         e.offset,
 		endSlice:       e.endSlice,

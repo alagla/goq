@@ -15,9 +15,9 @@ func (e *MergeExpr) Size() int {
 	return e.subExpr[0].Size()
 }
 
-func (e *MergeExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *MergeExpr) Copy() ExpressionInterface {
 	return &MergeExpr{
-		ExpressionBase: e.inlineCopyBase(funExpr),
+		ExpressionBase: e.copyBase(),
 	}
 }
 

@@ -26,15 +26,15 @@ func NewSliceInline(sliceExpr *SliceExpr, expr ExpressionInterface) *SliceInline
 	return ret
 }
 
-func (e *SliceInline) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *SliceInline) Copy() ExpressionInterface {
 	ret := &SliceInline{
-		ExpressionBase: NewExpressionBase(e.GetSource()),
+		ExpressionBase: e.copyBase(),
 		Offset:         e.Offset,
 		size:           e.size,
 		SliceEnd:       e.SliceEnd,
 		NoSlice:        e.NoSlice,
+		oneTrit:        e.oneTrit,
 	}
-	ret.AppendSubExpr(e.subExpr[0].InlineCopy(funExpr))
 	return ret
 }
 

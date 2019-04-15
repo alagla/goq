@@ -36,7 +36,7 @@ func (e *ConstTypeInfo) GetSource() string {
 	return ""
 }
 
-func (e *ConstTypeInfo) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *ConstTypeInfo) Copy() ExpressionInterface {
 	return &ConstTypeInfo{
 		name:   e.name,
 		size:   e.size,

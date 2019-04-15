@@ -32,7 +32,7 @@ type ExpressionInterface interface {
 	Eval(*EvalFrame, Trits) bool
 	References(string) bool
 	HasState() bool
-	InlineCopy(funExpr *FunctionExpr) ExpressionInterface
+	Copy() ExpressionInterface // shallow copy
 	GetSubexpressions() []ExpressionInterface
 	SetSubexpressions([]ExpressionInterface)
 }

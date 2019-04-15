@@ -33,8 +33,16 @@ func (e *SliceExpr) Site() *QuplaSite {
 	return e.site
 }
 
-func (e *SliceExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
-	return NewSliceInline(e, funExpr.subExpr[e.site.Idx])
+func (e *SliceExpr) Copy() ExpressionInterface {
+	return &SliceExpr{
+		ExpressionBase: NewExpressionBase(e.source),
+		site:           e.site,
+		offset:         e.offset,
+		size:           e.size,
+		sliceEnd:       e.sliceEnd,
+		noSlice:        e.noSlice,
+		oneTrit:        e.oneTrit,
+	}
 }
 
 func (e *SliceExpr) Size() int {

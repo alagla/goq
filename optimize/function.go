@@ -5,35 +5,51 @@ import (
 	. "github.com/lunfardo314/goq/qupla"
 )
 
-func optimizeFunction(def *Function) bool {
-	var numOptimizedSlices, numOptimizedInlineSlices, numOptimizedConcat int
+func optimizeFunction(def *Function, stats map[string]int) bool {
+	var optSlices, optInlineSlices, optConcats bool
 
 	if Config.OptimizeOneTimeSites {
-		def.RetExpr = optimizeSlices(def, def.RetExpr, &numOptimizedSlices)
+		optSlices = optimizeSlices(def, stats)
 	}
 	if Config.OptimizeInlineSlices {
-		def.RetExpr = optimizeInlineSlices(def.RetExpr, &numOptimizedInlineSlices)
+		optInlineSlices = optimizeInlineSlices(def, stats)
 	}
 	if Config.OptimizeConcats {
-		def.RetExpr = optimizeConcatExpr(def.RetExpr, &numOptimizedConcat)
+		optConcats = optimizeConcats(def, stats)
 	}
-	return numOptimizedSlices+numOptimizedInlineSlices+numOptimizedConcat > 0
+	return optSlices || optInlineSlices || optConcats
 }
 
-func InlineExpression(expr ExpressionInterface, def *Function) ExpressionInterface {
-	switch e := expr.(type) {
-	case *SliceExpr:
-		panic("can't inline slice expression")
-	case *FunctionExpr:
-		return InlineFunctionCall(e, def)
+func IncStat(key string, stats map[string]int) {
+	_, ok := stats[key]
+	if !ok {
+		stats[key] = 0
 	}
+	stats[key]++
 }
 
-func InlineFunctionCall(funExpr *FunctionExpr, def *Function) ExpressionInterface {
-	if !funExpr.FuncDef.ZeroInternalSites() || funExpr.FuncDef == def {
-		// inline only if there's no internal sites
-		// don't do recursive inlining
-		return funExpr
+func StatValue(key string, stats map[string]int) int {
+	v, ok := stats[key]
+	if !ok {
+		return 0
 	}
-	return funExpr.FuncDef.RetExpr.InlineCopy(funExpr)
+	return v
 }
+
+//func InlineExpression(expr ExpressionInterface, def *Function) ExpressionInterface {
+//	switch e := expr.(type) {
+//	case *SliceExpr:
+//		panic("can't inline slice expression")
+//	case *FunctionExpr:
+//		return ExpandInlineFunCall(e, def)
+//	}
+//}
+//
+//func ExpandInlineFunCall(funExpr *FunctionExpr, def *Function) ExpressionInterface {
+//	if !funExpr.FuncDef.ZeroInternalSites() || funExpr.FuncDef == def {
+//		// inline only if there's no internal sites
+//		// don't do recursive inlining
+//		return funExpr
+//	}
+//	return funExpr.FuncDef.RetExpr.InlineCopy(funExpr)
+//}

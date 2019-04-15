@@ -17,3 +17,9 @@ func LogDefer(minVerbosity int, fun func()) {
 		fun()
 	}
 }
+
+func LogStats(minVerbosity int, stats map[string]int) {
+	for key, value := range stats {
+		Logf(minVerbosity, "      %v: %v", key, value)
+	}
+}
