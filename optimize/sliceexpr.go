@@ -2,7 +2,7 @@ package optimize
 
 import . "github.com/lunfardo314/goq/qupla"
 
-// All non param and non state slices which are used only once
+// All not params and not state vars slices which are used only once
 // within function will be replaced by SliceInline
 // This will eliminate unnecessary Eval call and unnecessary caching
 

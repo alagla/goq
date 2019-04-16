@@ -29,7 +29,7 @@ func NewSupervisor(lockTimeout time.Duration) *Supervisor {
 //    - name, used only for tracing
 //    - inSize, expected size of input trit vector. O means any not nil
 //    - outSize, size of output trit vector
-//    - core, and object which implement EntityCore interface. It calculates output trits from inputs
+//    - core, an object which implement EntityCore interface. It calculates output trits from inputs
 
 func (sv *Supervisor) NewEntity(name string, inSize, outSize int, core EntityCore) (*Entity, error) {
 	if outSize < 1 || inSize < 0 {
@@ -112,7 +112,7 @@ func (sv *Supervisor) Affect(envName string, entity *Entity, delay int) error {
 //    - "unjoins" and "unaffects" related entities.
 //    - marks environment as invalid. Any effects for this environment which may remain in the queue will be ignored
 // After environment is deleted, some entities may become completely detached from the supervisor.
-// Input loop and go routine of such an entity is automatically stopped.
+// Input loop and goroutine of such entity is automatically stopped.
 
 func (sv *Supervisor) DeleteEnvironment(envName string) error {
 	if !sv.accessLock.acquire(sv.timeout) {

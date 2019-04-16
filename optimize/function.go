@@ -6,7 +6,7 @@ import (
 )
 
 func optimizeFunction(def *Function, stats map[string]int) bool {
-	var optSlices, optInlineSlices, optConcats, optMerges bool
+	var optSlices, optInlineSlices, optConcats, optMerges, optInlineCalls bool
 
 	if Config.OptimizeOneTimeSites {
 		optSlices = optimizeSlices(def, stats)
@@ -20,7 +20,10 @@ func optimizeFunction(def *Function, stats map[string]int) bool {
 	if Config.OptimizeMerges {
 		optMerges = optimizeMerges(def, stats)
 	}
-	return optSlices || optInlineSlices || optConcats || optMerges
+	if Config.OptimizeFunCallsInline {
+		optInlineCalls = optimizeFunctionByInlining(def, stats)
+	}
+	return optSlices || optInlineSlices || optConcats || optMerges || optInlineCalls
 }
 
 func IncStat(key string, stats map[string]int) {
@@ -37,6 +40,66 @@ func StatValue(key string, stats map[string]int) int {
 		return 0
 	}
 	return v
+}
+
+func isExpandableInline(funExpr *FunctionExpr, ctx *Function) bool {
+	if funExpr.FuncDef == ctx {
+		return false // recursive expansion inline is not allowed
+	}
+	for _, site := range funExpr.FuncDef.Sites {
+		if site.IsState {
+			return false
+		}
+		if !site.IsParam && !site.NotUsed {
+			return false
+		}
+	}
+	return true
+}
+
+func optimizeFunctionByInlining(def *Function, stats map[string]int) bool {
+	before := StatValue("numFuncCallInlined", stats)
+	for _, site := range def.Sites {
+		if site.NotUsed || site.IsState || site.IsParam || site.NumUses > 1 {
+			continue
+		}
+		site.Assign = expandInlineExpr(site.Assign, def, stats)
+	}
+	def.RetExpr = expandInlineExpr(def.RetExpr, def, stats)
+	return before != StatValue("numFuncCallInlined", stats)
+
+}
+
+func expandInlineExpr(expr ExpressionInterface, ctx *Function, stats map[string]int) ExpressionInterface {
+	var ret ExpressionInterface
+	if funcExpr, ok := expr.(*FunctionExpr); ok && isExpandableInline(funcExpr, ctx) {
+		IncStat("numFuncCallInlined", stats)
+		ret = expandInlineFuncCall(funcExpr)
+	} else {
+		ret = expr.Copy()
+	}
+	transformSubexpressions(ret, func(se ExpressionInterface) ExpressionInterface {
+		return expandInlineExpr(se, ctx, stats)
+	})
+	return ret
+}
+
+func expandInlineFuncCall(funExpr *FunctionExpr) ExpressionInterface {
+	return inlineCopy(funExpr.FuncDef.RetExpr, funExpr)
+}
+
+func inlineCopy(expr ExpressionInterface, scope *FunctionExpr) ExpressionInterface {
+	if sliceExpr, ok := expr.(*SliceExpr); ok {
+		if !sliceExpr.Site().IsParam {
+			panic("can't expand inline non-param slice")
+		}
+		return NewSliceInline(sliceExpr, scope.GetSubExpr(sliceExpr.Site().Idx))
+	}
+	ret := expr.Copy()
+	transformSubexpressions(ret, func(se ExpressionInterface) ExpressionInterface {
+		return inlineCopy(se, scope)
+	})
+	return ret
 }
 
 //func InlineExpression(expr ExpressionInterface, def *Function) ExpressionInterface {

@@ -23,7 +23,9 @@ func OptimizeModule(module *QuplaModule, stats map[string]int) {
 	for _, funName := range tmpKeys {
 		// optimize while there's something to optimize
 		Logf(2, "Optimizing function '%v'", funName)
+		count := 0
 		for optimizeFunction(module.Functions[funName], stats) {
+			Logf(2, "%v", count)
 		}
 	}
 	//for _, exec := range module.Execs {
