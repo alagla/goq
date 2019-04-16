@@ -56,7 +56,11 @@ func moduleTest(fname string, chain bool, t *testing.T) {
 	module, succ := analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
 
 	if succ {
-		optimize.OptimizeModule(module)
+		stats := make(map[string]int)
+
+		optimize.OptimizeModule(module, stats)
+		cfg.LogStats(0, stats)
+
 		succ = module.AttachToSupervisor(sv)
 	} else {
 		t.Errorf("Failed to load module from '%v'", fname)

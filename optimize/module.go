@@ -6,14 +6,13 @@ import (
 	"sort"
 )
 
-func OptimizeModule(module *QuplaModule) {
+func OptimizeModule(module *QuplaModule, stats map[string]int) {
 	Logf(0, "Optimizing module..")
 	Logf(1, "Inline call optimisation = %v", Config.OptimizeFunCallsInline)
 	Logf(1, "Inline slice optimisation = %v", Config.OptimizeInlineSlices)
 	Logf(1, "One time site optimisation = %v", Config.OptimizeOneTimeSites)
 	Logf(1, "Concat optimisation = %v", Config.OptimizeConcats)
 
-	stats := make(map[string]int)
 	tmpKeys := make([]string, 0, len(module.Functions))
 
 	for k := range module.Functions {
@@ -28,8 +27,6 @@ func OptimizeModule(module *QuplaModule) {
 		for optimizeFunction(module.Functions[funName], stats) {
 		}
 	}
-	LogStats(0, stats)
-
 	//for _, exec := range module.Execs {
 	//	OptimizeExecStmt(exec)
 	//}

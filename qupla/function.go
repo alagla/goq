@@ -173,3 +173,25 @@ func (def *Function) ZeroInternalSites() bool {
 	_, _, _, numVars, numUnusedVars := def.NumSites()
 	return numVars == numUnusedVars
 }
+
+func (def *Function) Stats() map[string]int {
+	ret := make(map[string]int)
+	for _, site := range def.LocalVars {
+		if !site.IsParam {
+			countTypesInExpression(site.Assign, ret)
+		}
+	}
+	countTypesInExpression(def.RetExpr, ret)
+	return ret
+}
+
+func countTypesInExpression(expr ExpressionInterface, stats map[string]int) {
+	t := fmt.Sprintf("%T", expr)
+	if _, ok := stats[t]; !ok {
+		stats[t] = 0
+	}
+	stats[t]++
+	for _, se := range expr.GetSubexpressions() {
+		countTypesInExpression(se, stats)
+	}
+}

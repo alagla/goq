@@ -1,6 +1,8 @@
 package optimize
 
-import . "github.com/lunfardo314/goq/qupla"
+import (
+	. "github.com/lunfardo314/goq/qupla"
+)
 
 // if inline slice does no slicing of the expression at all (takes whole vector)
 // return that expression
@@ -8,6 +10,9 @@ import . "github.com/lunfardo314/goq/qupla"
 // optimize the value expression
 
 func optimizeInlineSlices(def *Function, stats map[string]int) bool {
+	//if strings.HasPrefix(def.Name, "fixSign"){
+	//	fmt.Println("kuku")
+	//}
 	before := StatValue("numOptimizedInlineSlices", stats)
 	for _, site := range def.LocalVars {
 		if site.NotUsed || site.IsState || site.IsParam || site.NumUses > 1 {
@@ -28,12 +33,12 @@ func optimizeInlineSlicesInExpr(expr ExpressionInterface, stats map[string]int) 
 	}
 
 	if inlineSlice.NoSlice {
-		IncStat("numOptimizedInlineSlices", stats)
+		IncStat("numOptimizedInlineSlices:eliminated", stats)
 		return inlineSlice.GetSubExpr(0)
 	}
 	valueExpr, ok := inlineSlice.GetSubExpr(0).(*ValueExpr)
 	if ok {
-		IncStat("numOptimizedInlineSlices", stats)
+		IncStat("numOptimizedInlineSlices:toValue", stats)
 		return NewValueExpr(valueExpr.TritValue[inlineSlice.Offset:inlineSlice.SliceEnd])
 	}
 	return inlineSlice

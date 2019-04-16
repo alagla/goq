@@ -1,6 +1,8 @@
 package optimize
 
-import . "github.com/lunfardo314/goq/qupla"
+import (
+	. "github.com/lunfardo314/goq/qupla"
+)
 
 // calls optFun for each subexpression to get optimized copy
 

@@ -6,8 +6,6 @@ import (
 
 type SliceExpr struct {
 	ExpressionBase
-	//LocalVarIdx int
-	//VarScope    *Function
 	site     *QuplaSite
 	offset   int
 	size     int
