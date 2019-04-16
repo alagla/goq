@@ -10,11 +10,8 @@ import (
 // optimize the value expression
 
 func optimizeInlineSlices(def *Function, stats map[string]int) bool {
-	//if strings.HasPrefix(def.Name, "fixSign"){
-	//	fmt.Println("kuku")
-	//}
 	before := StatValue("numOptimizedInlineSlices", stats)
-	for _, site := range def.LocalVars {
+	for _, site := range def.Sites {
 		if site.NotUsed || site.IsState || site.IsParam || site.NumUses > 1 {
 			continue
 		}
@@ -34,7 +31,8 @@ func optimizeInlineSlicesInExpr(expr ExpressionInterface, stats map[string]int) 
 
 	if inlineSlice.NoSlice {
 		IncStat("numOptimizedInlineSlices:eliminated", stats)
-		return inlineSlice.GetSubExpr(0)
+		return optimizeInlineSlicesInExpr(inlineSlice.GetSubExpr(0), stats)
+	} else {
 	}
 	valueExpr, ok := inlineSlice.GetSubExpr(0).(*ValueExpr)
 	if ok {

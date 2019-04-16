@@ -35,6 +35,7 @@ type ExpressionInterface interface {
 	Copy() ExpressionInterface // shallow copy
 	GetSubexpressions() []ExpressionInterface
 	SetSubexpressions([]ExpressionInterface)
+	GetSource() string
 }
 
 const (
@@ -48,7 +49,7 @@ func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
 		buffer:  make(Trits, expr.FuncDef.BufLen, expr.FuncDef.BufLen),
 		context: expr,
 	}
-	for _, vi := range expr.FuncDef.LocalVars {
+	for _, vi := range expr.FuncDef.Sites {
 		ret.buffer[vi.Offset] = notEvaluated
 	}
 	return ret
@@ -143,7 +144,7 @@ func (frame *EvalFrame) SaveStateVariables() {
 	}
 	Logf(7, "SaveStateVariables for '%v'", frame.context.FuncDef.Name)
 	var val Trits
-	for _, vi := range frame.context.FuncDef.LocalVars {
+	for _, vi := range frame.context.FuncDef.Sites {
 		if !vi.IsState {
 			continue
 		}

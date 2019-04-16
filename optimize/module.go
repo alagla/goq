@@ -7,7 +7,7 @@ import (
 )
 
 func OptimizeModule(module *QuplaModule, stats map[string]int) {
-	Logf(0, "Optimizing module..")
+	Logf(1, "Optimizing module..")
 	Logf(1, "Inline call optimisation = %v", Config.OptimizeFunCallsInline)
 	Logf(1, "Inline slice optimisation = %v", Config.OptimizeInlineSlices)
 	Logf(1, "One time site optimisation = %v", Config.OptimizeOneTimeSites)
@@ -18,7 +18,6 @@ func OptimizeModule(module *QuplaModule, stats map[string]int) {
 	for k := range module.Functions {
 		tmpKeys = append(tmpKeys, k)
 	}
-
 	sort.Strings(tmpKeys)
 
 	for _, funName := range tmpKeys {

@@ -8,7 +8,7 @@ import . "github.com/lunfardo314/goq/qupla"
 
 func optimizeSlices(def *Function, stats map[string]int) bool {
 	before := StatValue("numOptimizedSlices", stats)
-	for _, site := range def.LocalVars {
+	for _, site := range def.Sites {
 		if site.NotUsed || site.IsState || site.IsParam || site.NumUses > 1 {
 			continue
 		}

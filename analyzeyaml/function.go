@@ -21,7 +21,7 @@ func AnalyzeFunctionPreliminary(name string, defYAML *QuplaFuncDefYAML, module *
 	}
 	def := NewFunction(name, sz, module)
 
-	if err = createVarScope(defYAML, def, module); err != nil {
+	if err = createSites(defYAML, def, module); err != nil {
 		return err
 	}
 	return module.AddFuncDef(name, def)
@@ -125,14 +125,14 @@ func AnalyzeVar(vi *QuplaSite, defYAML *QuplaFuncDefYAML, def *Function, module 
 	return nil
 }
 
-func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
+func createSites(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
 	// function parameters (first numParams)
 	def.NumParams = len(src.Params)
 	for idx, arg := range src.Params {
 		if def.GetVarIdx(arg.ArgName) >= 0 {
 			return fmt.Errorf("duplicate arg Name '%v'", arg.ArgName)
 		}
-		def.LocalVars = append(def.LocalVars, &QuplaSite{
+		def.Sites = append(def.Sites, &QuplaSite{
 			Idx:      idx,
 			Name:     arg.ArgName,
 			Size:     arg.Size,
@@ -163,8 +163,8 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 			return fmt.Errorf("wrong declared state variable: '%v' in '%v'", name, def.Name)
 		} else {
 			// for old value
-			def.LocalVars = append(def.LocalVars, &QuplaSite{
-				Idx:     len(def.LocalVars),
+			def.Sites = append(def.Sites, &QuplaSite{
+				Idx:     len(def.Sites),
 				Name:    name,
 				Size:    src.State[name].Size,
 				IsState: true,
@@ -192,8 +192,8 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 				return fmt.Errorf("several assignment to the same var '%v' in '%v' is not allowed", name, def.Name)
 			}
 		} else {
-			def.LocalVars = append(def.LocalVars, &QuplaSite{
-				Idx:     len(def.LocalVars),
+			def.Sites = append(def.Sites, &QuplaSite{
+				Idx:     len(def.Sites),
 				Name:    name,
 				Size:    0, // unknown yet
 				IsState: false,
@@ -221,7 +221,7 @@ func analyzeAssigns(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModul
 func finalizeLocalVars(def *Function, module *QuplaModule) error {
 	var curOffset int
 	def.InSize = 0
-	for _, v := range def.LocalVars {
+	for _, v := range def.Sites {
 		if v.Size == 0 {
 			v.Size = v.Assign.Size()
 		}

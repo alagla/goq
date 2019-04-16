@@ -16,6 +16,9 @@ func Test_Opt0QuplaTests(t *testing.T) {
 
 func Test_Opt1QuplaTests(t *testing.T) {
 	moduleOptimize_1_Test("../examples/modules/QuplaTests.yml", t)
+	moduleOptimize_1_Test("../examples/modules/Examples.yml", t)
+	moduleOptimize_1_Test("../examples/modules/Curl.yml", t)
+	moduleOptimize_1_Test("../examples/modules/Fibonacci.yml", t)
 }
 
 func moduleOptimize_0_Test(fname string, t *testing.T) {
@@ -50,7 +53,7 @@ func moduleOptimize_0_Test(fname string, t *testing.T) {
 
 func moduleOptimize_1_Test(fname string, t *testing.T) {
 
-	cfg.Logf(0, "---------------------------\nTesting QuplaYAML module %v optimization", fname)
+	cfg.Logf(0, "------------------\nTesting QuplaYAML module %v optimization: testing if two optimisation has same result", fname)
 	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(fname)
 	if err != nil {
 		t.Errorf("%v", err)
@@ -67,8 +70,8 @@ func moduleOptimize_1_Test(fname string, t *testing.T) {
 	}
 	stats1 := make(map[string]int)
 	optimize.OptimizeModule(module1, stats1)
-	cfg.Logf(0, "Optimization stats for %v (1st optimization)", name)
-	cfg.LogStats(0, stats1)
+	cfg.Logf(1, "Optimization stats for %v (1st optimization)", name)
+	cfg.LogStats(1, stats1)
 
 	name = fname + "-opt2"
 	if module2, succ = analyzeyaml.AnalyzeQuplaModule(name, moduleYAML); !succ {
@@ -77,8 +80,8 @@ func moduleOptimize_1_Test(fname string, t *testing.T) {
 	}
 	stats2 := make(map[string]int)
 	optimize.OptimizeModule(module2, stats2)
-	cfg.Logf(0, "Optimization stats for %v (2nd optimization)", name)
-	cfg.LogStats(0, stats2)
+	cfg.Logf(1, "Optimization stats for %v (2nd optimization)", name)
+	cfg.LogStats(1, stats2)
 
 	funNames := make([]string, 0)
 	for n := range module1.Functions {

@@ -29,6 +29,9 @@ func (e *ExpressionBase) SetSubexpressions(subExpr []ExpressionInterface) {
 }
 
 func (e *ExpressionBase) GetSource() string {
+	if e == nil {
+		return ""
+	}
 	return e.source
 }
 

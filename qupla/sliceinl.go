@@ -6,20 +6,22 @@ import (
 
 type SliceInline struct {
 	ExpressionBase
-	Offset   int
-	size     int
-	SliceEnd int
-	NoSlice  bool
-	oneTrit  bool
+	OrigSiteName string // original name
+	Offset       int
+	size         int
+	SliceEnd     int
+	NoSlice      bool
+	oneTrit      bool
 }
 
 func NewSliceInline(sliceExpr *SliceExpr, expr ExpressionInterface) *SliceInline {
 	ret := &SliceInline{
 		ExpressionBase: NewExpressionBase(sliceExpr.GetSource()),
+		OrigSiteName:   sliceExpr.site.Name,
 		Offset:         sliceExpr.offset,
 		size:           sliceExpr.size,
 		SliceEnd:       sliceExpr.sliceEnd,
-		NoSlice:        sliceExpr.noSlice,
+		NoSlice:        sliceExpr.offset == 0 && sliceExpr.size == expr.Size(),
 		oneTrit:        sliceExpr.oneTrit,
 	}
 	ret.AppendSubExpr(expr)
@@ -29,6 +31,7 @@ func NewSliceInline(sliceExpr *SliceExpr, expr ExpressionInterface) *SliceInline
 func (e *SliceInline) Copy() ExpressionInterface {
 	ret := &SliceInline{
 		ExpressionBase: e.copyBase(),
+		OrigSiteName:   e.OrigSiteName,
 		Offset:         e.Offset,
 		size:           e.size,
 		SliceEnd:       e.SliceEnd,

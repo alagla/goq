@@ -59,7 +59,7 @@ func moduleTest(fname string, chain bool, t *testing.T) {
 		stats := make(map[string]int)
 
 		optimize.OptimizeModule(module, stats)
-		cfg.LogStats(0, stats)
+		cfg.LogStats(1, stats)
 
 		succ = module.AttachToSupervisor(sv)
 	} else {

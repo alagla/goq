@@ -15,7 +15,7 @@ type Function struct {
 	Name              string
 	retSize           int
 	RetExpr           ExpressionInterface
-	LocalVars         []*QuplaSite
+	Sites             []*QuplaSite
 	NumParams         int  // idx < NumParams represents parameter, idx >= represents local var (assign)
 	BufLen            int  // total length of the local var buffer
 	HasStateVariables bool // if has state vars itself
@@ -33,7 +33,7 @@ func NewFunction(name string, size int, module *QuplaModule) *Function {
 		module:     module,
 		Name:       name,
 		retSize:    size,
-		LocalVars:  make([]*QuplaSite, 0, 10),
+		Sites:      make([]*QuplaSite, 0, 10),
 		Joins:      make(map[string]int),
 		Affects:    make(map[string]int),
 		ParamSizes: make([]int, 0, 5),
@@ -61,7 +61,7 @@ func (def *Function) HasState() bool {
 }
 
 func (def *Function) References(funName string) bool {
-	for _, vi := range def.LocalVars {
+	for _, vi := range def.Sites {
 		if vi.Assign != nil && vi.Assign.References(funName) {
 			return true
 		}
@@ -90,7 +90,7 @@ func (def *Function) GetAffectEnv() map[string]int {
 }
 
 func (def *Function) GetVarIdx(name string) int {
-	for i, lv := range def.LocalVars {
+	for i, lv := range def.Sites {
 		if lv.Name == name {
 			return i
 		}
@@ -99,10 +99,10 @@ func (def *Function) GetVarIdx(name string) int {
 }
 
 func (def *Function) VarByIdx(idx int) (*QuplaSite, error) {
-	if idx < 0 || idx >= len(def.LocalVars) {
+	if idx < 0 || idx >= len(def.Sites) {
 		return nil, fmt.Errorf("worng var idx %v", idx)
 	}
-	return def.LocalVars[idx], nil
+	return def.Sites[idx], nil
 }
 
 func (def *Function) VarByName(name string) (*QuplaSite, error) {
@@ -115,7 +115,7 @@ func (def *Function) VarByName(name string) (*QuplaSite, error) {
 
 func (def *Function) CheckArgSizes(args []ExpressionInterface) error {
 	for i := range args {
-		if i >= def.NumParams || args[i].Size() != def.LocalVars[i].Size {
+		if i >= def.NumParams || args[i].Size() != def.Sites[i].Size {
 			return fmt.Errorf("param and arg # %v mismach in %v", i, def.Name)
 		}
 	}
@@ -151,7 +151,7 @@ func (def *Function) Eval(frame *EvalFrame, result Trits) bool {
 // returns numSites, numParam, numState, numVars, numUnusedVars
 func (def *Function) NumSites() (int, int, int, int, int) {
 	var numSites, numParam, numState, numVars, numUnusedVars int
-	for _, vi := range def.LocalVars {
+	for _, vi := range def.Sites {
 		numSites++
 		if vi.IsParam {
 			numParam++
@@ -176,7 +176,7 @@ func (def *Function) ZeroInternalSites() bool {
 
 func (def *Function) Stats() map[string]int {
 	ret := make(map[string]int)
-	for _, site := range def.LocalVars {
+	for _, site := range def.Sites {
 		if !site.IsParam {
 			countTypesInExpression(site.Assign, ret)
 		}
