@@ -91,7 +91,9 @@ func CmdLoadModule(words []string) {
 	}
 	var succ bool
 	module, succ = analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
-	optimize.OptimizeModule(module)
+	stats := make(map[string]int)
+	optimize.OptimizeModule(module, stats)
+	LogStats(0, stats)
 
 	module.PrintStats()
 	if succ {

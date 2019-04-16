@@ -8,6 +8,16 @@ type MergeExpr struct {
 	ExpressionBase
 }
 
+func NewMergeExpression(src string, args []ExpressionInterface) *MergeExpr {
+	ret := &MergeExpr{
+		ExpressionBase: NewExpressionBase(src),
+	}
+	for _, a := range args {
+		ret.AppendSubExpr(a)
+	}
+	return ret
+}
+
 func (e *MergeExpr) Size() int {
 	if e == nil {
 		return 0
@@ -22,8 +32,10 @@ func (e *MergeExpr) Copy() ExpressionInterface {
 }
 
 func (e *MergeExpr) Eval(frame *EvalFrame, result Trits) bool {
-	if e.subExpr[0].Eval(frame, result) {
-		return e.subExpr[1].Eval(frame, result)
+	for _, se := range e.subExpr {
+		if !se.Eval(frame, result) {
+			return false // return first not null
+		}
 	}
-	return false
+	return true // all nulls
 }

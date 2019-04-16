@@ -6,7 +6,7 @@ import (
 )
 
 func optimizeFunction(def *Function, stats map[string]int) bool {
-	var optSlices, optInlineSlices, optConcats bool
+	var optSlices, optInlineSlices, optConcats, optMerges bool
 
 	if Config.OptimizeOneTimeSites {
 		optSlices = optimizeSlices(def, stats)
@@ -17,7 +17,10 @@ func optimizeFunction(def *Function, stats map[string]int) bool {
 	if Config.OptimizeConcats {
 		optConcats = optimizeConcats(def, stats)
 	}
-	return optSlices || optInlineSlices || optConcats
+	if Config.OptimizeMerges {
+		optMerges = optimizeMerges(def, stats)
+	}
+	return optSlices || optInlineSlices || optConcats || optMerges
 }
 
 func IncStat(key string, stats map[string]int) {

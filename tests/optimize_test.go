@@ -53,7 +53,7 @@ func moduleOptimize_0_Test(fname string, t *testing.T) {
 
 func moduleOptimize_1_Test(fname string, t *testing.T) {
 
-	cfg.Logf(0, "------------------\nTesting QuplaYAML module %v optimization: testing if two optimisation has same result", fname)
+	cfg.Logf(0, "------------------\nTesting QuplaYAML module %v optimization: testing if two optimization has same result", fname)
 	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(fname)
 	if err != nil {
 		t.Errorf("%v", err)
