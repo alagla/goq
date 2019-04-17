@@ -18,9 +18,9 @@ type ConstValue struct {
 	size  int
 }
 
-func (e *ConstValue) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *ConstValue) Copy() ExpressionInterface {
 	return &ConstValue{
-		ExpressionBase: e.inlineCopyBase(funExpr),
+		ExpressionBase: e.copyBase(),
 		value:          e.value,
 		name:           e.name,
 		size:           e.size,

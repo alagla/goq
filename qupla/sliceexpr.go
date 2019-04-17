@@ -6,31 +6,37 @@ import (
 
 type SliceExpr struct {
 	ExpressionBase
-	//LocalVarIdx int
-	//VarScope    *Function
-	vi       *QuplaSite
+	site     *QuplaSite
 	offset   int
 	size     int
 	sliceEnd int
-	noSlice  bool
 	oneTrit  bool
 }
 
-func NewQuplaSliceExpr(vi *QuplaSite, src string, offset, size int) *SliceExpr {
-	noSlice := offset == 0 && size == vi.Size
+func NewQuplaSliceExpr(site *QuplaSite, src string, offset, size int) *SliceExpr {
 	return &SliceExpr{
 		ExpressionBase: NewExpressionBase(src),
-		vi:             vi,
+		site:           site,
 		offset:         offset,
 		size:           size,
 		sliceEnd:       offset + size,
-		noSlice:        noSlice,
 		oneTrit:        size == 1,
 	}
 }
 
-func (e *SliceExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
-	return NewSliceInline(e, funExpr.subExpr[e.vi.Idx])
+func (e *SliceExpr) Site() *QuplaSite {
+	return e.site
+}
+
+func (e *SliceExpr) Copy() ExpressionInterface {
+	return &SliceExpr{
+		ExpressionBase: NewExpressionBase(e.source),
+		site:           e.site,
+		offset:         e.offset,
+		size:           e.size,
+		sliceEnd:       e.sliceEnd,
+		oneTrit:        e.oneTrit,
+	}
 }
 
 func (e *SliceExpr) Size() int {
@@ -41,16 +47,12 @@ func (e *SliceExpr) Size() int {
 }
 
 func (e *SliceExpr) Eval(frame *EvalFrame, result Trits) bool {
-	restmp, null := e.vi.Eval(frame)
+	restmp, null := e.site.Eval(frame)
 	if !null {
 		if e.oneTrit {
 			result[0] = restmp[e.offset] // optimization ????
 		} else {
-			if e.noSlice {
-				copy(result, restmp)
-			} else {
-				copy(result, restmp[e.offset:e.sliceEnd])
-			}
+			copy(result, restmp[e.offset:e.sliceEnd])
 		}
 	}
 	return null

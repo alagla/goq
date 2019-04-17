@@ -16,9 +16,9 @@ func (e *LutExpr) Size() int {
 	return e.LutDef.Size()
 }
 
-func (e *LutExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *LutExpr) Copy() ExpressionInterface {
 	return &LutExpr{
-		ExpressionBase: e.inlineCopyBase(funExpr),
+		ExpressionBase: e.copyBase(),
 		LutDef:         e.LutDef,
 	}
 }

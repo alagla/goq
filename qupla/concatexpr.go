@@ -30,11 +30,6 @@ func NewConcatExpression(src string, args []ExpressionInterface) *ConcatExpr {
 
 func (e *ConcatExpr) Size() int {
 	return e.size
-	//var ret int
-	//for _, se := range e.subExpr{
-	//	ret += se.Size()
-	//}
-	//return ret
 }
 
 func (e *ConcatExpr) Eval(frame *EvalFrame, result Trits) bool {
@@ -44,42 +39,13 @@ func (e *ConcatExpr) Eval(frame *EvalFrame, result Trits) bool {
 		}
 	}
 	return false
-
-	//null := e.subExpr[0].Eval(frame, result)
-	//if null {
-	//	return true
-	//}
-	//return e.subExpr[1].Eval(frame, result[e.subExpr[0].Size():])
 }
 
-func (e *ConcatExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *ConcatExpr) Copy() ExpressionInterface {
 	return &ConcatExpr{
-		ExpressionBase: e.inlineCopyBase(funExpr),
+		ExpressionBase: e.copyBase(),
 		size:           e.size,
 		offset:         e.offset,
 		endSlice:       e.endSlice,
 	}
-}
-
-func optimizeConcatExpr(expr ExpressionInterface) ExpressionInterface {
-	_, ok := expr.(*ConcatExpr)
-	subExpr := make([]ExpressionInterface, 0)
-	if !ok {
-		for _, se := range expr.GetSubexpressions() {
-			subExpr = append(subExpr, optimizeConcatExpr(se))
-		}
-		expr.SetSubexpressions(subExpr)
-		return expr
-	}
-	for _, se := range expr.GetSubexpressions() {
-		oe := optimizeConcatExpr(se)
-		if ce, ok := oe.(*ConcatExpr); ok {
-			for _, e := range ce.subExpr {
-				subExpr = append(subExpr, e)
-			}
-		} else {
-			subExpr = append(subExpr, oe)
-		}
-	}
-	return NewConcatExpression("optimized", subExpr)
 }

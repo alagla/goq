@@ -4,6 +4,7 @@ import (
 	"github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/analyzeyaml"
 	. "github.com/lunfardo314/goq/cfg"
+	"github.com/lunfardo314/goq/optimize"
 	"github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/goq/readyaml"
 	"github.com/lunfardo314/goq/utils"
@@ -90,6 +91,11 @@ func CmdLoadModule(words []string) {
 	}
 	var succ bool
 	module, succ = analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
+	stats := make(map[string]int)
+	optimize.OptimizeModule(module, stats)
+	Logf(0, "Optimisation stats:")
+	LogStats(0, stats)
+
 	module.PrintStats()
 	if succ {
 		succ = module.AttachToSupervisor(svisor)
@@ -205,25 +211,6 @@ func CmdLfun(words []string) {
 	}
 	funcs := module.FindFuncs(substr)
 	Logfuncs(funcs)
-}
-
-func CmdPassparam(words []string) {
-	if moduleYAML == nil {
-		Logf(0, "Error: module was not loaded")
-		return
-	}
-	substr := ""
-	if len(words) == 2 {
-		substr = words[1]
-	}
-	funcs := module.FindFuncs(substr)
-	lfun := make([]*qupla.Function, 0)
-	for _, f := range funcs {
-		if f.ZeroInternalSites() {
-			lfun = append(lfun, f)
-		}
-	}
-	Logfuncs(lfun)
 }
 
 func CmdLenv(words []string) {

@@ -2,7 +2,6 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
-	"github.com/lunfardo314/goq/cfg"
 )
 
 type FunctionExpr struct {
@@ -44,21 +43,10 @@ func (e *FunctionExpr) HasState() bool {
 	return e.FuncDef.hasState || e.hasStateSubexpr()
 }
 
-func (e *FunctionExpr) Inline() ExpressionInterface {
-	if !e.FuncDef.ZeroInternalSites() || e.FuncDef.isRecursive {
-		return e
-	}
-	e.FuncDef.module.IncStat("numInlined")
-	cfg.Logf(5, "inlined '%v' in %v", e.GetSource(), e.FuncDef.Name)
-	ret := e.FuncDef.RetExpr.InlineCopy(e)
-	return ret
-}
-
-func (e *FunctionExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
-	ret := &FunctionExpr{
-		ExpressionBase: e.inlineCopyBase(funExpr),
+func (e *FunctionExpr) Copy() ExpressionInterface {
+	return &FunctionExpr{
+		ExpressionBase: e.copyBase(),
 		FuncDef:        e.FuncDef,
 		callIndex:      e.callIndex,
 	}
-	return ret.Inline()
 }

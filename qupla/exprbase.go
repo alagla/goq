@@ -12,15 +12,12 @@ func NewExpressionBase(source string) ExpressionBase {
 	}
 }
 
-func (e *ExpressionBase) inlineCopyBase(funcExpr *FunctionExpr) ExpressionBase {
-	ret := ExpressionBase{
-		source:  e.source,
-		subExpr: make([]ExpressionInterface, len(e.subExpr), len(e.subExpr)),
+// shallow copy
+func (base *ExpressionBase) copyBase() ExpressionBase {
+	return ExpressionBase{
+		source:  base.source,
+		subExpr: base.subExpr,
 	}
-	for i := range e.subExpr {
-		ret.subExpr[i] = e.subExpr[i].InlineCopy(funcExpr)
-	}
-	return ret
 }
 
 func (e *ExpressionBase) GetSubexpressions() []ExpressionInterface {
@@ -32,6 +29,9 @@ func (e *ExpressionBase) SetSubexpressions(subExpr []ExpressionInterface) {
 }
 
 func (e *ExpressionBase) GetSource() string {
+	if e == nil {
+		return ""
+	}
 	return e.source
 }
 

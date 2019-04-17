@@ -7,23 +7,27 @@ import (
 // TODO with fields expressions
 type QuplaFieldExpr struct {
 	ExpressionBase
-	CondExpr ExpressionInterface
+}
+
+func NewFieldExpr(src string, condExpr ExpressionInterface) *QuplaFieldExpr {
+	ret := &QuplaFieldExpr{
+		ExpressionBase: NewExpressionBase(src),
+	}
+	ret.AppendSubExpr(condExpr)
+	return ret
 }
 
 func (e *QuplaFieldExpr) Size() int {
 	if e == nil {
 		return 0
 	}
-	return e.CondExpr.Size()
+	return e.subExpr[0].Size()
 }
 
 func (e *QuplaFieldExpr) Eval(_ *EvalFrame, _ Trits) bool {
 	return true
 }
 
-func (e *QuplaFieldExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
-	return &QuplaFieldExpr{
-		ExpressionBase: e.inlineCopyBase(funExpr),
-		CondExpr:       e.CondExpr.InlineCopy(funExpr),
-	}
+func (e *QuplaFieldExpr) Copy() ExpressionInterface {
+	return NewFieldExpr(e.source, e.subExpr[0])
 }

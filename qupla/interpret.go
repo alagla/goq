@@ -13,12 +13,12 @@ type QuplaSite struct {
 	Idx      int
 	Offset   int
 	Size     int
-	SliceEnd int // offset + size precalculated
+	SliceEnd int // Offset + size precalculated
 	IsState  bool
 	IsParam  bool
 	Assign   ExpressionInterface
-	numUses  int  // number of times referenced in the scope (by slice expressions)
-	notUsed  bool // optimized away
+	NumUses  int  // number of times referenced in the scope (by slice expressions)
+	NotUsed  bool // optimized away
 }
 
 type EvalFrame struct {
@@ -32,9 +32,10 @@ type ExpressionInterface interface {
 	Eval(*EvalFrame, Trits) bool
 	References(string) bool
 	HasState() bool
-	InlineCopy(funExpr *FunctionExpr) ExpressionInterface
+	Copy() ExpressionInterface // shallow copy
 	GetSubexpressions() []ExpressionInterface
 	SetSubexpressions([]ExpressionInterface)
+	GetSource() string
 }
 
 const (
@@ -48,14 +49,14 @@ func newEvalFrame(expr *FunctionExpr, prev *EvalFrame) EvalFrame {
 		buffer:  make(Trits, expr.FuncDef.BufLen, expr.FuncDef.BufLen),
 		context: expr,
 	}
-	for _, vi := range expr.FuncDef.LocalVars {
+	for _, vi := range expr.FuncDef.Sites {
 		ret.buffer[vi.Offset] = notEvaluated
 	}
 	return ret
 }
 
 func (vi *QuplaSite) IncNumUses() {
-	vi.numUses++
+	vi.NumUses++
 }
 
 func (frame *EvalFrame) getCallTrace() []uint8 {
@@ -143,7 +144,7 @@ func (frame *EvalFrame) SaveStateVariables() {
 	}
 	Logf(7, "SaveStateVariables for '%v'", frame.context.FuncDef.Name)
 	var val Trits
-	for _, vi := range frame.context.FuncDef.LocalVars {
+	for _, vi := range frame.context.FuncDef.Sites {
 		if !vi.IsState {
 			continue
 		}

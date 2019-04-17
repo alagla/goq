@@ -21,9 +21,9 @@ func IsNullExpr(e interface{}) bool {
 	return ok
 }
 
-func (e *NullExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *NullExpr) Copy() ExpressionInterface {
 	return &NullExpr{
-		ExpressionBase: e.inlineCopyBase(funExpr),
+		ExpressionBase: e.copyBase(),
 		size:           e.size,
 	}
 }

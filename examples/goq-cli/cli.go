@@ -38,8 +38,6 @@ func executor(in string) {
 		CmdLfun(words)
 	case "inline":
 		CmdInline(words)
-	case "passparam": // for debugging
-		CmdPassparam(words)
 	case "lenv":
 		CmdLenv(words)
 	case "trace":

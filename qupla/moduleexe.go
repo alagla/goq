@@ -10,15 +10,15 @@ import (
 )
 
 func (module *QuplaModule) AttachExecs(disp *supervisor.Supervisor, fromIdx int, toIdx int, chain bool) []*ExecStmt {
-	if len(module.execs) == 0 {
+	if len(module.Execs) == 0 {
 		Logf(0, "No executables to execute")
 		return nil
 	}
-	if fromIdx < 0 || fromIdx >= len(module.execs) {
+	if fromIdx < 0 || fromIdx >= len(module.Execs) {
 		fromIdx = 0
 	}
-	if toIdx < 0 || toIdx >= len(module.execs) {
-		toIdx = len(module.execs) - 1
+	if toIdx < 0 || toIdx >= len(module.Execs) {
+		toIdx = len(module.Execs) - 1
 	}
 	if fromIdx < 0 || fromIdx > toIdx {
 		Logf(0, "Wrong range of indices: from %v to %v", fromIdx, toIdx)
@@ -30,7 +30,7 @@ func (module *QuplaModule) AttachExecs(disp *supervisor.Supervisor, fromIdx int,
 	var err error
 	var prev *ExecStmt
 	for idx := fromIdx; idx <= toIdx; idx++ {
-		exec = module.execs[idx]
+		exec = module.Execs[idx]
 		if err = exec.attach(disp, prev); err != nil {
 			Logf(0, "can't attach executable '%v'", exec.GetName())
 		} else {
@@ -102,7 +102,7 @@ func (module *QuplaModule) RunExecs(disp *supervisor.Supervisor, fromIdx int, to
 	attachedExecs := module.AttachExecs(disp, fromIdx, toIdx, chain)
 
 	Logf(1, "Running executable statements with indices between %v and %v", fromIdx, toIdx)
-	Logf(1, "   total in the module: %v", len(module.execs))
+	Logf(1, "   total in the module: %v", len(module.Execs))
 	Logf(1, "   running: %v", len(attachedExecs))
 	cmode := "OFF"
 	if chain {

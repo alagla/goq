@@ -24,8 +24,11 @@ It also contains YAML representations of `QuplaTests`, `Examples`, `Fibonacci` a
 convert YAML module representation into interpretable Qupla representation which is completely independent from 
 YAML source. It also performs necessary semantic analysis and checking.
 
-- [qupla](https://github.com/lunfardo314/goq/tree/master/qupla) library contains 
+- [qupla](https://github.com/lunfardo314/goq/tree/master/qupla) package contains 
 Qupla runtime representations and Qupla interpreter
+
+- [optimize](https://github.com/lunfardo314/goq/tree/master/qupla) package contains 
+Qupla optimisation functions.  
 
 - [supervisor](https://github.com/lunfardo314/goq/tree/master/supervisor) contains Qubic 
 Supervisor as it is defined in _Qubic Computational Model_ (QCM). 
@@ -83,11 +86,7 @@ Run `go get github.com/lunfardo314/goq/examples/goq-cli`
 
 Make directory `GOPATH/src/lunfardo314/goq/tests` current.
 
-Run test:
-
-- without optimization of function calls `go test`
-
-- with expanding inline function calls wherever possible `go test -args - inline`
+Run test: `go test`
 
 ### Run goq-cli
 

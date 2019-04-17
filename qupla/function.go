@@ -15,29 +15,38 @@ type Function struct {
 	Name              string
 	retSize           int
 	RetExpr           ExpressionInterface
-	LocalVars         []*QuplaSite
+	Sites             []*QuplaSite
 	NumParams         int  // idx < NumParams represents parameter, idx >= represents local var (assign)
 	BufLen            int  // total length of the local var buffer
 	HasStateVariables bool // if has state vars itself
 	hasState          bool // if directly or indirectly references those with state vars
-	isRecursive       bool // is directly or indirectly recursive
 	InSize            int
 	ParamSizes        []int
 	traceLevel        int
 	nextCallIndex     uint8
 	StateHashMap      *StateHashMap
+	expandedInline    utils.StringSet // needed for optimisation, prevention of recursions while expanding inline
 }
 
 func NewFunction(name string, size int, module *QuplaModule) *Function {
 	return &Function{
-		module:     module,
-		Name:       name,
-		retSize:    size,
-		LocalVars:  make([]*QuplaSite, 0, 10),
-		Joins:      make(map[string]int),
-		Affects:    make(map[string]int),
-		ParamSizes: make([]int, 0, 5),
+		module:         module,
+		Name:           name,
+		retSize:        size,
+		Sites:          make([]*QuplaSite, 0, 10),
+		Joins:          make(map[string]int),
+		Affects:        make(map[string]int),
+		ParamSizes:     make([]int, 0, 5),
+		expandedInline: make(utils.StringSet),
 	}
+}
+
+func (def *Function) AppendInline(s string) {
+	def.expandedInline.Append(s)
+}
+
+func (def *Function) WasInline(s string) bool {
+	return def.expandedInline.Contains(s)
 }
 
 func (def *Function) NextCallIndex() uint8 {
@@ -61,7 +70,7 @@ func (def *Function) HasState() bool {
 }
 
 func (def *Function) References(funName string) bool {
-	for _, vi := range def.LocalVars {
+	for _, vi := range def.Sites {
 		if vi.Assign != nil && vi.Assign.References(funName) {
 			return true
 		}
@@ -90,7 +99,7 @@ func (def *Function) GetAffectEnv() map[string]int {
 }
 
 func (def *Function) GetVarIdx(name string) int {
-	for i, lv := range def.LocalVars {
+	for i, lv := range def.Sites {
 		if lv.Name == name {
 			return i
 		}
@@ -99,10 +108,10 @@ func (def *Function) GetVarIdx(name string) int {
 }
 
 func (def *Function) VarByIdx(idx int) (*QuplaSite, error) {
-	if idx < 0 || idx >= len(def.LocalVars) {
+	if idx < 0 || idx >= len(def.Sites) {
 		return nil, fmt.Errorf("worng var idx %v", idx)
 	}
-	return def.LocalVars[idx], nil
+	return def.Sites[idx], nil
 }
 
 func (def *Function) VarByName(name string) (*QuplaSite, error) {
@@ -115,7 +124,7 @@ func (def *Function) VarByName(name string) (*QuplaSite, error) {
 
 func (def *Function) CheckArgSizes(args []ExpressionInterface) error {
 	for i := range args {
-		if i >= def.NumParams || args[i].Size() != def.LocalVars[i].Size {
+		if i >= def.NumParams || args[i].Size() != def.Sites[i].Size {
 			return fmt.Errorf("param and arg # %v mismach in %v", i, def.Name)
 		}
 	}
@@ -148,75 +157,24 @@ func (def *Function) Eval(frame *EvalFrame, result Trits) bool {
 	return null
 }
 
-func (def *Function) Optimize() {
-	if Config.OptimizeOneTimeSites {
-		before := def.ZeroInternalSites()
-		def.RetExpr = def.optimizeOneTimeSites(def.RetExpr)
-
-		_, _, _, numVars, numUnusedVars := def.NumSites()
-		Logf(5, "Optimized %v sites out of %v in '%v'", numUnusedVars, numVars, def.Name)
-		after := def.ZeroInternalSites()
-		if !before && after {
-			Logf(5, "'%v' became inlineable", def.Name)
+func (def *Function) Stats() map[string]int {
+	ret := make(map[string]int)
+	for _, site := range def.Sites {
+		if !site.IsParam {
+			countTypesInExpression(site.Assign, ret)
 		}
 	}
-	if Config.OptimizeInlineSlices {
-		def.RetExpr = def.optimizeInlineSlices(def.RetExpr)
-	}
-	if Config.OptimizeConcats {
-		def.RetExpr = optimizeConcatExpr(def.RetExpr)
-	}
+	countTypesInExpression(def.RetExpr, ret)
+	return ret
 }
 
-func (def *Function) optimizeOneTimeSites(expr ExpressionInterface) ExpressionInterface {
-	sliceExpr, ok := expr.(*SliceExpr)
-	if !ok {
-		subExpr := make([]ExpressionInterface, 0)
-		for _, se := range expr.GetSubexpressions() {
-			opt := def.optimizeOneTimeSites(se)
-			subExpr = append(subExpr, opt)
-		}
-		expr.SetSubexpressions(subExpr)
-		return expr
+func countTypesInExpression(expr ExpressionInterface, stats map[string]int) {
+	t := fmt.Sprintf("%T", expr)
+	if _, ok := stats[t]; !ok {
+		stats[t] = 0
 	}
-	if sliceExpr.vi.IsState || sliceExpr.vi.IsParam || sliceExpr.vi.numUses > 1 {
-		return expr
+	stats[t]++
+	for _, se := range expr.GetSubexpressions() {
+		countTypesInExpression(se, stats)
 	}
-	// slice expressions optimized to SliceInline
-	opt := def.optimizeOneTimeSites(def.LocalVars[sliceExpr.vi.Idx].Assign)
-	sliceExpr.vi.notUsed = true
-	return NewSliceInline(sliceExpr, opt)
-}
-
-func (def *Function) optimizeInlineSlices(expr ExpressionInterface) ExpressionInterface {
-	if _, ok := expr.(*SliceInline); ok {
-		def.module.IncStat("numOptimizedInlineSlices")
-	}
-	return optimizeInlineSlicesExpr(expr)
-}
-
-// returns numSites, numParam, numState, numVars, numUnusedVars
-func (def *Function) NumSites() (int, int, int, int, int) {
-	var numSites, numParam, numState, numVars, numUnusedVars int
-	for _, vi := range def.LocalVars {
-		numSites++
-		if vi.IsParam {
-			numParam++
-		}
-		if vi.IsState {
-			numState++
-		}
-		if !vi.IsParam && !vi.IsState {
-			numVars++
-			if vi.notUsed {
-				numUnusedVars++
-			}
-		}
-	}
-	return numSites, numParam, numState, numVars, numUnusedVars
-}
-
-func (def *Function) ZeroInternalSites() bool {
-	_, _, _, numVars, numUnusedVars := def.NumSites()
-	return numVars == numUnusedVars
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/goq/readyaml"
+	"sort"
 )
 
 func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module *QuplaModule, scope *Function) (*TypeExpr, error) {
@@ -24,12 +25,20 @@ func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module *QuplaModule, scope *Fu
 	var fe ExpressionInterface
 	var fi *ConstTypeFieldInfo
 	var sumFld int
-	for fldName, expr := range exprYAML.Fields {
+
+	// sort fields by name
+	tmpKeys := make([]string, 0)
+	for fldName := range exprYAML.Fields {
+		tmpKeys = append(tmpKeys, fldName)
+	}
+	sort.Strings(tmpKeys)
+
+	for _, fldName := range tmpKeys {
 		fi, err = typeInfo.GetFieldInfo(fldName)
 		if err != nil {
 			return nil, err
 		}
-		if fe, err = AnalyzeExpression(expr, module, scope); err != nil {
+		if fe, err = AnalyzeExpression(exprYAML.Fields[fldName], module, scope); err != nil {
 			return nil, err
 		}
 		if fe.Size() != fi.Size {

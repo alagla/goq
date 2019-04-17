@@ -22,9 +22,9 @@ func NewQuplaTypeExpr(src string, size int) *TypeExpr {
 	}
 }
 
-func (e *TypeExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *TypeExpr) Copy() ExpressionInterface {
 	return &TypeExpr{
-		ExpressionBase: e.inlineCopyBase(funExpr),
+		ExpressionBase: e.copyBase(),
 		size:           e.size,
 		Fields:         e.Fields,
 	}

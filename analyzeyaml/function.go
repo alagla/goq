@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/lunfardo314/goq/qupla"
 	. "github.com/lunfardo314/goq/readyaml"
+	"sort"
 	"strconv"
 )
 
@@ -20,7 +21,7 @@ func AnalyzeFunctionPreliminary(name string, defYAML *QuplaFuncDefYAML, module *
 	}
 	def := NewFunction(name, sz, module)
 
-	if err = createVarScope(defYAML, def, module); err != nil {
+	if err = createSites(defYAML, def, module); err != nil {
 		return err
 	}
 	return module.AddFuncDef(name, def)
@@ -58,11 +59,6 @@ func AnalyzeFunction(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule
 		return fmt.Errorf("in funcdef '%v': return expression can't be nil", def.Name)
 	}
 	def.Analyzed = true
-	if def.ZeroInternalSites() {
-		module.IncStat("numPassParams")
-	}
-
-	def.Optimize()
 	return nil
 }
 func analyzeEnvironmentStatements(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
@@ -126,14 +122,14 @@ func AnalyzeVar(vi *QuplaSite, defYAML *QuplaFuncDefYAML, def *Function, module 
 	return nil
 }
 
-func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
+func createSites(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {
 	// function parameters (first numParams)
 	def.NumParams = len(src.Params)
 	for idx, arg := range src.Params {
 		if def.GetVarIdx(arg.ArgName) >= 0 {
 			return fmt.Errorf("duplicate arg Name '%v'", arg.ArgName)
 		}
-		def.LocalVars = append(def.LocalVars, &QuplaSite{
+		def.Sites = append(def.Sites, &QuplaSite{
 			Idx:      idx,
 			Name:     arg.ArgName,
 			Size:     arg.Size,
@@ -149,24 +145,41 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 	}
 
 	var idx int
-	for name, s := range src.State {
+
+	// sort state vars
+
+	tmpKeys := make([]string, 0)
+	for name := range src.State {
+		tmpKeys = append(tmpKeys, name)
+	}
+	sort.Strings(tmpKeys)
+
+	for _, name := range tmpKeys {
 		idx = def.GetVarIdx(name)
 		if idx >= 0 {
 			return fmt.Errorf("wrong declared state variable: '%v' in '%v'", name, def.Name)
 		} else {
 			// for old value
-			def.LocalVars = append(def.LocalVars, &QuplaSite{
-				Idx:     len(def.LocalVars),
+			def.Sites = append(def.Sites, &QuplaSite{
+				Idx:     len(def.Sites),
 				Name:    name,
-				Size:    s.Size,
+				Size:    src.State[name].Size,
 				IsState: true,
 			})
 		}
 		module.IncStat("numStateVars")
 	}
+
 	// variables defined by assigns
-	var vi *QuplaSite
+	// sort by names
+	tmpKeys = make([]string, 0)
 	for name := range src.Assigns {
+		tmpKeys = append(tmpKeys, name)
+	}
+	sort.Strings(tmpKeys)
+
+	var vi *QuplaSite
+	for _, name := range tmpKeys {
 		vi, _ = def.VarByName(name)
 		if vi != nil {
 			if vi.IsParam {
@@ -176,8 +189,8 @@ func createVarScope(src *QuplaFuncDefYAML, def *Function, module *QuplaModule) e
 				return fmt.Errorf("several assignment to the same var '%v' in '%v' is not allowed", name, def.Name)
 			}
 		} else {
-			def.LocalVars = append(def.LocalVars, &QuplaSite{
-				Idx:     len(def.LocalVars),
+			def.Sites = append(def.Sites, &QuplaSite{
+				Idx:     len(def.Sites),
 				Name:    name,
 				Size:    0, // unknown yet
 				IsState: false,
@@ -205,7 +218,7 @@ func analyzeAssigns(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModul
 func finalizeLocalVars(def *Function, module *QuplaModule) error {
 	var curOffset int
 	def.InSize = 0
-	for _, v := range def.LocalVars {
+	for _, v := range def.Sites {
 		if v.Size == 0 {
 			v.Size = v.Assign.Size()
 		}

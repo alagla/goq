@@ -3,7 +3,6 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
-	"github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/supervisor"
 	"time"
 )
@@ -13,28 +12,19 @@ type ExecStmt struct {
 	isTest     bool
 	isFloat    bool // needed for float comparison
 	expected   Trits
-	expr       ExpressionInterface // *FunctionExpr
+	Expr       ExpressionInterface // *FunctionExpr
 	module     *QuplaModule
 	idx        int
 	evalEntity *Entity
 }
 
 func NewExecStmt(src string, expr ExpressionInterface, isTest, isFloat bool, expected Trits, module *QuplaModule) *ExecStmt {
-	if cfg.Config.OptimizeFunCallsInline {
-		expr = expr.InlineCopy(nil)
-	}
-	if cfg.Config.OptimizeOneTimeSites {
-		expr = optimizeInlineSlicesExpr(expr)
-	}
-	if cfg.Config.OptimizeConcats {
-		expr = optimizeConcatExpr(expr)
-	}
 	return &ExecStmt{
 		ExpressionBase: NewExpressionBase(src),
 		isTest:         isTest,
 		isFloat:        isFloat,
 		expected:       expected,
-		expr:           expr,
+		Expr:           expr,
 		module:         module,
 	}
 }
@@ -48,7 +38,7 @@ func (ex *ExecStmt) GetIdx() int {
 }
 
 func (ex *ExecStmt) HasState() bool {
-	return ex.expr.HasState()
+	return ex.Expr.HasState()
 }
 
 func (ex *ExecStmt) evalEnvironmentName() string {
@@ -130,25 +120,22 @@ type execEvalCore struct {
 
 func (ec *execEvalCore) Call(_ Trits, result Trits) bool {
 	start := unixMsNow()
-	null := ec.exec.expr.Eval(nil, result)
+	null := ec.exec.Expr.Eval(nil, result)
 	ec.numRun++
 	ec.totalDurationMsec += unixMsNow() - start
 	ec.lastResult = result
 	if ec.exec.isTest {
 		if ec.exec.resultIsExpected(result) {
 			ec.numTestPassed++
-		} else {
-			fmt.Println("kuku")
 		}
 	}
 	return null
 }
 
 func (ex *ExecStmt) newEvalEntity(sv *Supervisor) (*Entity, error) {
-	//name := fmt.Sprintf("#%v-EVAL_%v", ex.idx, ex.expr.GetSource())
 	name := fmt.Sprintf("#%v-EVAL", ex.idx)
 	core := &execEvalCore{exec: ex}
-	return sv.NewEntity(name, 0, ex.expr.Size(), core)
+	return sv.NewEntity(name, 0, ex.Expr.Size(), core)
 }
 
 type runSummary struct {

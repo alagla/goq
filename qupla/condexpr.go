@@ -31,11 +31,11 @@ func (e *CondExpr) Eval(frame *EvalFrame, result Trits) bool {
 	case -1:
 		return true
 	}
-	panic(Sprintf("trit value in cond expr '%v'", e.source))
+	panic(Sprintf("trit value in cond Expr '%v'", e.source))
 }
 
-func (e *CondExpr) InlineCopy(funExpr *FunctionExpr) ExpressionInterface {
+func (e *CondExpr) Copy() ExpressionInterface {
 	return &CondExpr{
-		ExpressionBase: e.inlineCopyBase(funExpr),
+		ExpressionBase: e.copyBase(),
 	}
 }
