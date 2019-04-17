@@ -29,3 +29,12 @@ func LogStats(minVerbosity int, stats map[string]int) {
 		Logf(minVerbosity, "      %v: %v", key, stats[key])
 	}
 }
+
+func AddStats(dst, add map[string]int) {
+	for k := range add {
+		if _, ok := dst[k]; !ok {
+			dst[k] = 0
+		}
+		dst[k] += add[k]
+	}
+}

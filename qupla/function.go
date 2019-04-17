@@ -20,7 +20,6 @@ type Function struct {
 	BufLen            int  // total length of the local var buffer
 	HasStateVariables bool // if has state vars itself
 	hasState          bool // if directly or indirectly references those with state vars
-	isRecursive       bool // is directly or indirectly recursive
 	InSize            int
 	ParamSizes        []int
 	traceLevel        int
@@ -156,32 +155,6 @@ func (def *Function) Eval(frame *EvalFrame, result Trits) bool {
 		}
 	}
 	return null
-}
-
-// returns numSites, numParam, numState, numVars, numUnusedVars
-func (def *Function) NumSites() (int, int, int, int, int) {
-	var numSites, numParam, numState, numVars, numUnusedVars int
-	for _, vi := range def.Sites {
-		numSites++
-		if vi.IsParam {
-			numParam++
-		}
-		if vi.IsState {
-			numState++
-		}
-		if !vi.IsParam && !vi.IsState {
-			numVars++
-			if vi.NotUsed {
-				numUnusedVars++
-			}
-		}
-	}
-	return numSites, numParam, numState, numVars, numUnusedVars
-}
-
-func (def *Function) ZeroInternalSites() bool {
-	_, _, _, numVars, numUnusedVars := def.NumSites()
-	return numVars == numUnusedVars
 }
 
 func (def *Function) Stats() map[string]int {

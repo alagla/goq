@@ -22,11 +22,13 @@ func OptimizeModule(module *QuplaModule, stats map[string]int) {
 
 	for _, funName := range tmpKeys {
 		// optimize while there's something to optimize
-		Logf(2, "Optimizing function '%v'", funName)
-		for optimizeFunction(module.Functions[funName], stats) {
+		Logf(3, "Optimizing function '%v'", funName)
+		fstats := make(map[string]int)
+		for optimizeFunction(module.Functions[funName], fstats) {
 		}
+		if len(fstats) != 0 {
+			LogStats(3, fstats)
+		}
+		AddStats(stats, fstats)
 	}
-	//for _, exec := range module.Execs {
-	//	OptimizeExecStmt(exec)
-	//}
 }

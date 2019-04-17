@@ -59,9 +59,6 @@ func AnalyzeFunction(name string, defYAML *QuplaFuncDefYAML, module *QuplaModule
 		return fmt.Errorf("in funcdef '%v': return expression can't be nil", def.Name)
 	}
 	def.Analyzed = true
-	if def.ZeroInternalSites() {
-		module.IncStat("numPassParams")
-	}
 	return nil
 }
 func analyzeEnvironmentStatements(defYAML *QuplaFuncDefYAML, def *Function, module *QuplaModule) error {

@@ -48,8 +48,8 @@ func AnalyzeQuplaModule(name string, moduleYAML *QuplaModuleYAML) (*QuplaModule,
 	logf(1, "Functions with state variables: %v", numWithStateVars)
 	logf(1, "Functions with state (which references functions with state variables): %v", numStateful)
 
-	numRecursive := ret.MarkRecursive()
-	logf(1, "Recursive functions (directly or indirectly): %v", numRecursive)
+	//numRecursive := ret.MarkRecursive()
+	//logf(1, "Recursive functions (directly or indirectly): %v", numRecursive)
 
 	for funname, fundef := range ret.Functions {
 		if fundef.HasEnvStmt() {

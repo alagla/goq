@@ -162,16 +162,6 @@ func (module *QuplaModule) MarkStateful() (int, int) {
 	return hasStateVars, len(stateful)
 }
 
-func (module *QuplaModule) MarkRecursive() int {
-	var ret int
-	for _, fd := range module.Functions {
-		fd.isRecursive = module.checkIsRecursive(fd)
-		ret++
-		module.IncStat("numRecursive")
-	}
-	return ret
-}
-
 func (module *QuplaModule) collectReferencingFuncs(nameSet StringSet) int {
 	tmpList := make([]string, 0)
 	for name := range nameSet {
