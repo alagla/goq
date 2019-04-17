@@ -43,7 +43,7 @@ func StatValue(key string, stats map[string]int) int {
 }
 
 func isExpandableInline(funExpr *FunctionExpr, ctx *Function) bool {
-	if funExpr.FuncDef == ctx {
+	if ctx.WasInline(funExpr.FuncDef.Name) {
 		return false // recursive expansion inline is not allowed
 	}
 	for _, site := range funExpr.FuncDef.Sites {
@@ -73,11 +73,12 @@ func optimizeFunctionByInlining(def *Function, stats map[string]int) bool {
 func expandInlineExpr(expr ExpressionInterface, ctx *Function, stats map[string]int) ExpressionInterface {
 	var ret ExpressionInterface
 	if funcExpr, ok := expr.(*FunctionExpr); ok && isExpandableInline(funcExpr, ctx) {
-		IncStat("numFuncCallInlined", stats)
 		ret = expandInlineFuncCall(funcExpr)
-	} else {
-		ret = expr.Copy()
+		ctx.AppendInline(funcExpr.FuncDef.Name)
+		IncStat("numFuncCallInlined", stats)
+		return ret
 	}
+	ret = expr.Copy()
 	transformSubexpressions(ret, func(se ExpressionInterface) ExpressionInterface {
 		return expandInlineExpr(se, ctx, stats)
 	})

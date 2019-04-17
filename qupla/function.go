@@ -26,18 +26,28 @@ type Function struct {
 	traceLevel        int
 	nextCallIndex     uint8
 	StateHashMap      *StateHashMap
+	expandedInline    utils.StringSet // needed for optimisation, prevention of recursions while expanding inline
 }
 
 func NewFunction(name string, size int, module *QuplaModule) *Function {
 	return &Function{
-		module:     module,
-		Name:       name,
-		retSize:    size,
-		Sites:      make([]*QuplaSite, 0, 10),
-		Joins:      make(map[string]int),
-		Affects:    make(map[string]int),
-		ParamSizes: make([]int, 0, 5),
+		module:         module,
+		Name:           name,
+		retSize:        size,
+		Sites:          make([]*QuplaSite, 0, 10),
+		Joins:          make(map[string]int),
+		Affects:        make(map[string]int),
+		ParamSizes:     make([]int, 0, 5),
+		expandedInline: make(utils.StringSet),
 	}
+}
+
+func (def *Function) AppendInline(s string) {
+	def.expandedInline.Append(s)
+}
+
+func (def *Function) WasInline(s string) bool {
+	return def.expandedInline.Contains(s)
 }
 
 func (def *Function) NextCallIndex() uint8 {
