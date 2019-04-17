@@ -28,7 +28,7 @@ YAML source. It also performs necessary semantic analysis and checking.
 Qupla runtime representations and Qupla interpreter
 
 - [optimize](https://github.com/lunfardo314/goq/tree/master/qupla) package contains 
-Qupla optimisation functions.  
+Qupla optimization functions.  
 
 - [supervisor](https://github.com/lunfardo314/goq/tree/master/supervisor) contains Qubic 
 Supervisor as it is defined in _Qubic Computational Model_ (QCM). 
