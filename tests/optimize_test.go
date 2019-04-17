@@ -10,9 +10,9 @@ import (
 	"testing"
 )
 
-func Test_Opt0QuplaTests(t *testing.T) {
-	moduleOptimize_0_Test("../examples/modules/QuplaTests.yml", t)
-}
+//func Test_Opt0QuplaTests(t *testing.T) {
+//	moduleOptimize_0_Test("../examples/modules/QuplaTests.yml", t)
+//}
 
 func Test_Opt1QuplaTests(t *testing.T) {
 	moduleOptimize_1_Test("../examples/modules/QuplaTests.yml", t)
