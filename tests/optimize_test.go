@@ -38,14 +38,14 @@ func moduleOptimize_0_Test(fname string, t *testing.T) {
 		t.Errorf("Failed to analyze module '%v'", name)
 		return
 	}
-	stats := make(map[string]int)
-	optimize.OptimizeModule(module, stats)
+	stats1 := make(map[string]int)
+	optimize.OptimizeModule(module, stats1)
 	cfg.Logf(0, "Optimization stats for %v (1st optimization)", name)
-	cfg.LogStats(0, stats)
+	cfg.LogStats(0, stats1)
 
-	stats = make(map[string]int)
-	optimize.OptimizeModule(module, stats)
-	if len(stats) != 0 {
+	stats2 := make(map[string]int)
+	optimize.OptimizeModule(module, stats2)
+	if len(stats2) != 0 {
 		t.Errorf("Some part left unoptimized in '%v'", name)
 		return
 	}

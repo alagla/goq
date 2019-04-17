@@ -20,15 +20,18 @@ func OptimizeModule(module *QuplaModule, stats map[string]int) {
 	}
 	sort.Strings(tmpKeys)
 
-	for _, funName := range tmpKeys {
-		// optimize while there's something to optimize
-		Logf(3, "Optimizing function '%v'", funName)
-		fstats := make(map[string]int)
-		for optimizeFunction(module.Functions[funName], fstats) {
+	// optimisation cycles
+	for i := 0; i < 1; i++ {
+		for _, funName := range tmpKeys {
+			// optimize while there's something to optimize
+			Logf(3, "Optimizing function '%v'", funName)
+			fstats := make(map[string]int)
+			for optimizeFunction(module.Functions[funName], fstats) {
+			}
+			if len(fstats) != 0 {
+				LogStats(3, fstats)
+			}
+			AddStats(stats, fstats)
 		}
-		if len(fstats) != 0 {
-			LogStats(3, fstats)
-		}
-		AddStats(stats, fstats)
 	}
 }

@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"flag"
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/cfg"
@@ -15,9 +14,9 @@ var sv *Supervisor
 func init() {
 	cfg.Config.Verbosity = 0
 	sv = NewSupervisor(1 * time.Second)
-	pinline := flag.Bool("inline", false, "use inline call optimisation")
-	flag.Parse()
-	cfg.Config.OptimizeFunCallsInline = *pinline
+	//pinline := flag.Bool("inline", false, "use inline call optimisation")
+	//flag.Parse()
+	//cfg.Config.OptimizeFunCallsInline = *pinline
 }
 
 type mockEntityCore struct {
