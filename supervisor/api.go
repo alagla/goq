@@ -54,8 +54,9 @@ func (sv *Supervisor) NewEntity(name string, inSize, outSize int, core EntityCor
 
 func (sv *Supervisor) GetQuantCount() int64 {
 	sv.quantCountMutex.RLock()
-	defer sv.quantCountMutex.RUnlock()
-	return sv.quantCount
+	ret := sv.quantCount
+	sv.quantCountMutex.RUnlock()
+	return ret
 }
 
 // creates new environment if doesn't exist another with the same name
@@ -64,8 +65,9 @@ func (sv *Supervisor) CreateEnvironment(name string) error {
 	if !sv.accessLock.acquire(sv.timeout) {
 		return fmt.Errorf("request lock timeout: can't create environment")
 	}
-	defer sv.accessLock.release()
-	return sv.createEnvironment(name)
+	ret := sv.createEnvironment(name)
+	sv.accessLock.release()
+	return ret
 }
 
 // executes several 'joins' and 'affects' of the entity to environments
@@ -77,20 +79,22 @@ func (sv *Supervisor) Attach(entity *Entity, joins, affects map[string]int) erro
 	if !sv.accessLock.acquire(sv.timeout) {
 		return fmt.Errorf("acquire lock timeout: can't attach entity to environment")
 	}
-	defer sv.accessLock.release()
 
 	for envName, limit := range joins {
 		env := sv.getOrCreateEnvironment(envName)
 		if err := env.join(entity, limit); err != nil {
+			sv.accessLock.release()
 			return err
 		}
 	}
 	for envName, delay := range affects {
 		env := sv.getOrCreateEnvironment(envName)
 		if err := env.affect(entity, delay); err != nil {
+			sv.accessLock.release()
 			return err
 		}
 	}
+	sv.accessLock.release()
 	return nil
 }
 
@@ -118,15 +122,17 @@ func (sv *Supervisor) DeleteEnvironment(envName string) error {
 	if !sv.accessLock.acquire(sv.timeout) {
 		return fmt.Errorf("request lock timeout: can't delete environment")
 	}
-	defer sv.accessLock.release()
 
 	env, ok := sv.environments[envName]
 	if !ok {
+		sv.accessLock.release()
 		return fmt.Errorf("can't find environment '%v'", envName)
 	}
 	env.invalidate()
 	delete(sv.environments, envName)
 	Logf(5, "deleted environment '%v'", envName)
+
+	sv.accessLock.release()
 	return nil
 }
 
@@ -136,13 +142,13 @@ func (sv *Supervisor) ClearEnvironments() error {
 	if !sv.accessLock.acquire(sv.timeout) {
 		return fmt.Errorf("request lock timeout: can't delete environment")
 	}
-	defer sv.accessLock.release()
 
 	for _, env := range sv.environments {
 		env.invalidate()
 	}
 	sv.environments = make(map[string]*environment)
 	Logf(5, "supervisor: all environments were deleted")
+	sv.accessLock.release()
 	return nil
 }
 
@@ -182,7 +188,6 @@ func (sv *Supervisor) EnvironmentInfo() map[string]*EnvironmentInfo {
 	if !sv.accessLock.acquire(sv.timeout) {
 		return nil
 	}
-	defer sv.accessLock.release()
 
 	ret := make(map[string]*EnvironmentInfo)
 
@@ -200,6 +205,7 @@ func (sv *Supervisor) EnvironmentInfo() map[string]*EnvironmentInfo {
 		}
 		ret[name] = envInfo
 	}
+	sv.accessLock.release()
 	return ret
 }
 
