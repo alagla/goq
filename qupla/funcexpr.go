@@ -7,19 +7,15 @@ import (
 type FunctionExpr struct {
 	ExpressionBase
 	FuncDef   *Function
-	callIndex []byte
+	callIndex uint8
 }
 
 func NewFunctionExpr(src string, funcDef *Function, callIndex uint8) *FunctionExpr {
 	return &FunctionExpr{
 		ExpressionBase: NewExpressionBase(src),
 		FuncDef:        funcDef,
-		callIndex:      []uint8{callIndex},
+		callIndex:      callIndex,
 	}
-}
-
-func (e *FunctionExpr) SetCallIndex(idx []uint8) {
-	e.callIndex = idx
 }
 
 func (e *FunctionExpr) Size() int {

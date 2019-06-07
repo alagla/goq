@@ -1,7 +1,27 @@
-module: 'Fibonacci.yml'
+module: 'Qupla.yml'
 # import Qupla
 
 types: 
+  # type TritCarry { ... }
+  TritCarry:
+    size: '*'
+    fields: 
+        value: 
+          vector: type Trit [1]
+          size: '1'
+        carry: 
+          vector: type Carry [Trit]
+          size: '1'
+  # type TryteCarry { ... }
+  TryteCarry:
+    size: '*'
+    fields: 
+        value: 
+          vector: type Tryte [3]
+          size: '3'
+        carry: 
+          vector: type Carry [Trit]
+          size: '1'
   # type Trit [1]
   Trit:
     vector: 1
@@ -94,261 +114,262 @@ types:
   Carry:
     vector: Trit
     size: '1'
-  # type TritCarry { ... }
-  TritCarry:
-    size: '*'
-    fields: 
-        value: 
-          vector: Trit
-          size: '1'
-        carry: 
-          vector: Carry
-          size: '1'
   # type TinyFloat { ... }
   TinyFloat:
     size: '*'
     fields: 
         mantissa: 
-          vector: Tiny
+          vector: type Tiny [9]
           size: '9'
         exponent: 
-          vector: Tryte
+          vector: type Tryte [3]
           size: '3'
   # type Float { ... }
   Float:
     size: '*'
     fields: 
         mantissa: 
-          vector: Tiny2
+          vector: type Tiny2 [18]
           size: '18'
         exponent: 
-          vector: Tryte2
+          vector: type Tryte2 [6]
           size: '6'
   # type Double { ... }
   Double:
     size: '*'
     fields: 
         mantissa: 
-          vector: Tiny4
+          vector: type Tiny4 [36]
           size: '36'
         exponent: 
-          vector: Tiny
+          vector: type Tiny [9]
           size: '9'
   # type HugeFloat { ... }
   HugeFloat:
     size: '*'
     fields: 
         mantissa: 
-          vector: Int2
+          vector: type Int2 [54]
           size: '54'
         exponent: 
-          vector: Tiny2
+          vector: type Tiny2 [18]
           size: '18'
   # type Attachment { ... }
   Attachment:
     size: '*'
     fields: 
         timestamp: 
-          vector: Int
+          vector: type Int [27]
           size: '27'
         timestampLowerBound: 
-          vector: Int
+          vector: type Int [27]
           size: '27'
         timestampUpperBound: 
-          vector: Int
+          vector: type Int [27]
           size: '27'
   # type Transaction { ... }
   Transaction:
     size: '*'
     fields: 
         signature: 
-          vector: Signature
+          vector: type Signature [6561]
           size: '6561'
         extraDataDigest: 
-          vector: Hash
+          vector: type Hash [243]
           size: '243'
         address: 
-          vector: Hash
+          vector: type Hash [243]
           size: '243'
         value: 
-          vector: Huge
+          vector: type Huge [81]
           size: '81'
         issuanceTimestamp: 
-          vector: Int
+          vector: type Int [27]
           size: '27'
         timelockLowerBound: 
-          vector: Int
+          vector: type Int [27]
           size: '27'
         timelockUpperBound: 
-          vector: Int
+          vector: type Int [27]
           size: '27'
         bundle: 
-          vector: Huge
+          vector: type Huge [81]
           size: '81'
         trunk: 
-          vector: Hash
+          vector: type Hash [243]
           size: '243'
         branch: 
-          vector: Hash
+          vector: type Hash [243]
           size: '243'
         tag: 
-          vector: Huge
+          vector: type Huge [81]
           size: '81'
         attachment: 
-          vector: Attachment
+          vector: type Attachment { ... }
           size: '81'
         nonce: 
-          vector: Huge
+          vector: type Huge [81]
           size: '81'
 luts: 
   # lut not
   not:
     lutTable:
-      - '0 = 1'
-      - '1 = 0'
+      - '- = 1'
+      - '1 = -'
   # lut and
   and:
     lutTable:
-      - '00 = 0'
-      - '01 = 0'
-      - '10 = 0'
+      - '-- = -'
+      - '-1 = -'
+      - '1- = -'
       - '11 = 1'
   # lut and3
   and3:
     lutTable:
-      - '000 = 0'
-      - '001 = 0'
-      - '010 = 0'
-      - '011 = 0'
-      - '100 = 0'
-      - '101 = 0'
-      - '110 = 0'
+      - '--- = -'
+      - '--1 = -'
+      - '-1- = -'
+      - '-11 = -'
+      - '1-- = -'
+      - '1-1 = -'
+      - '11- = -'
       - '111 = 1'
   # lut or
   or:
     lutTable:
-      - '00 = 0'
-      - '01 = 1'
-      - '10 = 1'
+      - '-- = -'
+      - '-1 = 1'
+      - '1- = 1'
       - '11 = 1'
   # lut or3
   or3:
     lutTable:
-      - '000 = 0'
-      - '001 = 1'
-      - '010 = 1'
-      - '011 = 1'
-      - '100 = 1'
-      - '101 = 1'
-      - '110 = 1'
+      - '--- = -'
+      - '--1 = 1'
+      - '-1- = 1'
+      - '-11 = 1'
+      - '1-- = 1'
+      - '1-1 = 1'
+      - '11- = 1'
       - '111 = 1'
   # lut xor
   xor:
     lutTable:
-      - '00 = 0'
-      - '01 = 1'
-      - '10 = 1'
-      - '11 = 0'
+      - '-- = -'
+      - '-1 = 1'
+      - '1- = 1'
+      - '11 = -'
   # lut xor3
   xor3:
     lutTable:
-      - '000 = 0'
-      - '001 = 1'
-      - '010 = 1'
-      - '011 = 0'
-      - '100 = 1'
-      - '101 = 0'
-      - '110 = 0'
+      - '--- = -'
+      - '--1 = 1'
+      - '-1- = 1'
+      - '-11 = -'
+      - '1-- = 1'
+      - '1-1 = -'
+      - '11- = -'
       - '111 = 1'
   # lut nand
   nand:
     lutTable:
-      - '00 = 1'
-      - '01 = 1'
-      - '10 = 1'
-      - '11 = 0'
+      - '-- = 1'
+      - '-1 = 1'
+      - '1- = 1'
+      - '11 = -'
   # lut nand3
   nand3:
     lutTable:
-      - '000 = 1'
-      - '001 = 1'
-      - '010 = 1'
-      - '011 = 1'
-      - '100 = 1'
-      - '101 = 1'
-      - '110 = 1'
-      - '111 = 0'
+      - '--- = 1'
+      - '--1 = 1'
+      - '-1- = 1'
+      - '-11 = 1'
+      - '1-- = 1'
+      - '1-1 = 1'
+      - '11- = 1'
+      - '111 = -'
   # lut nor
   nor:
     lutTable:
-      - '00 = 1'
-      - '01 = 0'
-      - '10 = 0'
-      - '11 = 0'
+      - '-- = 1'
+      - '-1 = -'
+      - '1- = -'
+      - '11 = -'
   # lut nor3
   nor3:
     lutTable:
-      - '000 = 1'
-      - '001 = 0'
-      - '010 = 0'
-      - '011 = 0'
-      - '100 = 0'
-      - '101 = 0'
-      - '110 = 0'
-      - '111 = 0'
+      - '--- = 1'
+      - '--1 = -'
+      - '-1- = -'
+      - '-11 = -'
+      - '1-- = -'
+      - '1-1 = -'
+      - '11- = -'
+      - '111 = -'
   # lut xnor
   xnor:
     lutTable:
-      - '00 = 1'
-      - '01 = 0'
-      - '10 = 0'
+      - '-- = 1'
+      - '-1 = -'
+      - '1- = -'
       - '11 = 1'
+  # lut xnor3
+  xnor3:
+    lutTable:
+      - '--- = 1'
+      - '--1 = -'
+      - '-1- = -'
+      - '-11 = 1'
+      - '1-- = -'
+      - '1-1 = 1'
+      - '11- = 1'
+      - '111 = -'
   # lut equal
   equal:
     lutTable:
       - '-- = 1'
-      - '-0 = 0'
-      - '-1 = 0'
-      - '0- = 0'
+      - '-0 = -'
+      - '-1 = -'
+      - '0- = -'
       - '00 = 1'
-      - '01 = 0'
-      - '1- = 0'
-      - '10 = 0'
+      - '01 = -'
+      - '1- = -'
+      - '10 = -'
       - '11 = 1'
   # lut isMin
   isMin:
     lutTable:
       - '- = 1'
-      - '0 = 0'
-      - '1 = 0'
+      - '0 = -'
+      - '1 = -'
   # lut isNegative
   isNegative:
     lutTable:
       - '- = 1'
-      - '0 = 0'
-      - '1 = 0'
+      - '0 = -'
+      - '1 = -'
   # lut isOne
   isOne:
     lutTable:
-      - '- = 0'
-      - '0 = 0'
+      - '- = -'
+      - '0 = -'
       - '1 = 1'
   # lut isPositive
   isPositive:
     lutTable:
-      - '- = 0'
-      - '0 = 0'
+      - '- = -'
+      - '0 = -'
       - '1 = 1'
   # lut isZero
   isZero:
     lutTable:
-      - '- = 0'
+      - '- = -'
       - '0 = 1'
-      - '1 = 0'
+      - '1 = -'
   # lut notNegative
   notNegative:
     lutTable:
-      - '- = 0'
+      - '- = -'
       - '0 = 1'
       - '1 = 1'
   # lut notPositive
@@ -356,12 +377,12 @@ luts:
     lutTable:
       - '- = 1'
       - '0 = 1'
-      - '1 = 0'
+      - '1 = -'
   # lut notZero
   notZero:
     lutTable:
       - '- = 1'
-      - '0 = 0'
+      - '0 = -'
       - '1 = 1'
   # lut cmp
   cmp:
@@ -379,24 +400,24 @@ luts:
   isLess:
     lutTable:
       - '- = 1'
-      - '0 = 0'
-      - '1 = 0'
+      - '0 = -'
+      - '1 = -'
   # lut isGreater
   isGreater:
     lutTable:
-      - '- = 0'
-      - '0 = 0'
+      - '- = -'
+      - '0 = -'
       - '1 = 1'
   # lut isEqual
   isEqual:
     lutTable:
-      - '- = 0'
+      - '- = -'
       - '0 = 1'
-      - '1 = 0'
+      - '1 = -'
   # lut notLess
   notLess:
     lutTable:
-      - '- = 0'
+      - '- = -'
       - '0 = 1'
       - '1 = 1'
   # lut notGreater
@@ -404,73 +425,103 @@ luts:
     lutTable:
       - '- = 1'
       - '0 = 1'
-      - '1 = 0'
+      - '1 = -'
   # lut notEqual
   notEqual:
     lutTable:
       - '- = 1'
-      - '0 = 0'
+      - '0 = -'
       - '1 = 1'
   # lut even
   even:
     lutTable:
-      - '--- = 0'
+      - '--- = -'
       - '0-- = 1'
-      - '1-- = 0'
+      - '1-- = -'
       - '-0- = 1'
-      - '00- = 0'
+      - '00- = -'
       - '10- = 1'
-      - '-1- = 0'
+      - '-1- = -'
       - '01- = 1'
-      - '11- = 0'
+      - '11- = -'
       - '--0 = 1'
-      - '0-0 = 0'
+      - '0-0 = -'
       - '1-0 = 1'
-      - '-00 = 0'
+      - '-00 = -'
       - '000 = 1'
-      - '100 = 0'
+      - '100 = -'
       - '-10 = 1'
-      - '010 = 0'
+      - '010 = -'
       - '110 = 1'
-      - '--1 = 0'
+      - '--1 = -'
       - '0-1 = 1'
-      - '1-1 = 0'
+      - '1-1 = -'
       - '-01 = 1'
-      - '001 = 0'
+      - '001 = -'
       - '101 = 1'
-      - '-11 = 0'
+      - '-11 = -'
       - '011 = 1'
-      - '111 = 0'
-  # lut fullAdd
-  fullAdd:
+      - '111 = -'
+  # lut fullAddSum
+  fullAddSum:
     lutTable:
-      - '--- = 0-'
-      - '--0 = 1-'
-      - '--1 = -0'
-      - '-0- = 1-'
-      - '-00 = -0'
-      - '-01 = 00'
-      - '-1- = -0'
-      - '-10 = 00'
-      - '-11 = 10'
-      - '0-- = 1-'
-      - '0-0 = -0'
-      - '0-1 = 00'
-      - '00- = -0'
-      - '000 = 00'
-      - '001 = 10'
-      - '01- = 00'
-      - '010 = 10'
-      - '011 = -1'
-      - '1-- = -0'
-      - '1-0 = 00'
-      - '1-1 = 10'
-      - '10- = 00'
-      - '100 = 10'
-      - '101 = -1'
-      - '11- = 10'
-      - '110 = -1'
-      - '111 = 01'
+      - '--- = 0'
+      - '--0 = 1'
+      - '--1 = -'
+      - '-0- = 1'
+      - '-00 = -'
+      - '-01 = 0'
+      - '-1- = -'
+      - '-10 = 0'
+      - '-11 = 1'
+      - '0-- = 1'
+      - '0-0 = -'
+      - '0-1 = 0'
+      - '00- = -'
+      - '000 = 0'
+      - '001 = 1'
+      - '01- = 0'
+      - '010 = 1'
+      - '011 = -'
+      - '1-- = -'
+      - '1-0 = 0'
+      - '1-1 = 1'
+      - '10- = 0'
+      - '100 = 1'
+      - '101 = -'
+      - '11- = 1'
+      - '110 = -'
+      - '111 = 0'
+  # lut fullAddCarry
+  fullAddCarry:
+    lutTable:
+      - '--- = -'
+      - '--0 = -'
+      - '--1 = 0'
+      - '-0- = -'
+      - '-00 = 0'
+      - '-01 = 0'
+      - '-1- = 0'
+      - '-10 = 0'
+      - '-11 = 0'
+      - '0-- = -'
+      - '0-0 = 0'
+      - '0-1 = 0'
+      - '00- = 0'
+      - '000 = 0'
+      - '001 = 0'
+      - '01- = 0'
+      - '010 = 0'
+      - '011 = 1'
+      - '1-- = 0'
+      - '1-0 = 0'
+      - '1-1 = 0'
+      - '10- = 0'
+      - '100 = 0'
+      - '101 = 1'
+      - '11- = 0'
+      - '110 = 1'
+      - '111 = 1'
   # lut fullMul
   fullMul:
     lutTable:
@@ -483,18 +534,30 @@ luts:
       - '1- = -'
       - '10 = 0'
       - '11 = 1'
-  # lut halfAdd
-  halfAdd:
+  # lut halfAddSum
+  halfAddSum:
     lutTable:
-      - '-- = 1-'
-      - '-0 = -0'
-      - '-1 = 00'
-      - '0- = -0'
-      - '00 = 00'
-      - '01 = 10'
-      - '1- = 00'
-      - '10 = 10'
-      - '11 = -1'
+      - '-- = 1'
+      - '-0 = -'
+      - '-1 = 0'
+      - '0- = -'
+      - '00 = 0'
+      - '01 = 1'
+      - '1- = 0'
+      - '10 = 1'
+      - '11 = -'
+  # lut halfAddCarry
+  halfAddCarry:
+    lutTable:
+      - '-- = -'
+      - '-0 = 0'
+      - '-1 = 0'
+      - '0- = 0'
+      - '00 = 0'
+      - '01 = 0'
+      - '1- = 0'
+      - '10 = 0'
+      - '11 = 1'
   # lut neg
   neg:
     lutTable:
@@ -531,18 +594,30 @@ luts:
       - '-11 = 1'
       - '011 = 1'
       - '111 = 1'
+  # lut sign2
+  sign2:
+    lutTable:
+      - '-- = -'
+      - '0- = -'
+      - '1- = -'
+      - '-0 = -'
+      - '00 = 0'
+      - '10 = 1'
+      - '-1 = 1'
+      - '01 = 1'
+      - '11 = 1'
   # lut unequal
   unequal:
     lutTable:
-      - '-- = 0'
+      - '-- = -'
       - '-0 = 1'
       - '-1 = 1'
       - '0- = 1'
-      - '00 = 0'
+      - '00 = -'
       - '01 = 1'
       - '1- = 1'
       - '10 = 1'
-      - '11 = 0'
+      - '11 = -'
 functions: 
 # 
 # func Int fibonacci1<Int>(Int n) {
@@ -1190,7 +1265,10 @@ functions:
 #   add0 = halfAdd<A>(val[0 : A], carry)
 #   add1 = halfAdd<B>(val[A : B], add0.carry)
 #   add2 = halfAdd<C>(val[A + B : C], add1.carry)
-#   return add0.value & add1.value & add2
+#   return TCarry{
+#     value = add0.value & add1.value & add2.value
+#     carry = add2.carry
+#   }
 # }
   halfAdd_27:
     returnType: 
@@ -1306,40 +1384,71 @@ functions:
               fields: 
                 - carry
     return: 
-    # add0.value & add1.value & add2
-      ConcatExpr:
-        source: 'add0.value & add1.value & add2'
-        lhs: 
-          ConcatExpr:
-            source: 'add0.value & add1.value'
-            lhs: 
-              SliceExpr:
-                source: 'add0.value'
-                var: add0
-                offset: 0
-                size: 9
-                fields: 
-                  - value
-            rhs: 
-              SliceExpr:
-                source: 'add1.value'
-                var: add1
-                offset: 0
-                size: 9
-                fields: 
-                  - value
-        rhs: 
-          SliceExpr:
-            source: 'add2'
-            var: add2
-            offset: 0
-            size: 10
+    # TCarry{
+    #   value = add0.value & add1.value & add2.value
+    #   carry = add2.carry
+    # }
+      TypeExpr:
+        source: 'TCarry{ /   value = add0.value & add1.value & add2.value /   carry = add2.carry / }'
+        type: 
+          ConstTypeName:
+            typeName: TCarry
+            size: 28
+            fields:
+              value: 
+                size: '27'
+                offset: '0'
+              carry: 
+                size: '1'
+                offset: '27'
+        fieldValues: 
+          value:
+            ConcatExpr:
+              source: 'add0.value & add1.value & add2.value'
+              lhs: 
+                ConcatExpr:
+                  source: 'add0.value & add1.value'
+                  lhs: 
+                    SliceExpr:
+                      source: 'add0.value'
+                      var: add0
+                      offset: 0
+                      size: 9
+                      fields: 
+                        - value
+                  rhs: 
+                    SliceExpr:
+                      source: 'add1.value'
+                      var: add1
+                      offset: 0
+                      size: 9
+                      fields: 
+                        - value
+              rhs: 
+                SliceExpr:
+                  source: 'add2.value'
+                  var: add2
+                  offset: 0
+                  size: 9
+                  fields: 
+                    - value
+          carry:
+            SliceExpr:
+              source: 'add2.carry'
+              var: add2
+              offset: 9
+              size: 1
+              fields: 
+                - carry
 # 
 # func TCarry halfAdd<A>(A val, Carry carry) {
 #   add0 = halfAdd<A>(val[0 : A], carry)
 #   add1 = halfAdd<B>(val[A : B], add0.carry)
 #   add2 = halfAdd<C>(val[A + B : C], add1.carry)
-#   return add0.value & add1.value & add2
+#   return TCarry{
+#     value = add0.value & add1.value & add2.value
+#     carry = add2.carry
+#   }
 # }
   halfAdd_9:
     returnType: 
@@ -1455,183 +1564,62 @@ functions:
               fields: 
                 - carry
     return: 
-    # add0.value & add1.value & add2
-      ConcatExpr:
-        source: 'add0.value & add1.value & add2'
-        lhs: 
-          ConcatExpr:
-            source: 'add0.value & add1.value'
-            lhs: 
-              SliceExpr:
-                source: 'add0.value'
-                var: add0
-                offset: 0
-                size: 3
-                fields: 
-                  - value
-            rhs: 
-              SliceExpr:
-                source: 'add1.value'
-                var: add1
-                offset: 0
-                size: 3
-                fields: 
-                  - value
-        rhs: 
-          SliceExpr:
-            source: 'add2'
-            var: add2
-            offset: 0
-            size: 4
-# 
-# func TCarry halfAdd<A>(A val, Carry carry) {
-#   add0 = halfAdd<A>(val[0 : A], carry)
-#   add1 = halfAdd<B>(val[A : B], add0.carry)
-#   add2 = halfAdd<C>(val[A + B : C], add1.carry)
-#   return add0.value & add1.value & add2
-# }
-  halfAdd_3:
-    returnType: 
-      ConstTypeName:
-        typeName: TCarry
-        size: 4
-        fields:
-          value: 
-            size: '3'
-            offset: '0'
-          carry: 
-            size: '1'
-            offset: '3'
-    params:
-      - 
-        argName: val
-        size: 3
+    # TCarry{
+    #   value = add0.value & add1.value & add2.value
+    #   carry = add2.carry
+    # }
+      TypeExpr:
+        source: 'TCarry{ /   value = add0.value & add1.value & add2.value /   carry = add2.carry / }'
         type: 
           ConstTypeName:
-            typeName: A
-            size: 3
-      - 
-        argName: carry
-        size: 1
-        type: 
-          ConstTypeName:
-            typeName: Carry
-            size: 1
-    assigns: 
-      add0:
-        FuncExpr:
-          source: 'halfAdd<A>(val[0 : A], carry)'
-          name: halfAdd_1
-          args:
-          - 
-            SliceExpr:
-              source: 'val[0 : A]'
-              var: val
-              offset: 0
-              size: 1
-              start:
-                ConstNumber:
-                  value: 0
-              end:
-                ConstTypeName:
-                  typeName: A
-                  size: 1
-          - 
-            SliceExpr:
-              source: 'carry'
-              var: carry
-              offset: 0
-              size: 1
-      add1:
-        FuncExpr:
-          source: 'halfAdd<B>(val[A : B], add0.carry)'
-          name: halfAdd_1
-          args:
-          - 
-            SliceExpr:
-              source: 'val[A : B]'
-              var: val
-              offset: 1
-              size: 1
-              start:
-                ConstTypeName:
-                  typeName: A
-                  size: 1
-              end:
-                ConstTypeName:
-                  typeName: B
-                  size: 1
-          - 
-            SliceExpr:
-              source: 'add0.carry'
-              var: add0
-              offset: 1
-              size: 1
-              fields: 
-                - carry
-      add2:
-        FuncExpr:
-          source: 'halfAdd<C>(val[A + B : C], add1.carry)'
-          name: halfAdd_1
-          args:
-          - 
-            SliceExpr:
-              source: 'val[A + B : C]'
-              var: val
-              offset: 2
-              size: 1
-              start:
-                ConstExpr:
-                  operator: '+'
+            typeName: TCarry
+            size: 10
+            fields:
+              value: 
+                size: '9'
+                offset: '0'
+              carry: 
+                size: '1'
+                offset: '9'
+        fieldValues: 
+          value:
+            ConcatExpr:
+              source: 'add0.value & add1.value & add2.value'
+              lhs: 
+                ConcatExpr:
+                  source: 'add0.value & add1.value'
                   lhs: 
-                    ConstTypeName:
-                      typeName: A
-                      size: 1
+                    SliceExpr:
+                      source: 'add0.value'
+                      var: add0
+                      offset: 0
+                      size: 3
+                      fields: 
+                        - value
                   rhs: 
-                    ConstTypeName:
-                      typeName: B
-                      size: 1
-              end:
-                ConstTypeName:
-                  typeName: C
-                  size: 1
-          - 
+                    SliceExpr:
+                      source: 'add1.value'
+                      var: add1
+                      offset: 0
+                      size: 3
+                      fields: 
+                        - value
+              rhs: 
+                SliceExpr:
+                  source: 'add2.value'
+                  var: add2
+                  offset: 0
+                  size: 3
+                  fields: 
+                    - value
+          carry:
             SliceExpr:
-              source: 'add1.carry'
-              var: add1
-              offset: 1
+              source: 'add2.carry'
+              var: add2
+              offset: 3
               size: 1
               fields: 
                 - carry
-    return: 
-    # add0.value & add1.value & add2
-      ConcatExpr:
-        source: 'add0.value & add1.value & add2'
-        lhs: 
-          ConcatExpr:
-            source: 'add0.value & add1.value'
-            lhs: 
-              SliceExpr:
-                source: 'add0.value'
-                var: add0
-                offset: 0
-                size: 1
-                fields: 
-                  - value
-            rhs: 
-              SliceExpr:
-                source: 'add1.value'
-                var: add1
-                offset: 0
-                size: 1
-                fields: 
-                  - value
-        rhs: 
-          SliceExpr:
-            source: 'add2'
-            var: add2
-            offset: 0
-            size: 2
 # 
 # func Int sub<Int>(Int lhs, Int rhs) {
 #   sum = fullAdd<Int>(lhs, neg<Int>(rhs), 0)
@@ -1699,7 +1687,10 @@ functions:
 #   add0 = fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)
 #   add1 = fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)
 #   add2 = fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)
-#   return add0.value & add1.value & add2
+#   return TCarry{
+#     value = add0.value & add1.value & add2.value
+#     carry = add2.carry
+#   }
 # }
   fullAdd_27:
     returnType: 
@@ -1870,40 +1861,71 @@ functions:
               fields: 
                 - carry
     return: 
-    # add0.value & add1.value & add2
-      ConcatExpr:
-        source: 'add0.value & add1.value & add2'
-        lhs: 
-          ConcatExpr:
-            source: 'add0.value & add1.value'
-            lhs: 
-              SliceExpr:
-                source: 'add0.value'
-                var: add0
-                offset: 0
-                size: 9
-                fields: 
-                  - value
-            rhs: 
-              SliceExpr:
-                source: 'add1.value'
-                var: add1
-                offset: 0
-                size: 9
-                fields: 
-                  - value
-        rhs: 
-          SliceExpr:
-            source: 'add2'
-            var: add2
-            offset: 0
-            size: 10
+    # TCarry{
+    #   value = add0.value & add1.value & add2.value
+    #   carry = add2.carry
+    # }
+      TypeExpr:
+        source: 'TCarry{ /   value = add0.value & add1.value & add2.value /   carry = add2.carry / }'
+        type: 
+          ConstTypeName:
+            typeName: TCarry
+            size: 28
+            fields:
+              value: 
+                size: '27'
+                offset: '0'
+              carry: 
+                size: '1'
+                offset: '27'
+        fieldValues: 
+          value:
+            ConcatExpr:
+              source: 'add0.value & add1.value & add2.value'
+              lhs: 
+                ConcatExpr:
+                  source: 'add0.value & add1.value'
+                  lhs: 
+                    SliceExpr:
+                      source: 'add0.value'
+                      var: add0
+                      offset: 0
+                      size: 9
+                      fields: 
+                        - value
+                  rhs: 
+                    SliceExpr:
+                      source: 'add1.value'
+                      var: add1
+                      offset: 0
+                      size: 9
+                      fields: 
+                        - value
+              rhs: 
+                SliceExpr:
+                  source: 'add2.value'
+                  var: add2
+                  offset: 0
+                  size: 9
+                  fields: 
+                    - value
+          carry:
+            SliceExpr:
+              source: 'add2.carry'
+              var: add2
+              offset: 9
+              size: 1
+              fields: 
+                - carry
 # 
 # func TCarry fullAdd<A>(A lhs, A rhs, Carry carry) {
 #   add0 = fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)
 #   add1 = fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)
 #   add2 = fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)
-#   return add0.value & add1.value & add2
+#   return TCarry{
+#     value = add0.value & add1.value & add2.value
+#     carry = add2.carry
+#   }
 # }
   fullAdd_9:
     returnType: 
@@ -2074,238 +2096,62 @@ functions:
               fields: 
                 - carry
     return: 
-    # add0.value & add1.value & add2
-      ConcatExpr:
-        source: 'add0.value & add1.value & add2'
-        lhs: 
-          ConcatExpr:
-            source: 'add0.value & add1.value'
-            lhs: 
-              SliceExpr:
-                source: 'add0.value'
-                var: add0
-                offset: 0
-                size: 3
-                fields: 
-                  - value
-            rhs: 
-              SliceExpr:
-                source: 'add1.value'
-                var: add1
-                offset: 0
-                size: 3
-                fields: 
-                  - value
-        rhs: 
-          SliceExpr:
-            source: 'add2'
-            var: add2
-            offset: 0
-            size: 4
-# 
-# func TCarry fullAdd<A>(A lhs, A rhs, Carry carry) {
-#   add0 = fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)
-#   add1 = fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)
-#   add2 = fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)
-#   return add0.value & add1.value & add2
-# }
-  fullAdd_3:
-    returnType: 
-      ConstTypeName:
-        typeName: TCarry
-        size: 4
-        fields:
-          value: 
-            size: '3'
-            offset: '0'
-          carry: 
-            size: '1'
-            offset: '3'
-    params:
-      - 
-        argName: lhs
-        size: 3
+    # TCarry{
+    #   value = add0.value & add1.value & add2.value
+    #   carry = add2.carry
+    # }
+      TypeExpr:
+        source: 'TCarry{ /   value = add0.value & add1.value & add2.value /   carry = add2.carry / }'
         type: 
           ConstTypeName:
-            typeName: A
-            size: 3
-      - 
-        argName: rhs
-        size: 3
-        type: 
-          ConstTypeName:
-            typeName: A
-            size: 3
-      - 
-        argName: carry
-        size: 1
-        type: 
-          ConstTypeName:
-            typeName: Carry
-            size: 1
-    assigns: 
-      add0:
-        FuncExpr:
-          source: 'fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)'
-          name: fullAdd_1
-          args:
-          - 
+            typeName: TCarry
+            size: 10
+            fields:
+              value: 
+                size: '9'
+                offset: '0'
+              carry: 
+                size: '1'
+                offset: '9'
+        fieldValues: 
+          value:
+            ConcatExpr:
+              source: 'add0.value & add1.value & add2.value'
+              lhs: 
+                ConcatExpr:
+                  source: 'add0.value & add1.value'
+                  lhs: 
+                    SliceExpr:
+                      source: 'add0.value'
+                      var: add0
+                      offset: 0
+                      size: 3
+                      fields: 
+                        - value
+                  rhs: 
+                    SliceExpr:
+                      source: 'add1.value'
+                      var: add1
+                      offset: 0
+                      size: 3
+                      fields: 
+                        - value
+              rhs: 
+                SliceExpr:
+                  source: 'add2.value'
+                  var: add2
+                  offset: 0
+                  size: 3
+                  fields: 
+                    - value
+          carry:
             SliceExpr:
-              source: 'lhs[0 : A]'
-              var: lhs
-              offset: 0
-              size: 1
-              start:
-                ConstNumber:
-                  value: 0
-              end:
-                ConstTypeName:
-                  typeName: A
-                  size: 1
-          - 
-            SliceExpr:
-              source: 'rhs[0 : A]'
-              var: rhs
-              offset: 0
-              size: 1
-              start:
-                ConstNumber:
-                  value: 0
-              end:
-                ConstTypeName:
-                  typeName: A
-                  size: 1
-          - 
-            SliceExpr:
-              source: 'carry'
-              var: carry
-              offset: 0
-              size: 1
-      add1:
-        FuncExpr:
-          source: 'fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)'
-          name: fullAdd_1
-          args:
-          - 
-            SliceExpr:
-              source: 'lhs[A : B]'
-              var: lhs
-              offset: 1
-              size: 1
-              start:
-                ConstTypeName:
-                  typeName: A
-                  size: 1
-              end:
-                ConstTypeName:
-                  typeName: B
-                  size: 1
-          - 
-            SliceExpr:
-              source: 'rhs[A : B]'
-              var: rhs
-              offset: 1
-              size: 1
-              start:
-                ConstTypeName:
-                  typeName: A
-                  size: 1
-              end:
-                ConstTypeName:
-                  typeName: B
-                  size: 1
-          - 
-            SliceExpr:
-              source: 'add0.carry'
-              var: add0
-              offset: 1
+              source: 'add2.carry'
+              var: add2
+              offset: 3
               size: 1
               fields: 
                 - carry
-      add2:
-        FuncExpr:
-          source: 'fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)'
-          name: fullAdd_1
-          args:
-          - 
-            SliceExpr:
-              source: 'lhs[A + B : C]'
-              var: lhs
-              offset: 2
-              size: 1
-              start:
-                ConstExpr:
-                  operator: '+'
-                  lhs: 
-                    ConstTypeName:
-                      typeName: A
-                      size: 1
-                  rhs: 
-                    ConstTypeName:
-                      typeName: B
-                      size: 1
-              end:
-                ConstTypeName:
-                  typeName: C
-                  size: 1
-          - 
-            SliceExpr:
-              source: 'rhs[A + B : C]'
-              var: rhs
-              offset: 2
-              size: 1
-              start:
-                ConstExpr:
-                  operator: '+'
-                  lhs: 
-                    ConstTypeName:
-                      typeName: A
-                      size: 1
-                  rhs: 
-                    ConstTypeName:
-                      typeName: B
-                      size: 1
-              end:
-                ConstTypeName:
-                  typeName: C
-                  size: 1
-          - 
-            SliceExpr:
-              source: 'add1.carry'
-              var: add1
-              offset: 1
-              size: 1
-              fields: 
-                - carry
-    return: 
-    # add0.value & add1.value & add2
-      ConcatExpr:
-        source: 'add0.value & add1.value & add2'
-        lhs: 
-          ConcatExpr:
-            source: 'add0.value & add1.value'
-            lhs: 
-              SliceExpr:
-                source: 'add0.value'
-                var: add0
-                offset: 0
-                size: 1
-                fields: 
-                  - value
-            rhs: 
-              SliceExpr:
-                source: 'add1.value'
-                var: add1
-                offset: 0
-                size: 1
-                fields: 
-                  - value
-        rhs: 
-          SliceExpr:
-            source: 'add2'
-            var: add2
-            offset: 0
-            size: 2
 # 
 # func Int neg<Int>(Int val) {
 #   val0 = neg<A>(val[0 : A])
@@ -3734,7 +3580,10 @@ functions:
 #   add0 = fullAdd<A>(lhs[0 : A], rhs[0 : A], carry)
 #   add1 = fullAdd<B>(lhs[A : B], rhs[A : B], add0.carry)
 #   add2 = fullAdd<C>(lhs[A + B : C], rhs[A + B : C], add1.carry)
-#   return add0.value & add1.value & add2
+#   return TCarry{
+#     value = add0.value & add1.value & add2.value
+#     carry = add2.carry
+#   }
 # }
   fullAdd_81:
     returnType: 
@@ -3905,34 +3754,62 @@ functions:
               fields: 
                 - carry
     return: 
-    # add0.value & add1.value & add2
-      ConcatExpr:
-        source: 'add0.value & add1.value & add2'
-        lhs: 
-          ConcatExpr:
-            source: 'add0.value & add1.value'
-            lhs: 
-              SliceExpr:
-                source: 'add0.value'
-                var: add0
-                offset: 0
-                size: 27
-                fields: 
-                  - value
-            rhs: 
-              SliceExpr:
-                source: 'add1.value'
-                var: add1
-                offset: 0
-                size: 27
-                fields: 
-                  - value
-        rhs: 
-          SliceExpr:
-            source: 'add2'
-            var: add2
-            offset: 0
-            size: 28
+    # TCarry{
+    #   value = add0.value & add1.value & add2.value
+    #   carry = add2.carry
+    # }
+      TypeExpr:
+        source: 'TCarry{ /   value = add0.value & add1.value & add2.value /   carry = add2.carry / }'
+        type: 
+          ConstTypeName:
+            typeName: TCarry
+            size: 82
+            fields:
+              value: 
+                size: '81'
+                offset: '0'
+              carry: 
+                size: '1'
+                offset: '81'
+        fieldValues: 
+          value:
+            ConcatExpr:
+              source: 'add0.value & add1.value & add2.value'
+              lhs: 
+                ConcatExpr:
+                  source: 'add0.value & add1.value'
+                  lhs: 
+                    SliceExpr:
+                      source: 'add0.value'
+                      var: add0
+                      offset: 0
+                      size: 27
+                      fields: 
+                        - value
+                  rhs: 
+                    SliceExpr:
+                      source: 'add1.value'
+                      var: add1
+                      offset: 0
+                      size: 27
+                      fields: 
+                        - value
+              rhs: 
+                SliceExpr:
+                  source: 'add2.value'
+                  var: add2
+                  offset: 0
+                  size: 27
+                  fields: 
+                    - value
+          carry:
+            SliceExpr:
+              source: 'add2.carry'
+              var: add2
+              offset: 27
+              size: 1
+              fields: 
+                - carry
 # 
 # func Huge decr<Huge>(Huge val) {
 #   halfSum = halfAdd<Huge>(val, -)
@@ -3982,7 +3859,10 @@ functions:
 #   add0 = halfAdd<A>(val[0 : A], carry)
 #   add1 = halfAdd<B>(val[A : B], add0.carry)
 #   add2 = halfAdd<C>(val[A + B : C], add1.carry)
-#   return add0.value & add1.value & add2
+#   return TCarry{
+#     value = add0.value & add1.value & add2.value
+#     carry = add2.carry
+#   }
 # }
   halfAdd_81:
     returnType: 
@@ -4098,34 +3978,62 @@ functions:
               fields: 
                 - carry
     return: 
-    # add0.value & add1.value & add2
-      ConcatExpr:
-        source: 'add0.value & add1.value & add2'
-        lhs: 
-          ConcatExpr:
-            source: 'add0.value & add1.value'
-            lhs: 
-              SliceExpr:
-                source: 'add0.value'
-                var: add0
-                offset: 0
-                size: 27
-                fields: 
-                  - value
-            rhs: 
-              SliceExpr:
-                source: 'add1.value'
-                var: add1
-                offset: 0
-                size: 27
-                fields: 
-                  - value
-        rhs: 
-          SliceExpr:
-            source: 'add2'
-            var: add2
-            offset: 0
-            size: 28
+    # TCarry{
+    #   value = add0.value & add1.value & add2.value
+    #   carry = add2.carry
+    # }
+      TypeExpr:
+        source: 'TCarry{ /   value = add0.value & add1.value & add2.value /   carry = add2.carry / }'
+        type: 
+          ConstTypeName:
+            typeName: TCarry
+            size: 82
+            fields:
+              value: 
+                size: '81'
+                offset: '0'
+              carry: 
+                size: '1'
+                offset: '81'
+        fieldValues: 
+          value:
+            ConcatExpr:
+              source: 'add0.value & add1.value & add2.value'
+              lhs: 
+                ConcatExpr:
+                  source: 'add0.value & add1.value'
+                  lhs: 
+                    SliceExpr:
+                      source: 'add0.value'
+                      var: add0
+                      offset: 0
+                      size: 27
+                      fields: 
+                        - value
+                  rhs: 
+                    SliceExpr:
+                      source: 'add1.value'
+                      var: add1
+                      offset: 0
+                      size: 27
+                      fields: 
+                        - value
+              rhs: 
+                SliceExpr:
+                  source: 'add2.value'
+                  var: add2
+                  offset: 0
+                  size: 27
+                  fields: 
+                    - value
+          carry:
+            SliceExpr:
+              source: 'add2.carry'
+              var: add2
+              offset: 27
+              size: 1
+              fields: 
+                - carry
 # 
 # func Huge sub<Huge>(Huge lhs, Huge rhs) {
 #   sum = fullAdd<Huge>(lhs, neg<Huge>(rhs), 0)
@@ -4299,6 +4207,7 @@ functions:
             size: 27
 # 
 # func LoopInfo fibonacci3<Int>(Int n) {
+#   join fibInit
 #   affect fibLoop
 #   return LoopInfo{
 #     n = n
@@ -4334,6 +4243,9 @@ functions:
             typeName: Int
             size: 27
     env: 
+      - 
+        name: fibInit
+        type: join
       - 
         name: fibLoop
         type: affect
@@ -4820,7 +4732,7 @@ functions:
               size: 1
 # 
 # func Bool even<Trit>(Trit val) {
-#   return even[val, 0, 0]
+#   return isZero[val]
 # }
   even_1:
     returnType: 
@@ -4836,9 +4748,9 @@ functions:
             typeName: Trit
             size: 1
     return: 
-    # even[val, 0, 0]
+    # isZero[val]
       LutExpr:
-        name: even
+        name: isZero
         args: 
           - 
             SliceExpr:
@@ -4846,16 +4758,6 @@ functions:
               var: val
               offset: 0
               size: 1
-          - 
-            ValueExpr:
-                value: '0'
-                trits: '0'
-                trytes: '9'
-          - 
-            ValueExpr:
-                value: '0'
-                trits: '0'
-                trytes: '9'
 # 
 # func Bool even<Tryte>(Tryte val) {
 #   return even[val[0], val[1], val[2]]
@@ -4907,7 +4809,10 @@ functions:
                   value: 2
 # 
 # func TritCarry fullAdd<Trit>(Trit lhs, Trit rhs, Carry carry) {
-#   return fullAdd[lhs, rhs, carry]
+#   return TritCarry{
+#     value = fullAddSum[lhs, rhs, carry]
+#     carry = fullAddCarry[lhs, rhs, carry]
+#   }
 # }
   fullAdd_1:
     returnType: 
@@ -4944,44 +4849,328 @@ functions:
             typeName: Carry
             size: 1
     return: 
-    # fullAdd[lhs, rhs, carry]
-      LutExpr:
-        name: fullAdd
-        args: 
-          - 
-            SliceExpr:
-              source: 'lhs'
-              var: lhs
-              offset: 0
-              size: 1
-          - 
-            SliceExpr:
-              source: 'rhs'
-              var: rhs
-              offset: 0
-              size: 1
-          - 
-            SliceExpr:
-              source: 'carry'
-              var: carry
-              offset: 0
-              size: 1
+    # TritCarry{
+    #   value = fullAddSum[lhs, rhs, carry]
+    #   carry = fullAddCarry[lhs, rhs, carry]
+    # }
+      TypeExpr:
+        source: 'TritCarry{ /   value = fullAddSum[lhs, rhs, carry] /   carry = fullAddCarry[lhs, rhs, carry] / }'
+        type: 
+          ConstTypeName:
+            typeName: TritCarry
+            size: 2
+            fields:
+              value: 
+                size: '1'
+                offset: '0'
+              carry: 
+                size: '1'
+                offset: '1'
+        fieldValues: 
+          value:
+            LutExpr:
+              name: fullAddSum
+              args: 
+                - 
+                  SliceExpr:
+                    source: 'lhs'
+                    var: lhs
+                    offset: 0
+                    size: 1
+                - 
+                  SliceExpr:
+                    source: 'rhs'
+                    var: rhs
+                    offset: 0
+                    size: 1
+                - 
+                  SliceExpr:
+                    source: 'carry'
+                    var: carry
+                    offset: 0
+                    size: 1
+          carry:
+            LutExpr:
+              name: fullAddCarry
+              args: 
+                - 
+                  SliceExpr:
+                    source: 'lhs'
+                    var: lhs
+                    offset: 0
+                    size: 1
+                - 
+                  SliceExpr:
+                    source: 'rhs'
+                    var: rhs
+                    offset: 0
+                    size: 1
+                - 
+                  SliceExpr:
+                    source: 'carry'
+                    var: carry
+                    offset: 0
+                    size: 1
 # 
-# func TritCarry fullMul<Trit>(Trit lhs, Trit rhs) {
+# func TryteCarry fullAdd<Tryte>(Tryte lhs, Tryte rhs, Carry carry) {
+#   sum0 = fullAddSum[lhs[0], rhs[0], carry]
+#   carry0 = fullAddCarry[lhs[0], rhs[0], carry]
+#   sum1 = fullAddSum[lhs[1], rhs[1], carry0]
+#   carry1 = fullAddCarry[lhs[1], rhs[1], carry0]
+#   return TryteCarry{
+#     value = sum0 & sum1 & fullAddSum[lhs[2], rhs[2], carry1]
+#     carry = fullAddCarry[lhs[2], rhs[2], carry1]
+#   }
+# }
+  fullAdd_3:
+    returnType: 
+      ConstTypeName:
+        typeName: TryteCarry
+        size: 4
+        fields:
+          value: 
+            size: '3'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '3'
+    params:
+      - 
+        argName: lhs
+        size: 3
+        type: 
+          ConstTypeName:
+            typeName: Tryte
+            size: 3
+      - 
+        argName: rhs
+        size: 3
+        type: 
+          ConstTypeName:
+            typeName: Tryte
+            size: 3
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    assigns: 
+      sum0:
+        LutExpr:
+          name: fullAddSum
+          args: 
+            - 
+              SliceExpr:
+                source: 'lhs[0]'
+                var: lhs
+                offset: 0
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 0
+            - 
+              SliceExpr:
+                source: 'rhs[0]'
+                var: rhs
+                offset: 0
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 0
+            - 
+              SliceExpr:
+                source: 'carry'
+                var: carry
+                offset: 0
+                size: 1
+      carry0:
+        LutExpr:
+          name: fullAddCarry
+          args: 
+            - 
+              SliceExpr:
+                source: 'lhs[0]'
+                var: lhs
+                offset: 0
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 0
+            - 
+              SliceExpr:
+                source: 'rhs[0]'
+                var: rhs
+                offset: 0
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 0
+            - 
+              SliceExpr:
+                source: 'carry'
+                var: carry
+                offset: 0
+                size: 1
+      sum1:
+        LutExpr:
+          name: fullAddSum
+          args: 
+            - 
+              SliceExpr:
+                source: 'lhs[1]'
+                var: lhs
+                offset: 1
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 1
+            - 
+              SliceExpr:
+                source: 'rhs[1]'
+                var: rhs
+                offset: 1
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 1
+            - 
+              SliceExpr:
+                source: 'carry0'
+                var: carry0
+                offset: 0
+                size: 1
+      carry1:
+        LutExpr:
+          name: fullAddCarry
+          args: 
+            - 
+              SliceExpr:
+                source: 'lhs[1]'
+                var: lhs
+                offset: 1
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 1
+            - 
+              SliceExpr:
+                source: 'rhs[1]'
+                var: rhs
+                offset: 1
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 1
+            - 
+              SliceExpr:
+                source: 'carry0'
+                var: carry0
+                offset: 0
+                size: 1
+    return: 
+    # TryteCarry{
+    #   value = sum0 & sum1 & fullAddSum[lhs[2], rhs[2], carry1]
+    #   carry = fullAddCarry[lhs[2], rhs[2], carry1]
+    # }
+      TypeExpr:
+        source: 'TryteCarry{ /   value = sum0 & sum1 & fullAddSum[lhs[2], rhs[2], carry1] /   carry = fullAddCarry[lhs[2], rhs[2], carry1] / }'
+        type: 
+          ConstTypeName:
+            typeName: TryteCarry
+            size: 4
+            fields:
+              value: 
+                size: '3'
+                offset: '0'
+              carry: 
+                size: '1'
+                offset: '3'
+        fieldValues: 
+          value:
+            ConcatExpr:
+              source: 'sum0 & sum1 & fullAddSum[lhs[2], rhs[2], carry1]'
+              lhs: 
+                ConcatExpr:
+                  source: 'sum0 & sum1'
+                  lhs: 
+                    SliceExpr:
+                      source: 'sum0'
+                      var: sum0
+                      offset: 0
+                      size: 1
+                  rhs: 
+                    SliceExpr:
+                      source: 'sum1'
+                      var: sum1
+                      offset: 0
+                      size: 1
+              rhs: 
+                LutExpr:
+                  name: fullAddSum
+                  args: 
+                    - 
+                      SliceExpr:
+                        source: 'lhs[2]'
+                        var: lhs
+                        offset: 2
+                        size: 1
+                        start:
+                          ConstNumber:
+                            value: 2
+                    - 
+                      SliceExpr:
+                        source: 'rhs[2]'
+                        var: rhs
+                        offset: 2
+                        size: 1
+                        start:
+                          ConstNumber:
+                            value: 2
+                    - 
+                      SliceExpr:
+                        source: 'carry1'
+                        var: carry1
+                        offset: 0
+                        size: 1
+          carry:
+            LutExpr:
+              name: fullAddCarry
+              args: 
+                - 
+                  SliceExpr:
+                    source: 'lhs[2]'
+                    var: lhs
+                    offset: 2
+                    size: 1
+                    start:
+                      ConstNumber:
+                        value: 2
+                - 
+                  SliceExpr:
+                    source: 'rhs[2]'
+                    var: rhs
+                    offset: 2
+                    size: 1
+                    start:
+                      ConstNumber:
+                        value: 2
+                - 
+                  SliceExpr:
+                    source: 'carry1'
+                    var: carry1
+                    offset: 0
+                    size: 1
+# 
+# func Trit2 fullMul<Trit>(Trit lhs, Trit rhs) {
 #   return fullMul[lhs, rhs] & 0
 # }
   fullMul_1:
     returnType: 
       ConstTypeName:
-        typeName: TritCarry
+        typeName: Trit2
         size: 2
-        fields:
-          value: 
-            size: '1'
-            offset: '0'
-          carry: 
-            size: '1'
-            offset: '1'
     params:
       - 
         argName: lhs
@@ -5023,21 +5212,14 @@ functions:
               trits: '0'
               trytes: '9'
 # 
-# func TritCarry fullMulNonZero<Trit>(Trit lhs, Trit rhs) {
+# func Trit2 fullMulNonZero<Trit>(Trit lhs, Trit rhs) {
 #   return fullMul[lhs, rhs] & 0
 # }
   fullMulNonZero_1:
     returnType: 
       ConstTypeName:
-        typeName: TritCarry
+        typeName: Trit2
         size: 2
-        fields:
-          value: 
-            size: '1'
-            offset: '0'
-          carry: 
-            size: '1'
-            offset: '1'
     params:
       - 
         argName: lhs
@@ -5080,7 +5262,10 @@ functions:
               trytes: '9'
 # 
 # func TritCarry halfAdd<Trit>(Trit val, Carry carry) {
-#   return halfAdd[val, carry]
+#   return TritCarry{
+#     value = halfAddSum[val, carry]
+#     carry = halfAddCarry[val, carry]
+#   }
 # }
   halfAdd_1:
     returnType: 
@@ -5110,22 +5295,246 @@ functions:
             typeName: Carry
             size: 1
     return: 
-    # halfAdd[val, carry]
-      LutExpr:
-        name: halfAdd
-        args: 
-          - 
-            SliceExpr:
-              source: 'val'
-              var: val
-              offset: 0
-              size: 1
-          - 
-            SliceExpr:
-              source: 'carry'
-              var: carry
-              offset: 0
-              size: 1
+    # TritCarry{
+    #   value = halfAddSum[val, carry]
+    #   carry = halfAddCarry[val, carry]
+    # }
+      TypeExpr:
+        source: 'TritCarry{ /   value = halfAddSum[val, carry] /   carry = halfAddCarry[val, carry] / }'
+        type: 
+          ConstTypeName:
+            typeName: TritCarry
+            size: 2
+            fields:
+              value: 
+                size: '1'
+                offset: '0'
+              carry: 
+                size: '1'
+                offset: '1'
+        fieldValues: 
+          value:
+            LutExpr:
+              name: halfAddSum
+              args: 
+                - 
+                  SliceExpr:
+                    source: 'val'
+                    var: val
+                    offset: 0
+                    size: 1
+                - 
+                  SliceExpr:
+                    source: 'carry'
+                    var: carry
+                    offset: 0
+                    size: 1
+          carry:
+            LutExpr:
+              name: halfAddCarry
+              args: 
+                - 
+                  SliceExpr:
+                    source: 'val'
+                    var: val
+                    offset: 0
+                    size: 1
+                - 
+                  SliceExpr:
+                    source: 'carry'
+                    var: carry
+                    offset: 0
+                    size: 1
+# 
+# func TryteCarry halfAdd<Tryte>(Tryte val, Carry carry) {
+#   sum0 = halfAddSum[val[0], carry]
+#   carry0 = halfAddCarry[val[0], carry]
+#   sum1 = halfAddSum[val[1], carry0]
+#   carry1 = halfAddCarry[val[1], carry0]
+#   return TryteCarry{
+#     value = sum0 & sum1 & halfAddSum[val[2], carry1]
+#     carry = halfAddCarry[val[2], carry1]
+#   }
+# }
+  halfAdd_3:
+    returnType: 
+      ConstTypeName:
+        typeName: TryteCarry
+        size: 4
+        fields:
+          value: 
+            size: '3'
+            offset: '0'
+          carry: 
+            size: '1'
+            offset: '3'
+    params:
+      - 
+        argName: val
+        size: 3
+        type: 
+          ConstTypeName:
+            typeName: Tryte
+            size: 3
+      - 
+        argName: carry
+        size: 1
+        type: 
+          ConstTypeName:
+            typeName: Carry
+            size: 1
+    assigns: 
+      sum0:
+        LutExpr:
+          name: halfAddSum
+          args: 
+            - 
+              SliceExpr:
+                source: 'val[0]'
+                var: val
+                offset: 0
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 0
+            - 
+              SliceExpr:
+                source: 'carry'
+                var: carry
+                offset: 0
+                size: 1
+      carry0:
+        LutExpr:
+          name: halfAddCarry
+          args: 
+            - 
+              SliceExpr:
+                source: 'val[0]'
+                var: val
+                offset: 0
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 0
+            - 
+              SliceExpr:
+                source: 'carry'
+                var: carry
+                offset: 0
+                size: 1
+      sum1:
+        LutExpr:
+          name: halfAddSum
+          args: 
+            - 
+              SliceExpr:
+                source: 'val[1]'
+                var: val
+                offset: 1
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 1
+            - 
+              SliceExpr:
+                source: 'carry0'
+                var: carry0
+                offset: 0
+                size: 1
+      carry1:
+        LutExpr:
+          name: halfAddCarry
+          args: 
+            - 
+              SliceExpr:
+                source: 'val[1]'
+                var: val
+                offset: 1
+                size: 1
+                start:
+                  ConstNumber:
+                    value: 1
+            - 
+              SliceExpr:
+                source: 'carry0'
+                var: carry0
+                offset: 0
+                size: 1
+    return: 
+    # TryteCarry{
+    #   value = sum0 & sum1 & halfAddSum[val[2], carry1]
+    #   carry = halfAddCarry[val[2], carry1]
+    # }
+      TypeExpr:
+        source: 'TryteCarry{ /   value = sum0 & sum1 & halfAddSum[val[2], carry1] /   carry = halfAddCarry[val[2], carry1] / }'
+        type: 
+          ConstTypeName:
+            typeName: TryteCarry
+            size: 4
+            fields:
+              value: 
+                size: '3'
+                offset: '0'
+              carry: 
+                size: '1'
+                offset: '3'
+        fieldValues: 
+          value:
+            ConcatExpr:
+              source: 'sum0 & sum1 & halfAddSum[val[2], carry1]'
+              lhs: 
+                ConcatExpr:
+                  source: 'sum0 & sum1'
+                  lhs: 
+                    SliceExpr:
+                      source: 'sum0'
+                      var: sum0
+                      offset: 0
+                      size: 1
+                  rhs: 
+                    SliceExpr:
+                      source: 'sum1'
+                      var: sum1
+                      offset: 0
+                      size: 1
+              rhs: 
+                LutExpr:
+                  name: halfAddSum
+                  args: 
+                    - 
+                      SliceExpr:
+                        source: 'val[2]'
+                        var: val
+                        offset: 2
+                        size: 1
+                        start:
+                          ConstNumber:
+                            value: 2
+                    - 
+                      SliceExpr:
+                        source: 'carry1'
+                        var: carry1
+                        offset: 0
+                        size: 1
+          carry:
+            LutExpr:
+              name: halfAddCarry
+              args: 
+                - 
+                  SliceExpr:
+                    source: 'val[2]'
+                    var: val
+                    offset: 2
+                    size: 1
+                    start:
+                      ConstNumber:
+                        value: 2
+                - 
+                  SliceExpr:
+                    source: 'carry1'
+                    var: carry1
+                    offset: 0
+                    size: 1
 # 
 # func Trit neg<Trit>(Trit val) {
 #   return neg[val]
