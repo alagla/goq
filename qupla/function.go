@@ -23,7 +23,7 @@ type Function struct {
 	InSize            int
 	ParamSizes        []int
 	traceLevel        int
-	nextCallIndex     uint8
+	nextCallIndex     byte
 	StateHashMap      *StateHashMap
 	expandedInline    utils.StringSet // needed for optimisation, prevention of recursions while expanding inline
 }
@@ -49,13 +49,10 @@ func (def *Function) WasInline(s string) bool {
 	return def.expandedInline.Contains(s)
 }
 
-func (def *Function) NextCallIndex() uint8 {
-	if def == nil {
-		return 0
-	}
+func (def *Function) NextCallIndex() byte {
 	ret := def.nextCallIndex
 	if ret == 0xFF {
-		panic("can't be more than 256 function calls within function body")
+		panic("can't be more than 2^16 function calls within function body")
 	}
 	def.nextCallIndex++
 	return ret
@@ -132,7 +129,7 @@ func (def *Function) CheckArgSizes(args []ExpressionInterface) error {
 }
 
 // mock expression with all null arguments
-func (def *Function) NewFuncExpressionWithNulls(callIndex uint8) *FunctionExpr {
+func (def *Function) NewFuncExpressionWithNulls(callIndex byte) *FunctionExpr {
 	ret := NewFunctionExpr("", def, callIndex)
 
 	offset := 0
@@ -144,6 +141,9 @@ func (def *Function) NewFuncExpressionWithNulls(callIndex uint8) *FunctionExpr {
 }
 
 func (def *Function) Eval(frame *EvalFrame, result Trits) bool {
+	//if def.traceLevel > 0 {
+	//	fmt.Printf("++++ kuku\n")
+	//}
 	null := def.RetExpr.Eval(frame, result)
 	if def.traceLevel > 0 {
 		if !null {
@@ -151,7 +151,7 @@ func (def *Function) Eval(frame *EvalFrame, result Trits) bool {
 			Logf(def.traceLevel, "trace '%v': returned %v, '%v'",
 				def.Name, bi, utils.TritsToString(result))
 		} else {
-			Logf(2+def.traceLevel, "trace '%v': returned null")
+			Logf(2+def.traceLevel, "trace '%v': returned null", def.Name)
 		}
 	}
 	return null
