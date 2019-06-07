@@ -13,9 +13,9 @@ type ConfigStruct struct {
 var Config = &ConfigStruct{
 	Version:                "0.01 alpha",
 	Verbosity:              2,
-	OptimizeFunCallsInline: true,
-	OptimizeOneTimeSites:   true,
-	OptimizeInlineSlices:   true,
-	OptimizeConcats:        true,
-	OptimizeMerges:         true,
+	OptimizeFunCallsInline: false,
+	OptimizeOneTimeSites:   false,
+	OptimizeInlineSlices:   false,
+	OptimizeConcats:        false,
+	OptimizeMerges:         false,
 }

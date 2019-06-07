@@ -62,7 +62,7 @@ func (module *QuplaModule) GetTypeFieldInfo(typeName, fldName string) (int64, in
 }
 
 func (module *QuplaModule) AddExec(exec *ExecStmt) {
-	exec.idx = len(module.Execs)
+	exec.SetIdx(uint16(len(module.Execs)))
 	module.Execs = append(module.Execs, exec)
 }
 

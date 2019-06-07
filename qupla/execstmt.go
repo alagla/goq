@@ -14,7 +14,7 @@ type ExecStmt struct {
 	expected   Trits
 	Expr       ExpressionInterface // *FunctionExpr
 	module     *QuplaModule
-	idx        int
+	idx        uint16
 	evalEntity *Entity
 }
 
@@ -33,7 +33,13 @@ func (ex *ExecStmt) GetName() string {
 	return fmt.Sprintf("#%v '%v'", ex.idx, ex.GetSource())
 }
 
-func (ex *ExecStmt) GetIdx() int {
+func (ex *ExecStmt) SetIdx(idx uint16) {
+	ex.idx = idx
+	funcExpr := ex.Expr.(*FunctionExpr)
+	funcExpr.SetCallIndex([]byte(funcExpr.FuncDef.Name))
+}
+
+func (ex *ExecStmt) GetIdx() uint16 {
 	return ex.idx
 }
 

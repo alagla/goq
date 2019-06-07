@@ -16,6 +16,11 @@ func (e *CondExpr) Size() int {
 	return e.subExpr[1].Size()
 }
 
+const (
+	BOOL_TRUE  = 1
+	BOOL_FALSE = -1
+)
+
 func (e *CondExpr) Eval(frame *EvalFrame, result Trits) bool {
 	var buf [1]int8
 	null := e.subExpr[0].Eval(frame, buf[:])
@@ -24,11 +29,11 @@ func (e *CondExpr) Eval(frame *EvalFrame, result Trits) bool {
 	}
 	// bool is 0/1
 	switch buf[0] {
-	case 1:
+	case BOOL_TRUE:
 		return e.subExpr[1].Eval(frame, result)
-	case 0:
+	case BOOL_FALSE:
 		return e.subExpr[2].Eval(frame, result)
-	case -1:
+	default:
 		return true
 	}
 	panic(Sprintf("trit value in cond Expr '%v'", e.source))

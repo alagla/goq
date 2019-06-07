@@ -24,11 +24,12 @@ func execBatch(cmdlist []string) {
 var startupCmd = []string{
 	//"load modules/Fibonacci.yml exitonfail",
 	//"load modules/Curl.yml exitonfail",
-	//"load modules/QuplaTests.yml exitonfail",
-	"load modules/Examples.yml exitonfail",
-	"run all",
+	"load modules/QuplaTestsNew.yml exitonfail",
+	//"load modules/Qupla.yml exitonfail",
+	//"trace listMap",
+	//"run 113-115",
 	//"run 0-1",
-	//"run all",
+	"run all",
 	//"run 0-10",
 }
 

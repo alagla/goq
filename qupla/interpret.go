@@ -60,10 +60,10 @@ func (vi *QuplaSite) IncNumUses() {
 }
 
 func (frame *EvalFrame) getCallTrace() []uint8 {
-	ret := make([]uint8, 0, 10)
+	ret := make([]uint8, 0, 40)
 	f := frame
 	for ; f != nil; f = f.prev {
-		ret = append(ret, f.context.callIndex)
+		ret = append(ret, f.context.callIndex...)
 	}
 	return ret
 }
