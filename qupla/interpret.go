@@ -63,7 +63,11 @@ func (frame *EvalFrame) getCallTrace() []uint8 {
 	ret := make([]uint8, 0, 40)
 	f := frame
 	for ; f != nil; f = f.prev {
-		ret = append(ret, f.context.callIndex...)
+		if f.prev != nil {
+			ret = append(ret, f.context.callIndex)
+		} else {
+			ret = append(ret, []uint8(frame.context.FuncDef.Name)...)
+		}
 	}
 	return ret
 }
