@@ -27,7 +27,7 @@ func (ent *Entity) stopListeningToEnvironment(env *environment) {
 	}
 	ent.joined = newList
 	if ent.checkStop() {
-		Logf(5, "stopped entity '%v'", ent.name)
+		Logf(5, "stopped entity '%v'", ent.Name)
 	}
 }
 
@@ -70,7 +70,7 @@ func (ent *Entity) entityLoop() {
 
 		LogDefer(3, func() {
 			Logf(3, "effect '%v' (%v) -> entity '%v'",
-				utils.TritsToString(msg.effect), utils.MustTritsToBigInt(msg.effect), ent.name)
+				utils.TritsToString(msg.effect), utils.MustTritsToBigInt(msg.effect), ent.Name)
 		})
 
 		// calculate result by calling entity core
@@ -83,9 +83,9 @@ func (ent *Entity) entityLoop() {
 			if msg.lastWithinLimit {
 				// if effect message is marked as last in the quant for this entity, it means
 				// join limit is reached for this entity.
-				// The effect is postponed to new quant by resending effect to the main queue of the supervisor
+				// The effect is postponed to new quant by resending effect to the main queue of the Supervisor
 				for _, affectInfo := range ent.affecting {
-					_ = ent.supervisor.postEffect("", affectInfo.environment, result, affectInfo.delay, false)
+					_ = ent.Supervisor.postEffect("", affectInfo.environment, result, affectInfo.delay, false)
 				}
 			} else {
 				// otherwise the effect can be processed with current quant and therefore is
@@ -94,16 +94,16 @@ func (ent *Entity) entityLoop() {
 					// if there's no delay, effect is sent directly to the environment's channel
 					// in the current quant
 					if affectInfo.delay == 0 {
-						ent.supervisor.quantWG.Add(1)
+						ent.Supervisor.quantWG.Add(1)
 						affectInfo.environment.effectChan <- result
 					} else {
 						// otherwise effect is posted to the main input queue
-						_ = ent.supervisor.postEffect("", affectInfo.environment, result, affectInfo.delay, false)
+						_ = ent.Supervisor.postEffect("", affectInfo.environment, result, affectInfo.delay, false)
 					}
 				}
 			}
 		}
-		ent.supervisor.quantWG.Done()
+		ent.Supervisor.quantWG.Done()
 	}
 }
 

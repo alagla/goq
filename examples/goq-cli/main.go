@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var svisor = supervisor.NewSupervisor(1 * time.Second)
+var svisor = supervisor.NewSupervisor("sv1", 1*time.Second)
 var moduleYAML *QuplaModuleYAML
 var module *qupla.QuplaModule
 
