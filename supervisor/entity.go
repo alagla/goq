@@ -69,8 +69,12 @@ func (ent *Entity) entityLoop() {
 		}
 
 		LogDefer(3, func() {
-			Logf(3, "effect '%v' (%v) -> entity '%v'",
-				utils.TritsToString(msg.effect), utils.MustTritsToBigInt(msg.effect), ent.Name)
+			res := utils.TritsToString(msg.effect)
+			reslen := len(res)
+			if reslen > 100 {
+				res = res[:100] + "..."
+			}
+			Logf(3, "effect -> entity '%v': '%v' (len=%d)", ent.Name, res, reslen)
 		})
 
 		// calculate result by calling entity core

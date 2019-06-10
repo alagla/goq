@@ -131,8 +131,13 @@ func (vi *QuplaSite) trace(frame *EvalFrame, result Trits, cached, null bool) {
 	if null {
 		s += "null"
 	} else {
-		bi, _ := utils.TritsToBigInt(result)
-		s += fmt.Sprintf("%v, '%v'", bi, utils.TritsToString(result))
+		//bi, _ := utils.TritsToBigInt(result)
+		res := utils.TritsToString(result)
+		reslen := len(res)
+		if len(res) > 100 {
+			res = res[:100] + "..."
+		}
+		s += fmt.Sprintf("'%v' len=%v", res, reslen)
 	}
 	if vi.IsState {
 		s += fmt.Sprintf(" (state with call trace '%v)' ",

@@ -1,11 +1,4 @@
 
-// function refresh(fun, millis){
-//     fun();
-//     setInterval(fun, millis);
-// }
-
-
-
 var hostEndpoint = "ws://localhost:8000/ws";
 var socket = null;
 var canvas = null;
@@ -63,7 +56,7 @@ function drawMap(themap){
 function connectToHost(){
     socket = new WebSocket(hostEndpoint);
     socket.onmessage = function(evt){
-        // console.log(evt.data);
+        console.log("received map data");
         let map =JSON.parse(evt.data);
         drawMap(map);
     };

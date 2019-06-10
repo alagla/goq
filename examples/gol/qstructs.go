@@ -42,7 +42,7 @@ func (qs QStruct) ToTrits(fields map[string]Trits) Trits {
 
 func (qs QStruct) Parse(effect Trits) (map[string]Trits, error) {
 	if len(effect) != qs.Size() {
-		return nil, fmt.Errorf("size of the effect must be equal to %v. Got %", qs.Size(), len(effect))
+		return nil, fmt.Errorf("size of the effect must be equal to %v. Got %v", qs.Size(), len(effect))
 	}
 	ret := make(map[string]Trits)
 	var cnt int

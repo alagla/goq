@@ -21,14 +21,14 @@ func main() {
 	currentDir, _ := os.Getwd()
 	Logf(0, "Current dir = %v", currentDir)
 
-	// load GOL module
-
+	// load GOL Qupla module
 	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(fname)
 	if err != nil {
 		Logf(0, "Error while parsing YAML file: %v", err)
 		moduleYAML = nil
 		return
 	}
+	// analyze loaded module and produce interpretable IR
 	module, succ := analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
 	if !succ {
 		Logf(0, "Failed to lead module: %v", err)
@@ -36,28 +36,48 @@ func main() {
 	}
 	module.PrintStats()
 
+	//module.SetTraceLevel(10, "gameOfLife")
+	//module.SetTraceLevel(10, "golLoopRows")
+	//module.SetTraceLevel(10, "golProcessRows")
+
+	// create Qubic supervisor
+
 	sv := supervisor.NewSupervisor("GOL supervisor", 2*time.Second)
+
+	// attach (join, affect) environments of the module to the supervisor
+
 	succ = module.AttachToSupervisor(sv)
 	if !succ {
 		Logf(0, "Failed to attach module to supervisor: %v", err)
 		return
 	}
-	traceEnvironment(sv, "GolView")
-	traceEnvironment(sv, "GolGen")
-	traceEnvironment(sv, "GolSend")
+	//traceEnvironment(sv, "GolView")
+	//traceEnvironment(sv, "GolGen")
+	//traceEnvironment(sv, "GolSend")
 
 	printEnvironmentInfo(sv)
 
-	golOracle, err := NewWSOracle(sv)
+	// create GolOracle
+
+	golOracle, err := NewGolOracle(sv)
 	if err != nil {
-		Logf(0, "error while creating WSOracle: %v", err)
+		Logf(0, "error while creating GolOracle: %v", err)
 		os.Exit(1)
 	}
+
+	// join the oracle to GolView environment
+	// any effect posted to that environment (GolInfo Qupla type) will be sent
+	// to the browser for display
+
 	err = sv.Join("GolView", golOracle.GetEntity(), 1)
 	if err != nil {
-		Logf(0, "error while joining WSOracle to environment: %v", err)
+		Logf(0, "error while joining GolOracle to environment: %v", err)
 		os.Exit(1)
 	}
+
+	// setting up and starting web server
+	// webserver will call gWSServerHandle provided by oracle to initate session
+	// the oracle will open WS with the browser and communicate directly
 
 	staticFileRoot = path.Join(currentDir, "examples/gol")
 	http.HandleFunc("/static/", staticFileHandler)
@@ -69,7 +89,7 @@ func main() {
 }
 
 func traceEnvironment(sv *supervisor.Supervisor, env string) {
-	printEffect, err := NewPrintEffectEntity(sv, env, 0, 0)
+	printEffect, err := NewPrintEffectEntity(sv, env, 0, 0, 100)
 	if err != nil {
 		Logf(0, "error while creating printEffect entity: %v", err)
 		os.Exit(1)

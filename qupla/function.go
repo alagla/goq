@@ -141,15 +141,20 @@ func (def *Function) NewFuncExpressionWithNulls(callIndex byte) *FunctionExpr {
 }
 
 func (def *Function) Eval(frame *EvalFrame, result Trits) bool {
-	//if def.traceLevel > 0 {
+	//if def.Name == "golGen" {
 	//	fmt.Printf("++++ kuku\n")
 	//}
 	null := def.RetExpr.Eval(frame, result)
 	if def.traceLevel > 0 {
 		if !null {
-			bi, _ := utils.TritsToBigInt(result)
-			Logf(def.traceLevel, "trace '%v': returned %v, '%v'",
-				def.Name, bi, utils.TritsToString(result))
+			//bi, _ := utils.TritsToBigInt(result)
+			res := utils.TritsToString(result)
+			reslen := len(res)
+			if reslen > 100 {
+				res = res[:100] + "..."
+			}
+			Logf(def.traceLevel, "trace '%v': returned '%v' len = %v",
+				def.Name, res, reslen)
 		} else {
 			Logf(2+def.traceLevel, "trace '%v': returned null", def.Name)
 		}
