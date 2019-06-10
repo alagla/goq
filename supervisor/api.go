@@ -33,9 +33,9 @@ func NewSupervisor(name string, lockTimeout time.Duration) *Supervisor {
 //    - core, an object which implement EntityCore interface. It calculates output trits from inputs
 
 func (sv *Supervisor) NewEntity(name string, inSize, outSize int, core EntityCore) (*Entity, error) {
-	if outSize < 1 || inSize < 0 {
-		return nil, fmt.Errorf("must be: output size > 0, input size >= 0")
-	}
+	//if outSize < 1 || inSize < 0 {
+	//	return nil, fmt.Errorf("must be: output size > 0, input size >= 0")
+	//}
 	ret := &Entity{
 		Supervisor: sv,
 		Name:       name,

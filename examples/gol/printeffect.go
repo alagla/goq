@@ -1,8 +1,8 @@
-package entities
+package main
 
 import (
-	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/supervisor"
 	"github.com/lunfardo314/goq/utils"
 	"time"
@@ -32,7 +32,7 @@ func NewPrintEffectEntity(supervisor *Supervisor, name string, printEvery int, p
 func (e *printEffectEntityCore) Call(input Trits, _ Trits) bool {
 	if (e.printEvery == 0 || e.counter%e.printEvery == 0) && time.Since(e.lastOutput) >= e.printNotMoreOftenThan {
 		trits := utils.TritsToString(input)
-		fmt.Printf("%9d %v.%v: '%v' (len=%v)", e.counter, e.entity.Supervisor.Name, e.entity.Name, trits, len(trits))
+		cfg.Logf(0, "%9d %v.%v: '%v' (len=%v)", e.counter, e.entity.Supervisor.Name, e.entity.Name, trits, len(trits))
 		e.lastOutput = time.Now()
 	}
 	e.counter++

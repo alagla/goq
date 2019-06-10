@@ -1,16 +1,14 @@
-package entities
+package main
 
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
-	"sync"
 )
 
 type Tritmap struct {
-	sync.RWMutex
 	Width  int
 	Height int
-	data   Trits
+	Data   Trits
 }
 
 func NewTritmap(width, height int) (*Tritmap, error) {
@@ -20,27 +18,29 @@ func NewTritmap(width, height int) (*Tritmap, error) {
 	return &Tritmap{
 		Width:  width,
 		Height: height,
-		data:   make(Trits, width*height),
+		Data:   make(Trits, width*height),
 	}, nil
 }
 
-func (m *Tritmap) Get(x, y int) (int8, error) {
-	m.RLock()
-	defer m.RUnlock()
+func MustNewTritmap(width, height int) *Tritmap {
+	ret, err := NewTritmap(width, height)
+	if err != nil {
+		panic(err)
+	}
+	return ret
+}
 
+func (m *Tritmap) Get(x, y int) (int8, error) {
 	if x < 0 || x >= m.Width || y < 0 || y >= m.Height {
 		return 0, fmt.Errorf("Tritmap.Get: out of bounds")
 	}
-	return m.data[x*m.Height+y], nil
+	return m.Data[y*m.Height+x], nil
 }
 
 func (m *Tritmap) Put(x, y int, value int8) error {
-	m.Lock()
-	defer m.Unlock()
-
 	if x < 0 || x >= m.Width || y < 0 || y >= m.Height {
 		return fmt.Errorf("Tritmap.Get: out of bounds")
 	}
-	m.data[x*m.Height+y] = value
+	m.Data[y*m.Height+x] = value
 	return nil
 }

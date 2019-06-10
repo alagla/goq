@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	. "github.com/iotaledger/iota.go/kerl"
 	. "github.com/iotaledger/iota.go/trinary"
 	"math/big"
 	"time"
@@ -163,8 +164,13 @@ var b2tencoding = []Trits{
 	{-1, 0, 1},  // dec value = 8, endoded value = 15
 }
 
-func Bytes2Trits(data []byte) Trits {
-	ret := make(Trits, 6*len(data))
+func Bytes2Trits(data []byte, lengthMultiple int) Trits {
+	var length int
+	length = 6 * len(data)
+	if lengthMultiple > 0 && length%lengthMultiple != 0 {
+		length = length + (lengthMultiple - length%lengthMultiple)
+	}
+	ret := make(Trits, length)
 	for i, b := range data {
 		copy(ret[6*i:6*i+3], b2tencoding[b>>4])
 		copy(ret[6*i+3:6*i+6], b2tencoding[b&0x0F])
@@ -202,4 +208,21 @@ func Trits2Bytes(trits Trits) ([]byte, error) {
 		ret[i/6] = bt
 	}
 	return ret, nil
+}
+
+func KerlHash243(trits Trits) (Trits, error) {
+	k := NewKerl()
+	if k == nil {
+		return nil, fmt.Errorf("couldn't initialize Kerl instance")
+	}
+	var err error
+	err = k.Absorb(trits)
+	if err != nil {
+		return nil, fmt.Errorf("absorb() failed: %s", err)
+	}
+	ts, err := k.Squeeze(243)
+	if err != nil {
+		return nil, fmt.Errorf("squeeze() failed: %v", err)
+	}
+	return ts, nil
 }

@@ -11,8 +11,8 @@ var socket = null;
 var canvas = null;
 var canvasOffsetLeft = null;
 var canvasOffsetTop = null;
-var golWidth = 50;
-var golHeight = 50;
+var golWidth = 81;
+var golHeight = 81;
 var cellStyle = "#000000";
 var backgroundStyle = "#D3D3D3";
 var cellW = 0;
@@ -35,6 +35,9 @@ function main(){
     clearCanvas(ctx);
 
     canvas.addEventListener('click', clickEvent);
+
+    let nextGenButton = document.getElementById("nextGenButton");
+    nextGenButton.addEventListener('click', nextGenEvent);
 }
 
 function clearCanvas(ctx) {
@@ -47,11 +50,13 @@ function drawCell(ctx, x, y){
     ctx.fillRect(x * cellH, y * cellW, cellH, cellW);
 }
 
-function drawPopulation(coord){
+function drawMap(themap){
     let ctx = canvas.getContext("2d");
     clearCanvas(ctx);
-    for (let idx in coord){
-        drawCell(ctx, coord[idx][0], coord[idx][1]);
+    for (let idx in themap){
+        if (themap[idx] == 1){
+            drawCell(ctx, idx % golWidth, idx / golWidth);
+        }
     }
 }
 
@@ -59,8 +64,8 @@ function connectToHost(){
     socket = new WebSocket(hostEndpoint);
     socket.onmessage = function(evt){
         // console.log(evt.data);
-        let coord =JSON.parse(evt.data);
-        drawPopulation(coord);
+        let map =JSON.parse(evt.data);
+        drawMap(map);
     };
 
     socket.onopen = () => {
@@ -81,6 +86,11 @@ function connectToHost(){
 function clickEvent(event){
     let elemX = Math.min(Math.round((event.pageX - canvasOffsetLeft) / cellW), golWidth-1);
     let elemY = Math.min(Math.round((event.pageY - canvasOffsetTop) / cellH), golHeight-1);
-    console.log("click", elemX, elemY);
-    socket.send(JSON.stringify({x:elemX, y:elemY}));
+    console.log("mpousecClick", elemX, elemY);
+    socket.send(JSON.stringify({nextGen: false, x:elemX, y:elemY}));
+}
+
+function nextGenEvent(event){
+    console.log("nextGenEvent");
+    socket.send(JSON.stringify({nextGen: true, x:0, y:0}));
 }

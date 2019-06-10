@@ -12,7 +12,7 @@ type ConfigStruct struct {
 
 var Config = &ConfigStruct{
 	Version:                "0.01 alpha",
-	Verbosity:              2,
+	Verbosity:              5,
 	OptimizeFunCallsInline: false,
 	OptimizeOneTimeSites:   false,
 	OptimizeInlineSlices:   false,
