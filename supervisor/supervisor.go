@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// TODO dispose supervisor ???
+// TODO dispose Supervisor ???
 
 func (sv *Supervisor) getEnvironment_(name string) *environment {
 	env, ok := sv.environments[name]
@@ -73,8 +73,13 @@ func (sv *Supervisor) postEffect(envName string, env *environment, effect Trits,
 		n = env.name
 	}
 	LogDefer(5, func() {
-		Logf(5, "posted effect '%v' (%v) to supervisor, environment '%v', delay %v. External = %v",
-			utils.TritsToString(effect), utils.MustTritsToBigInt(effect), n, delay, external)
+		res := utils.TritsToString(effect)
+		reslen := len(res)
+		if reslen > 100 {
+			res = res[:100] + "..."
+		}
+		Logf(5, "posted effect to Supervisor ->'%v', delay=%v external=%v: '%s' (len=%d)",
+			n, delay, external, res, reslen)
 	})
 
 	return sv.queue.Put(&quantMsg{
@@ -85,9 +90,9 @@ func (sv *Supervisor) postEffect(envName string, env *environment, effect Trits,
 	})
 }
 
-// main supervisor input loop
+// main Supervisor input loop
 // one message read from the queue means one quant
-// supervisor is locked during processing of the quant
+// Supervisor is locked during processing of the quant
 // It starts in locked state and the this loop doing 100 millisecond idle loops
 // while queue is empty
 
@@ -118,7 +123,7 @@ func (sv *Supervisor) supervisorInputLoop() {
 			continue
 		}
 
-		// if environment is not given by pointer, find it by name
+		// if environment is not given by pointer, find it by Name
 		if msg.environment == nil {
 			env = sv.getEnvironment_(msg.envName)
 		} else {
@@ -126,7 +131,7 @@ func (sv *Supervisor) supervisorInputLoop() {
 		}
 		if env == nil || env.invalid {
 			// environment can be invalid also in case it was deleted
-			// from the supervisor while some pending effects were still in the queue
+			// from the Supervisor while some pending effects were still in the queue
 			Logf(5, "supervisorInputLoop: can't find valid environment '%v'", msg.envName)
 			continue
 		}
@@ -145,10 +150,10 @@ func (sv *Supervisor) incQuantCount() {
 	sv.quantCount++
 }
 
-// setIdle is called from within supervisor input loop
-// supervisor is idle only if there's no messages in the inpout queue and therefore
+// setIdle is called from within Supervisor input loop
+// Supervisor is idle only if there's no messages in the inpout queue and therefore
 // it is not processing a quant.
-// Within the quant supervisor is locked for any calls from outside which change configuration of
+// Within the quant Supervisor is locked for any calls from outside which change configuration of
 // environments and entities
 
 func (sv *Supervisor) setIdle(idle bool) {

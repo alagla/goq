@@ -8,36 +8,37 @@ import (
 	"time"
 )
 
-// Public thread safe supervisor API
+// Public thread safe Supervisor API
 
-// Creates new instance of the supervisor
+// Creates new instance of the Supervisor
 
-func NewSupervisor(lockTimeout time.Duration) *Supervisor {
+func NewSupervisor(name string, lockTimeout time.Duration) *Supervisor {
 	ret := &Supervisor{
+		Name:         name,
 		queue:        queue.New(5),
 		environments: make(map[string]*environment),
 		accessLock:   newSema(),
 		timeout:      lockTimeout,
 	}
-	ret.accessLock.acquire(-1) // supervisor starts locked
+	ret.accessLock.acquire(-1) // Supervisor starts locked
 	go ret.supervisorInputLoop()
 	return ret
 }
 
 // create new Entity
 // Params:
-//    - name, used only for tracing
+//    - Name, used only for tracing
 //    - inSize, expected size of input trit vector. O means any not nil
 //    - outSize, size of output trit vector
 //    - core, an object which implement EntityCore interface. It calculates output trits from inputs
 
 func (sv *Supervisor) NewEntity(name string, inSize, outSize int, core EntityCore) (*Entity, error) {
-	if outSize < 1 || inSize < 0 {
-		return nil, fmt.Errorf("must be: output size > 0, input size >= 0")
-	}
+	//if outSize < 1 || inSize < 0 {
+	//	return nil, fmt.Errorf("must be: output size > 0, input size >= 0")
+	//}
 	ret := &Entity{
-		supervisor: sv,
-		name:       name,
+		Supervisor: sv,
+		Name:       name,
 		inSize:     inSize,
 		outSize:    outSize,
 		affecting:  make([]*affectEntData, 0),
@@ -49,7 +50,7 @@ func (sv *Supervisor) NewEntity(name string, inSize, outSize int, core EntityCor
 
 // returns current quant count.
 // Quant count is changing in async way therefore makes sense only
-// when supervisor is in idle state, i e input queue is empty
+// when Supervisor is in idle state, i e input queue is empty
 // Used when delay is posted with effect and for testing
 
 func (sv *Supervisor) GetQuantCount() int64 {
@@ -59,7 +60,7 @@ func (sv *Supervisor) GetQuantCount() int64 {
 	return ret
 }
 
-// creates new environment if doesn't exist another with the same name
+// creates new environment if doesn't exist another with the same Name
 
 func (sv *Supervisor) CreateEnvironment(name string) error {
 	if !sv.accessLock.acquire(sv.timeout) {
@@ -111,11 +112,11 @@ func (sv *Supervisor) Affect(envName string, entity *Entity, delay int) error {
 	return sv.Attach(entity, nil, map[string]int{envName: delay})
 }
 
-// deletes environment from the supervisor.
+// deletes environment from the Supervisor.
 //    - stops environment loop goroutine,
 //    - "unjoins" and "unaffects" related entities.
 //    - marks environment as invalid. Any effects for this environment which may remain in the queue will be ignored
-// After environment is deleted, some entities may become completely detached from the supervisor.
+// After environment is deleted, some entities may become completely detached from the Supervisor.
 // Input loop and goroutine of such entity is automatically stopped.
 
 func (sv *Supervisor) DeleteEnvironment(envName string) error {
@@ -147,7 +148,7 @@ func (sv *Supervisor) ClearEnvironments() error {
 		env.invalidate()
 	}
 	sv.environments = make(map[string]*environment)
-	Logf(5, "supervisor: all environments were deleted")
+	Logf(5, "Supervisor: all environments were deleted")
 	sv.accessLock.release()
 	return nil
 }
@@ -158,9 +159,9 @@ func (sv *Supervisor) PostEffect(envName string, effect Trits, delay int) error 
 	return sv.postEffect(envName, nil, effect, delay, true)
 }
 
-// executes `doFunct` if supervisor becomes idle (= releases lock) within 'timeout'
+// executes `doFunct` if Supervisor becomes idle (= releases lock) within 'timeout'
 // `doFunc` will be called upon release of the semaphore outside of the locked section.
-// Note, that there's no guarantee that supervisor will be idle (unlocked) during execution of `doFunc`
+// Note, that there's no guarantee that Supervisor will be idle (unlocked) during execution of `doFunc`
 
 func (sv *Supervisor) DoIfIdle(timeout time.Duration, doFunc func()) bool {
 	if !sv.accessLock.acquire(timeout) {
@@ -171,7 +172,7 @@ func (sv *Supervisor) DoIfIdle(timeout time.Duration, doFunc func()) bool {
 	return true
 }
 
-// loops until supervisor becomes idle and calls doFunc
+// loops until Supervisor becomes idle and calls doFunc
 func (sv *Supervisor) DoOnIdle(doFunc func()) {
 	for !sv.DoIfIdle(1*time.Second, doFunc) {
 	}
@@ -182,7 +183,7 @@ type EnvironmentInfo struct {
 	AffectedBy     []string
 }
 
-// returns info about current configuration of the supervisor
+// returns info about current configuration of the Supervisor
 
 func (sv *Supervisor) EnvironmentInfo() map[string]*EnvironmentInfo {
 	if !sv.accessLock.acquire(sv.timeout) {
@@ -198,10 +199,10 @@ func (sv *Supervisor) EnvironmentInfo() map[string]*EnvironmentInfo {
 		}
 		for _, joinData := range env.joins {
 			envInfo.JoinedEntities = append(envInfo.JoinedEntities,
-				fmt.Sprintf("%v(%v)", joinData.entity.name, joinData.limit))
+				fmt.Sprintf("%v(%v)", joinData.entity.Name, joinData.limit))
 		}
 		for _, ent := range env.affects {
-			envInfo.AffectedBy = append(envInfo.AffectedBy, ent.name)
+			envInfo.AffectedBy = append(envInfo.AffectedBy, ent.Name)
 		}
 		ret[name] = envInfo
 	}
@@ -217,5 +218,5 @@ func (ent *Entity) GetCore() EntityCore {
 
 // for calls from within entity core. For testing/debugging
 func (ent *Entity) GetQuantCount() int64 {
-	return ent.supervisor.GetQuantCount()
+	return ent.Supervisor.GetQuantCount()
 }

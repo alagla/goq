@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// fast fifo queue for supervisor input
+// fast fifo queue for Supervisor input
 
 const maxQueueLen = 100
 

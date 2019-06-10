@@ -8,6 +8,7 @@ import (
 )
 
 type Supervisor struct {
+	Name            string
 	queue           *queue.Queue
 	idle            bool
 	environments    map[string]*environment
@@ -19,8 +20,8 @@ type Supervisor struct {
 }
 
 type Entity struct {
-	supervisor *Supervisor
-	name       string
+	Supervisor *Supervisor
+	Name       string
 	inSize     int
 	outSize    int
 	affecting  []*affectEntData // list of affected environments where effects are sent

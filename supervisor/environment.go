@@ -43,8 +43,12 @@ func (env *environment) environmentLoop() {
 			panic("nil effect")
 		}
 		LogDefer(3, func() {
-			Logf(3, "effect '%v' (%v) -> environment '%v'",
-				utils.TritsToString(effect), utils.MustTritsToBigInt(effect), env.name)
+			res := utils.TritsToString(effect)
+			reslen := len(res)
+			if reslen > 100 {
+				res = res[:100] + "..."
+			}
+			Logf(3, "-> environment '%v': effect '%v' (len=%d)", env.name, res, reslen)
 		})
 		env.supervisor.quantWG.Add(len(env.joins))
 		for _, joinData := range env.joins {
