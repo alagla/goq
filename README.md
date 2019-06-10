@@ -42,6 +42,12 @@ Each externally placed effect starts a _quant_. During a _quant_ all entities ar
 Supervisor is locked for any changes during the quant.
 Exported supervisor API can be found in the file `api.go`. 
 
+- [examples/gol](https://github.com/lunfardo314/goq/tree/dev/examples/gol) contains **Game of Life**
+proof-of-concept originaly created by Eric Hop in Qupla [reference implementation](https://github.com/iotaledger/qupla).
+This PoC uses original unchanged Qupla code from reference implementation. It uses GOQ supervisor
+and GolOracle written in Go. GOL qubics are running on the server and user can access the 
+system from the web browser. 
+
 - [examples/goq-cli](https://github.com/lunfardo314/goq/tree/dev/examples/goq-cli) contains 
 _goq-cli_, a simple command line interface to Qupla and supervisor. 
 Primary purpose of _goq-cli_ is testing of the library itself. It hopefully can be used to test and debug any Qupla modules.
