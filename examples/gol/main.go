@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/lunfardo314/goq/analyzeyaml"
 	. "github.com/lunfardo314/goq/cfg"
@@ -17,12 +18,15 @@ const webServerPort = 8000
 const fname = "C:/Users/evaldas/Documents/proj/Go/src/github.com/lunfardo314/goq/examples/modules/GOL.yml"
 
 func main() {
+	codeStr := flag.String("goq", fname, "Full path the the Qupla GOQ.yml")
+	flag.Parse()
 	Logf(0, "Starting GOL for GOQ example")
 	currentDir, _ := os.Getwd()
 	Logf(0, "Current dir = %v", currentDir)
 
 	// load GOL Qupla module
-	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(fname)
+	Logf(0, "Loading GOL code from %v", fname)
+	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(*codeStr)
 	if err != nil {
 		Logf(0, "Error while parsing YAML file: %v", err)
 		moduleYAML = nil
