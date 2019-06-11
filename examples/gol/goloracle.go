@@ -7,9 +7,10 @@ import (
 	. "github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/supervisor"
 	"sync"
+	"time"
 )
 
-// file contain general definitions of GolOracle
+// file contain general definitions for GolOracle
 
 const (
 	golW = 81
@@ -23,8 +24,9 @@ type GolOracle struct {
 }
 
 type golConnection struct {
-	conn   *websocket.Conn
-	themap Trits
+	conn         *websocket.Conn
+	themap       Trits
+	timeLastCall time.Time
 }
 
 func NewGolOracle(sv *Supervisor) (*GolOracle, error) {
@@ -87,14 +89,34 @@ func (gol *GolOracle) CopyMap(id Hash) (Trits, error) {
 }
 
 func (gol *GolOracle) SetMap(id Hash, themap Trits) error {
-	gol.RLock()
-	defer gol.RUnlock()
+	gol.Lock()
+	defer gol.Unlock()
 	if c, ok := gol.golConnections[id]; ok {
 		c.themap = themap
 		return nil
 	}
 	return fmt.Errorf("websocket with id = '%v' doesn't exist", id)
 }
+
+func (gol *GolOracle) CallStart(id Hash) error {
+	gol.Lock()
+	defer gol.Unlock()
+	if c, ok := gol.golConnections[id]; ok {
+		c.timeLastCall = time.Now()
+		return nil
+	}
+	return fmt.Errorf("websocket with id = '%v' doesn't exist", id)
+}
+
+func (gol *GolOracle) CallDuration(id Hash) time.Duration {
+	gol.RLock()
+	defer gol.RUnlock()
+	if c, ok := gol.golConnections[id]; ok {
+		return time.Since(c.timeLastCall)
+	}
+	return 0
+}
+
 func getCell(themap Trits, x, y int) (int8, error) {
 	if x < 0 || x >= golW || y < 0 || y >= golH {
 		return 0, fmt.Errorf("Tritmap.Get: out of bounds")
@@ -126,7 +148,7 @@ var golInfoStruct = QStruct{
 }
 
 type clickCmd struct {
-	NextGen bool `json:"nextGen"` // true next generation, false update map,
-	X       int  `json:"x"`
-	Y       int  `json:"y"`
+	Cmd int `json:"cmd"` // 0 - update map, 1 - next generation, 2 - clear, 3 - randomize, 4 - radomize with gliders
+	X   int `json:"x"`
+	Y   int `json:"y"`
 }

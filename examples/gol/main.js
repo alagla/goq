@@ -29,8 +29,10 @@ function main(){
 
     canvas.addEventListener('click', clickEvent);
 
-    let nextGenButton = document.getElementById("nextGenButton");
-    nextGenButton.addEventListener('click', nextGenEvent);
+    document.getElementById("nextGenButton").addEventListener('click', nextGenEvent);
+    document.getElementById("clearButton").addEventListener('click', clearEvent);
+    document.getElementById("randomizeButton").addEventListener('click', randomizeEvent);
+    document.getElementById("randomizeGlidersButton").addEventListener('click', randomizeGlidersEvent);
 }
 
 function clearCanvas(ctx) {
@@ -46,9 +48,10 @@ function drawCell(ctx, x, y){
 function drawMap(themap){
     let ctx = canvas.getContext("2d");
     clearCanvas(ctx);
-    for (let idx in themap){
-        if (themap[idx] == 1){
-            drawCell(ctx, idx % golWidth, idx / golWidth);
+    // console.log("map data: "+themap);
+    for (let i = 0; i < themap.length; i++){
+        if (themap.charAt(i) == "1"){
+            drawCell(ctx, i % golWidth, i / golWidth);
         }
     }
 }
@@ -56,9 +59,9 @@ function drawMap(themap){
 function connectToHost(){
     socket = new WebSocket(hostEndpoint);
     socket.onmessage = function(evt){
-        console.log("received map data");
-        let map =JSON.parse(evt.data);
-        drawMap(map);
+        // let map =JSON.parse(evt.data);
+        // drawMap(map);
+        drawMap(String(evt.data))
     };
 
     socket.onopen = () => {
@@ -80,10 +83,25 @@ function clickEvent(event){
     let elemX = Math.min(Math.round((event.pageX - canvasOffsetLeft) / cellW), golWidth-1);
     let elemY = Math.min(Math.round((event.pageY - canvasOffsetTop) / cellH), golHeight-1);
     console.log("mpousecClick", elemX, elemY);
-    socket.send(JSON.stringify({nextGen: false, x:elemX, y:elemY}));
+    socket.send(JSON.stringify({cmd: 0, x:elemX, y:elemY}));
 }
 
 function nextGenEvent(event){
     console.log("nextGenEvent");
-    socket.send(JSON.stringify({nextGen: true, x:0, y:0}));
+    socket.send(JSON.stringify({cmd: 1, x:0, y:0}));
+}
+
+function clearEvent(event){
+    console.log("clearEvent");
+    socket.send(JSON.stringify({cmd: 2, x:0, y:0}));
+}
+
+function randomizeEvent(event){
+    console.log("randomizeEvent");
+    socket.send(JSON.stringify({cmd: 3, x:0, y:0}));
+}
+
+function randomizeGlidersEvent(event){
+    console.log("randomizeEvent");
+    socket.send(JSON.stringify({cmd: 4, x:0, y:0}));
 }
