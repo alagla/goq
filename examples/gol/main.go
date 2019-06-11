@@ -80,7 +80,8 @@ func main() {
 	// the oracle will open WS with the browser and communicate directly
 
 	staticFileRoot = path.Join(currentDir, "examples/gol")
-	http.HandleFunc("/static/", staticFileHandler)
+	//http.HandleFunc("/static/", staticFileHandler)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticFileRoot))))
 	http.HandleFunc("/", defaultHandler)
 	http.HandleFunc("/ws", golOracle.gWSServerHandle())
 
@@ -108,13 +109,14 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	loadStaticHTMLFile(w, "mainpage.html")
 }
 
-func staticFileHandler(w http.ResponseWriter, r *http.Request) {
-	fname := r.URL.Path[len("/static/"):]
-	loadStaticHTMLFile(w, fname)
-}
-
+//func staticFileHandler(w http.ResponseWriter, r *http.Request) {
+//	fname := r.URL.Path[len("/static/"):]
+//	loadStaticHTMLFile(w, fname)
+//}
+//
 func loadStaticHTMLFile(w http.ResponseWriter, fname string) {
 	pathname := path.Join(staticFileRoot, fname)
+	Logf(0, "load static file: %v", pathname)
 
 	body, err := ioutil.ReadFile(pathname)
 	if err != nil {

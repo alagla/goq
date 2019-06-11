@@ -1,0 +1,39 @@
+#title_table{
+    /*border: 1px solid #c2c2d6 ;*/
+}
+
+#title {
+    font-family: "Liberation Mono", monospace;
+    text-align: left;
+    font-size: 35px;
+    /*border: 1px solid #c2c2d6 ;*/
+}
+
+#subtitle {
+    font-family: "Liberation Mono", monospace;
+    text-align: left;
+    font-size: 15px;
+    /*border: 1px solid #c2c2d6 ;*/
+}
+
+#logo_cell {
+    /*border: 1px solid #c2c2d6 ;*/
+    padding-top: 10px;
+    padding-bottom: 10px;
+    vertical-align: top;
+}
+
+#title_cell{
+    /*border: 1px solid #c2c2d6 ;*/
+    padding-top: 20px;
+    padding-bottom: 10px;
+    padding-left: 40px;
+}
+
+#about_text {
+    font-family: "Liberation Mono", monospace;
+    font-size: 12px;
+    text-align: left;
+    width: 600px;
+    /*border: 1px solid #c2c2d6 ;*/
+}

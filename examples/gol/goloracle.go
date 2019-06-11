@@ -67,7 +67,7 @@ func (gol *GolOracle) RegisterGolConnection(id Hash, conn *websocket.Conn) error
 }
 
 func (gol *GolOracle) RemoveGolConnection(id Hash) error {
-	Logf(0, "Removing connection for %v: %v", id)
+	Logf(0, "Removing connection for %v", id)
 	gol.Lock()
 	defer gol.Unlock()
 	if _, ok := gol.golConnections[id]; ok {
