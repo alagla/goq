@@ -1,5 +1,4 @@
 
-var hostEndpoint = "ws://localhost:8000/ws";
 var socket = null;
 var canvas = null;
 var canvasOffsetLeft = null;
@@ -57,7 +56,7 @@ function drawMap(themap){
 }
 
 function connectToHost(){
-    socket = new WebSocket(hostEndpoint);
+    socket = new WebSocket("ws://" + location.host + "/ws");
     socket.onmessage = function(evt){
         // let map =JSON.parse(evt.data);
         // drawMap(map);
