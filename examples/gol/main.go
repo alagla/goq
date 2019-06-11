@@ -14,26 +14,39 @@ import (
 	"time"
 )
 
-const webServerPort = 8000
-const fname = "C:/Users/evaldas/Documents/proj/Go/src/github.com/lunfardo314/goq/examples/modules/GOL.yml"
+const (
+	webServerPort   = 8000
+	golCodeLocation = "C:/Users/evaldas/Documents/proj/Go/src/github.com/lunfardo314/goq/examples/modules/GOL.yml"
+	siteRoot        = "./examples/gol/static"
+)
 
 func main() {
-	codeStr := flag.String("code", fname, "Full path the the Qupla GOQ.yml")
+	cfgStr := flag.String("cfg", "gol.yml", "Location of the configuration YAML")
 	flag.Parse()
 	Logf(0, "Starting GOL for GOQ example")
 	currentDir, _ := os.Getwd()
-	Logf(0, "Current dir = %v", currentDir)
+	Logf(0, "Current dir is %v", currentDir)
+
+	err := readConfig(*cfgStr)
+	if err != nil {
+		Logf(0, "error while reading config file %v: %v", *cfgStr, err)
+		Logf(0, "using defaults")
+
+		ConfigGol.WebServerPort = webServerPort
+		ConfigGol.SiteRoot = siteRoot
+		ConfigGol.GolCodeLocation = golCodeLocation
+	}
 
 	// load GOL Qupla module
-	Logf(0, "Loading GOL code from %v", fname)
-	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(*codeStr)
+	Logf(0, "Loading GOL code from %v", ConfigGol.GolCodeLocation)
+	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(ConfigGol.GolCodeLocation)
 	if err != nil {
 		Logf(0, "Error while parsing YAML file: %v", err)
 		moduleYAML = nil
 		return
 	}
 	// analyze loaded module and produce interpretable IR
-	module, succ := analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
+	module, succ := analyzeyaml.AnalyzeQuplaModule(ConfigGol.GolCodeLocation, moduleYAML)
 	if !succ {
 		Logf(0, "Failed to lead module: %v", err)
 		return
@@ -83,14 +96,12 @@ func main() {
 	// webserver will call gWSServerHandle provided by oracle to initate session
 	// the oracle will open WS with the browser and communicate directly
 
-	staticFileRoot = path.Join(currentDir, "examples/gol")
-	//http.HandleFunc("/static/", staticFileHandler)
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticFileRoot))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(ConfigGol.SiteRoot))))
 	http.HandleFunc("/", defaultHandler)
 	http.HandleFunc("/ws", golOracle.gWSServerHandle())
 
-	Logf(0, "Web server will be running on port %d", webServerPort)
-	panic(http.ListenAndServe(fmt.Sprintf(":%d", webServerPort), nil))
+	Logf(0, "Web server will be running on port %d", ConfigGol.WebServerPort)
+	panic(http.ListenAndServe(fmt.Sprintf(":%d", ConfigGol.WebServerPort), nil))
 }
 
 func traceEnvironment(sv *supervisor.Supervisor, env string) {
@@ -107,19 +118,17 @@ func traceEnvironment(sv *supervisor.Supervisor, env string) {
 	Logf(0, "will be tracing environment '%v' with PrintEffectEntity", env)
 }
 
-var staticFileRoot string
-
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	loadStaticHTMLFile(w, "mainpage.html")
 }
 
 //func staticFileHandler(w http.ResponseWriter, r *http.Request) {
-//	fname := r.URL.Path[len("/static/"):]
-//	loadStaticHTMLFile(w, fname)
+//	golCodeLocation := r.URL.Path[len("/static/"):]
+//	loadStaticHTMLFile(w, golCodeLocation)
 //}
 //
 func loadStaticHTMLFile(w http.ResponseWriter, fname string) {
-	pathname := path.Join(staticFileRoot, fname)
+	pathname := path.Join(ConfigGol.SiteRoot, fname)
 	Logf(0, "load static file: %v", pathname)
 
 	body, err := ioutil.ReadFile(pathname)

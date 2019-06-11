@@ -143,7 +143,7 @@ func (gol *GolOracle) updateMapCmd(id string, idtrits Trits, x, y int) {
 }
 
 func (gol *GolOracle) clearCmd(id string, idtrits Trits) {
-	Logf(0, "clear map click cmd received form '%v'")
+	Logf(0, "clear map click cmd received form '%v'", id)
 	effect := golInfoStruct.ToTrits(map[string]Trits{
 		"id":   idtrits,
 		"grid": make(Trits, golH*golW),
