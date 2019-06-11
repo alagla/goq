@@ -18,7 +18,7 @@ const webServerPort = 8000
 const fname = "C:/Users/evaldas/Documents/proj/Go/src/github.com/lunfardo314/goq/examples/modules/GOL.yml"
 
 func main() {
-	codeStr := flag.String("goq", fname, "Full path the the Qupla GOQ.yml")
+	codeStr := flag.String("code", fname, "Full path the the Qupla GOQ.yml")
 	flag.Parse()
 	Logf(0, "Starting GOL for GOQ example")
 	currentDir, _ := os.Getwd()
