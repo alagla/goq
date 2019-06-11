@@ -1,20 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>Qubic Game Of Life PoC</title>
     <meta charset="UTF-8">
-    <meta name="description" content="Learning draw on cavas">
-    <meta name="keywords" content="IOTA, Tangle, Tanglebeat, crypto, token">
+    <meta name="description" content="Qubic Game Of Life PoC">
+    <meta name="keywords" content="IOTA, Tangle, Qubic, Tanglebeat, crypto">
     <meta name="author" content="lunfardo">
-    <title>Main test page</title>
+    <base href="/">
+    <link type="image/x-icon" rel="icon" href="/static/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="/static/main.css">
+    <script type="text/javascript" src="/static/main.js"> </script>
 </head>
-<script type="text/javascript" src="/static/main.js">
-</script>
-<body onload=main()>
-    <p>
+<body onload="main()">
+    <div style="display: table" id="title_table">
+        <div style="display: table-row">
+            <div style="display: table-cell" id="logo_cell"> <img id="iota_logo" src="/static/Iota_logo_crop.png"> </div>
+            <div  style="display: table-cell" id="title_cell">
+                <div style="display: table">
+                    <div style="display: table-row">
+                        <div  style="display: table-cell" id="title">Qubic Game Of Life</div>
+                    </div>
+                    <div style="display: table-row">
+                        <div  style="display: table-cell" id="subtitle">PoC with Qupla library for Go</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <p id="about_text">
+            The following demo uses original <b>Qubic Game Of Life</b> Qupla code written by Eric Hop
+            <br>as PoC for the
+            <a href="https://github.com/iotaledger/qupla" target="_blank">reference implementation</a> of Qupla.
+            The Qupla code can be found <a href="https://github.com/iotaledger/qupla/tree/master/src/main/resources/GameOfLife" target="_blank">here</a>.
+            <br>
+            This demo is an example of <b>GOQ</b>
+            <a href="https://github.com/lunfardo314/goq/tree/master/examples/gol" target="_blank">Qupla library for Go</a>.
+            <br>
+            <br> It demponstrates implementation of <b>Qubic oracle</b> which handles interaction with the user/browser and serves
+            as interface of the real world to Qubic.
+            <br><br>
+            The aim of this demo is experimenting with the architecture of Qubic supervisor and Qubic applications.
+            It also tests platform independence of Qubic as well as GOQ compatibility with the Qubic specs.
+        </p>
+    </div>
+    <div>
         <button id="nextGenButton">Next generation</button>
+        <button id="clearButton">Clear</button>
+        <button id="randomizeButton">Randomize</button>
+        <button id="randomizeGlidersButton">Randomize with gliders</button>
         <br>
         <canvas id="GOLCanvas" width="567" height="567"></canvas>
-    </p>
+    </div>
 </body>
 </html>
 
