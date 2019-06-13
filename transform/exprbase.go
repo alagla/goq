@@ -4,7 +4,7 @@ import (
 	. "github.com/lunfardo314/goq/qupla"
 )
 
-// calls optFun for each subexpression to get optimized copy
+// calls optFun for each subexpression and replace
 
 func transformSubexpressions(expr ExpressionInterface, optFun func(ExpressionInterface) ExpressionInterface) ExpressionInterface {
 	subExpr := make([]ExpressionInterface, 0)

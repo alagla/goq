@@ -46,6 +46,8 @@ func executor(in string) {
 		CmdRuntime(words)
 	case "post":
 		CmdPost(words)
+	case "forabra":
+		CmdForAbra(words)
 
 	default:
 		Logf(0, "unknown command")

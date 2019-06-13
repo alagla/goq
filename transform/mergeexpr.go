@@ -1,11 +1,14 @@
 package transform
 
-import . "github.com/lunfardo314/goq/qupla"
+import (
+	. "github.com/lunfardo314/goq/qupla"
+	"github.com/lunfardo314/goq/utils"
+)
 
 // tree of merges optimized into one merge of many expressions
 
-func optimizeMerges(def *Function, stats map[string]int) bool {
-	before := StatValue("numOptimizedMerges", stats)
+func OptimizeMerges(def *Function, stats map[string]int) bool {
+	before := utils.StatValue("numOptimizedMerges", stats)
 	for _, site := range def.Sites {
 		if site.NotUsed || site.IsState || site.IsParam || site.NumUses > 1 {
 			continue
@@ -13,7 +16,7 @@ func optimizeMerges(def *Function, stats map[string]int) bool {
 		site.Assign = optimizeMergesInExpr(site.Assign, stats)
 	}
 	def.RetExpr = optimizeMergesInExpr(def.RetExpr, stats)
-	return before != StatValue("numOptimizedMerges", stats)
+	return before != utils.StatValue("numOptimizedMerges", stats)
 }
 
 func optimizeMergesInExpr(expr ExpressionInterface, stats map[string]int) ExpressionInterface {
@@ -27,7 +30,7 @@ func optimizeMergesInExpr(expr ExpressionInterface, stats map[string]int) Expres
 	for _, se := range expr.GetSubexpressions() {
 		oe := optimizeMergesInExpr(se, stats)
 		if ce, ok := oe.(*MergeExpr); ok {
-			IncStat("numOptimizedMerges", stats)
+			utils.IncStat("numOptimizedMerges", stats)
 			for _, e := range ce.GetSubexpressions() {
 				subExpr = append(subExpr, e)
 			}

@@ -1,12 +1,17 @@
 package qupla2abra
 
 import (
-	"github.com/lunfardo314/goq/abra"
 	"github.com/lunfardo314/goq/qupla"
 )
 
-func NewAbraFromQupla(qmodule *qupla.QuplaModule) *abra.CodeUnit {
-	ret := abra.CodeUnit{}
+type AbraIR struct {
+	module *qupla.QuplaModule
+}
 
-	return ret
+func PrepareQupla4Abra(module *qupla.QuplaModule) *AbraIR {
+	ret := AbraIR{
+		module: module,
+	}
+
+	return &ret
 }

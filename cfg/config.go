@@ -16,6 +16,6 @@ var Config = &ConfigStruct{
 	OptimizeFunCallsInline: false,
 	OptimizeOneTimeSites:   false,
 	OptimizeInlineSlices:   false,
-	OptimizeConcats:        true,
-	OptimizeMerges:         true,
+	OptimizeConcats:        false,
+	OptimizeMerges:         false,
 }
