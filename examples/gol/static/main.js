@@ -41,6 +41,7 @@ function clearCanvas(ctx) {
 }
 
 function drawCell(ctx, x, y){
+    console.log("drawCell", x, y)
     ctx.fillRect(x * cellH, y * cellW, cellH, cellW);
 }
 
@@ -50,7 +51,7 @@ function drawMap(themap){
     // console.log("map data: "+themap);
     for (let i = 0; i < themap.length; i++){
         if (themap.charAt(i) == "1"){
-            drawCell(ctx, i % golWidth, i / golWidth);
+            drawCell(ctx, i % golWidth, Math.floor(i / golWidth));
         }
     }
 }
@@ -79,9 +80,12 @@ function connectToHost(){
 }
 
 function clickEvent(event){
-    let elemX = Math.min(Math.round((event.pageX - canvasOffsetLeft) / cellW), golWidth-1);
-    let elemY = Math.min(Math.round((event.pageY - canvasOffsetTop) / cellH), golHeight-1);
-    console.log("mpousecClick", elemX, elemY);
+    console.log(event);
+    console.log(cellW, cellH);
+    console.log(event.pageX - canvas.offsetLeft, event.pageY - canvas.offsetTop)
+    let elemX = Math.floor(Math.min((event.pageX - canvas.offsetLeft) / cellW, golWidth-1)) ;
+    let elemY = Math.floor(Math.min((event.pageY - canvas.offsetTop) / cellH, golHeight-1)) ;
+    console.log("mpouseClick", elemX, elemY);
     socket.send(JSON.stringify({cmd: 0, x:elemX, y:elemY}));
 }
 
