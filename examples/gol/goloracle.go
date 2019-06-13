@@ -147,8 +147,11 @@ var golInfoStruct = QStruct{
 	QField{"cmd", TritSize},
 }
 
-type clickCmd struct {
-	Cmd int `json:"cmd"` // 0 - update map, 1 - next generation, 2 - clear, 3 - randomize, 4 - radomize with gliders
-	X   int `json:"x"`
-	Y   int `json:"y"`
+type coord struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+type userMouseCmd struct {
+	Cmd   int     `json:"cmd"` // 0 - update map, 1 - next generation, 2 - clear, 3 - randomize, 4 - radomize with gliders
+	Coord []coord `json:"coord"`
 }

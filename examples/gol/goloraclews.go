@@ -58,7 +58,7 @@ func (gol *GolOracle) gWSServerHandle() func(http.ResponseWriter, *http.Request)
 func (gol *GolOracle) readWS(id string, idtrits Trits, conn *websocket.Conn) {
 	var data []byte
 	var err error
-	cmd := clickCmd{}
+	cmd := userMouseCmd{}
 
 	for {
 		_, data, err = conn.ReadMessage()
@@ -75,7 +75,7 @@ func (gol *GolOracle) readWS(id string, idtrits Trits, conn *websocket.Conn) {
 		_ = gol.CallStart(id)
 		switch cmd.Cmd {
 		case 0:
-			gol.updateMapCmd(id, idtrits, cmd.X, cmd.Y)
+			gol.updateMapCmd(id, idtrits, cmd.Coord)
 		case 1:
 			gol.nextGenCmd(id, idtrits)
 		case 2:
@@ -109,27 +109,29 @@ func (gol *GolOracle) nextGenCmd(id string, idtrits Trits) {
 	}
 }
 
-func (gol *GolOracle) updateMapCmd(id string, idtrits Trits, x, y int) {
-	Logf(0, "update map click cmd received form '%v' x=%d y=%d", id, x, y)
+func (gol *GolOracle) updateMapCmd(id string, idtrits Trits, coo []coord) {
+	Logf(0, "update map cmd received from '%v': %v", id, coo)
 	themapCopy, err := gol.CopyMap(id)
 	if err != nil {
 		Logf(0, "error while copying map: %v ", err)
 		return
 	}
-	var cell int8
-	cell, err = getCell(themapCopy, x, y)
-	if err != nil {
-		Logf(0, "error: %v", err)
-	}
-	switch cell {
-	case -1:
-		_ = putCell(themapCopy, x, y, 1)
-	case 0:
-		_ = putCell(themapCopy, x, y, 1)
-	case 1:
-		_ = putCell(themapCopy, x, y, 0)
-	default:
-		Logf(0, "error: wrong cell content %v at x = %d y = %d", cell, x, y)
+	for _, c := range coo {
+		var cell int8
+		cell, err = getCell(themapCopy, c.X, c.Y)
+		if err != nil {
+			Logf(0, "error: %v", err)
+		}
+		switch cell {
+		case -1:
+			_ = putCell(themapCopy, c.X, c.Y, 1)
+		case 0:
+			_ = putCell(themapCopy, c.X, c.Y, 1)
+		case 1:
+			_ = putCell(themapCopy, c.X, c.Y, 0)
+		default:
+			Logf(0, "error: wrong cell content %v at x = %d y = %d", cell, c.X, c.Y)
+		}
 	}
 	effect := golInfoStruct.ToTrits(map[string]Trits{
 		"id":   idtrits,
