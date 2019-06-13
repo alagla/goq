@@ -1,13 +1,16 @@
-package optimize
+package transform
 
-import . "github.com/lunfardo314/goq/qupla"
+import (
+	. "github.com/lunfardo314/goq/qupla"
+	"github.com/lunfardo314/goq/utils"
+)
 
 // All not params and not state vars slices which are used only once
 // within function will be replaced by SliceInline
 // This will eliminate unnecessary Eval call and unnecessary caching
 
-func optimizeSlices(def *Function, stats map[string]int) bool {
-	before := StatValue("numOptimizedSlices", stats)
+func OptimizeSlices(def *Function, stats map[string]int) bool {
+	before := utils.StatValue("numOptimizedSlices", stats)
 	for _, site := range def.Sites {
 		if site.NotUsed || site.IsState || site.IsParam || site.NumUses > 1 {
 			continue
@@ -15,7 +18,7 @@ func optimizeSlices(def *Function, stats map[string]int) bool {
 		site.Assign = optimizeSlicesInExpr(site.Assign, stats)
 	}
 	def.RetExpr = optimizeSlicesInExpr(def.RetExpr, stats)
-	return before != StatValue("numOptimizedSlices", stats)
+	return before != utils.StatValue("numOptimizedSlices", stats)
 }
 
 func optimizeSlicesInExpr(expr ExpressionInterface, stats map[string]int) ExpressionInterface {
@@ -32,6 +35,6 @@ func optimizeSlicesInExpr(expr ExpressionInterface, stats map[string]int) Expres
 	// slice expressions optimize along chain of assignments
 	opt := optimizeSlicesInExpr(site.Assign, stats)
 	site.NotUsed = true
-	IncStat("numOptimizedSlices", stats)
+	utils.IncStat("numOptimizedSlices", stats)
 	return NewSliceInline(sliceExpr, opt)
 }

@@ -11,7 +11,7 @@ import (
 type QuplaModule struct {
 	name         string
 	types        map[string]*QuplaTypeDef
-	luts         map[string]*LutDef
+	Luts         map[string]*LutDef
 	Functions    map[string]*Function
 	Execs        []*ExecStmt
 	stats        map[string]int
@@ -33,7 +33,7 @@ func NewQuplaModule(name string) *QuplaModule {
 	return &QuplaModule{
 		name:         name,
 		types:        make(map[string]*QuplaTypeDef),
-		luts:         make(map[string]*LutDef),
+		Luts:         make(map[string]*LutDef),
 		Functions:    make(map[string]*Function),
 		Execs:        make([]*ExecStmt, 0, 10),
 		stats:        make(map[string]int),
@@ -75,7 +75,7 @@ func (module *QuplaModule) AddFuncDef(name string, funcDef *Function) error {
 }
 
 func (module *QuplaModule) AddLutDef(name string, lutDef *LutDef) {
-	module.luts[name] = lutDef
+	module.Luts[name] = lutDef
 }
 
 func (module *QuplaModule) FindFuncDef(name string) *Function {
@@ -86,7 +86,7 @@ func (module *QuplaModule) FindFuncDef(name string) *Function {
 }
 
 func (module *QuplaModule) FindLUTDef(name string) (*LutDef, error) {
-	ret, ok := module.luts[name]
+	ret, ok := module.Luts[name]
 	if !ok {
 		return nil, fmt.Errorf("can't find LUT definition '%v'", name)
 	}

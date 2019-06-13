@@ -1,45 +1,30 @@
-package optimize
+package transform
 
 import (
 	. "github.com/lunfardo314/goq/cfg"
 	. "github.com/lunfardo314/goq/qupla"
+	"github.com/lunfardo314/goq/utils"
 )
 
 func optimizeFunction(def *Function, stats map[string]int) bool {
 	var optSlices, optInlineSlices, optConcats, optMerges, optInlineCalls bool
 
 	if Config.OptimizeOneTimeSites {
-		optSlices = optimizeSlices(def, stats)
+		optSlices = OptimizeSlices(def, stats)
 	}
 	if Config.OptimizeInlineSlices {
-		optInlineSlices = optimizeInlineSlices(def, stats)
+		optInlineSlices = OptimizeInlineSlices(def, stats)
 	}
 	if Config.OptimizeConcats {
-		optConcats = optimizeConcats(def, stats)
+		optConcats = OptimizeConcats(def, stats)
 	}
 	if Config.OptimizeMerges {
-		optMerges = optimizeMerges(def, stats)
+		optMerges = OptimizeMerges(def, stats)
 	}
 	if Config.OptimizeFunCallsInline {
 		optInlineCalls = optimizeFunctionByInlining(def, stats)
 	}
 	return optSlices || optInlineSlices || optConcats || optMerges || optInlineCalls
-}
-
-func IncStat(key string, stats map[string]int) {
-	_, ok := stats[key]
-	if !ok {
-		stats[key] = 0
-	}
-	stats[key]++
-}
-
-func StatValue(key string, stats map[string]int) int {
-	v, ok := stats[key]
-	if !ok {
-		return 0
-	}
-	return v
 }
 
 func isExpandableInline(funExpr *FunctionExpr, ctx *Function) bool {
@@ -58,7 +43,7 @@ func isExpandableInline(funExpr *FunctionExpr, ctx *Function) bool {
 }
 
 func optimizeFunctionByInlining(def *Function, stats map[string]int) bool {
-	before := StatValue("numFuncCallInlined", stats)
+	before := utils.StatValue("numFuncCallInlined", stats)
 	for _, site := range def.Sites {
 		if site.NotUsed || site.IsState || site.IsParam || site.NumUses > 1 {
 			continue
@@ -66,7 +51,7 @@ func optimizeFunctionByInlining(def *Function, stats map[string]int) bool {
 		site.Assign = expandInlineExpr(site.Assign, def, stats)
 	}
 	def.RetExpr = expandInlineExpr(def.RetExpr, def, stats)
-	return before != StatValue("numFuncCallInlined", stats)
+	return before != utils.StatValue("numFuncCallInlined", stats)
 
 }
 
@@ -75,7 +60,7 @@ func expandInlineExpr(expr ExpressionInterface, ctx *Function, stats map[string]
 	if funcExpr, ok := expr.(*FunctionExpr); ok && isExpandableInline(funcExpr, ctx) {
 		ret = expandInlineFuncCall(funcExpr)
 		ctx.AppendInline(funcExpr.FuncDef.Name)
-		IncStat("numFuncCallInlined", stats)
+		utils.IncStat("numFuncCallInlined", stats)
 		return ret
 	}
 	ret = expr.Copy()

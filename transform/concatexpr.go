@@ -1,11 +1,14 @@
-package optimize
+package transform
 
-import . "github.com/lunfardo314/goq/qupla"
+import (
+	. "github.com/lunfardo314/goq/qupla"
+	"github.com/lunfardo314/goq/utils"
+)
 
 // tree of concats optimized into one concat of many expressions
 
-func optimizeConcats(def *Function, stats map[string]int) bool {
-	before := StatValue("numOptimizedConcats", stats)
+func OptimizeConcats(def *Function, stats map[string]int) bool {
+	before := utils.StatValue("numOptimizedConcats", stats)
 	for _, site := range def.Sites {
 		if site.NotUsed || site.IsState || site.IsParam || site.NumUses > 1 {
 			continue
@@ -13,7 +16,7 @@ func optimizeConcats(def *Function, stats map[string]int) bool {
 		site.Assign = optimizeConcatsInExpr(site.Assign, stats)
 	}
 	def.RetExpr = optimizeConcatsInExpr(def.RetExpr, stats)
-	return before != StatValue("numOptimizedConcats", stats)
+	return before != utils.StatValue("numOptimizedConcats", stats)
 }
 
 func optimizeConcatsInExpr(expr ExpressionInterface, stats map[string]int) ExpressionInterface {
@@ -27,7 +30,7 @@ func optimizeConcatsInExpr(expr ExpressionInterface, stats map[string]int) Expre
 	for _, se := range expr.GetSubexpressions() {
 		oe := optimizeConcatsInExpr(se, stats)
 		if ce, ok := oe.(*ConcatExpr); ok {
-			IncStat("numOptimizedConcats", stats)
+			utils.IncStat("numOptimizedConcats", stats)
 			for _, e := range ce.GetSubexpressions() {
 				subExpr = append(subExpr, e)
 			}

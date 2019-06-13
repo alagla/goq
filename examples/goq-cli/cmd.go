@@ -4,9 +4,10 @@ import (
 	"github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/analyzeyaml"
 	. "github.com/lunfardo314/goq/cfg"
-	"github.com/lunfardo314/goq/optimize"
 	"github.com/lunfardo314/goq/qupla"
+	"github.com/lunfardo314/goq/qupla2abra"
 	. "github.com/lunfardo314/goq/readyaml"
+	"github.com/lunfardo314/goq/transform"
 	"github.com/lunfardo314/goq/utils"
 	"math"
 	"os"
@@ -92,7 +93,7 @@ func CmdLoadModule(words []string) {
 	var succ bool
 	module, succ = analyzeyaml.AnalyzeQuplaModule(fname, moduleYAML)
 	stats := make(map[string]int)
-	optimize.OptimizeModule(module, stats)
+	transform.OptimizeModule(module, stats)
 	Logf(0, "Optimisation stats:")
 	LogStats(0, stats)
 
@@ -163,6 +164,14 @@ func CmdInline(words []string) {
 	} else {
 		Logf(0, "Inline call optimization is OFF")
 	}
+}
+
+func CmdForAbra(_ []string) {
+	stats := make(map[string]int)
+	qupla2abra.PrepareModuleForAbra(module, stats)
+	Logf(0, "Transformation stats:")
+	LogStats(0, stats)
+	//module.PrintStats()
 }
 
 func CmdTrace(words []string) {

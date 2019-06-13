@@ -13,7 +13,7 @@ var sv *Supervisor
 
 func init() {
 	cfg.Config.Verbosity = 0
-	sv = NewSupervisor(1 * time.Second)
+	sv = NewSupervisor("testSupervisor", 1*time.Second)
 	//pinline := flag.Bool("inline", false, "use inline call optimisation")
 	//flag.Parse()
 	//cfg.Config.OptimizeFunCallsInline = *pinline
