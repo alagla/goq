@@ -14,8 +14,8 @@ var Config = &ConfigStruct{
 	Version:                "0.01 alpha",
 	Verbosity:              2,
 	OptimizeFunCallsInline: false,
-	OptimizeOneTimeSites:   true,
-	OptimizeInlineSlices:   true,
+	OptimizeOneTimeSites:   false,
+	OptimizeInlineSlices:   false,
 	OptimizeConcats:        true,
 	OptimizeMerges:         true,
 }

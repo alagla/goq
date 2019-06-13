@@ -3,8 +3,8 @@ package tests
 import (
 	"github.com/lunfardo314/goq/analyzeyaml"
 	"github.com/lunfardo314/goq/cfg"
-	"github.com/lunfardo314/goq/optimize"
 	"github.com/lunfardo314/goq/readyaml"
+	"github.com/lunfardo314/goq/transform"
 	"testing"
 )
 
@@ -58,7 +58,7 @@ func moduleTest(fname string, chain bool, t *testing.T) {
 	if succ {
 		stats := make(map[string]int)
 
-		optimize.OptimizeModule(module, stats)
+		transform.OptimizeModule(module, stats)
 		cfg.LogStats(1, stats)
 
 		succ = module.AttachToSupervisor(sv)

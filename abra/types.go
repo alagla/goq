@@ -2,10 +2,17 @@ package abra
 
 import . "github.com/iotaledger/iota.go/trinary"
 
+// package contains code which allows loading, saving and interpretation of teh Abra tritcode
+// it is independent from Qupla definitions
+
 // https://github.com/iotaledger/omega-docs/blob/master/qbc/abra/Spec.md
 
-type CodeUnitStruct struct {
-	EntityAttachment *EntityAttachmentStruct
+type Tritcode interface {
+	GetTritcode() Trits
+}
+
+type CodeUnit struct {
+	EntityAttachment *EntityAttachment
 	Code             *CodeStruct
 }
 
@@ -15,10 +22,9 @@ type CodeUnitStruct struct {
 //, attachments...
 //]
 
-type EntityAttachmentStruct struct {
-	CodeHash            Trits // 243 trit
-	NumberOfAttachments int
-	Attachments         []*AttachmentStruct
+type EntityAttachment struct {
+	CodeHash    Trits // 243 trit
+	Attachments []*Attachment
 }
 
 //Attachment:
@@ -30,13 +36,11 @@ type EntityAttachmentStruct struct {
 //, output environment data...
 //]
 
-type AttachmentStruct struct {
-	BranchBlockIndex           int
-	MaximumRecursionDepth      int
-	NumberOfInputEnvironments  int
-	InputEnvironments          []*InputEnvironmentData
-	NumberOfOutputEnvironments int
-	OutputEnvironments         []*OutputEnvironmentData
+type Attachment struct {
+	BranchBlockIndex      int
+	MaximumRecursionDepth int
+	InputEnvironments     []*InputEnvironmentData
+	OutputEnvironments    []*OutputEnvironmentData
 }
 
 //input environment data:
@@ -79,12 +83,9 @@ type OutputEnvironmentData struct {
 
 type CodeStruct struct {
 	TritcodeVersion int
-	//NumberOfLUTs          int
-	LUTs []*BlockStruct
-	//NumberOfBranchBlocks  int
-	Branches []*BlockStruct
-	//NumberOfExternalBlocks  int
-	ExternalBlocks []*BlockStruct
+	LUTs            []*LUT
+	Branches        []*Branch
+	ExternalBlocks  []*ExternalBlock
 }
 
 //LUT definition
@@ -99,27 +100,12 @@ type CodeStruct struct {
 //
 //This final value is treated as a binary number, and encoded within a 35-trit vector.
 
-type LUTDef uint64
-
-type BlockTypeEnum int
-
-const (
-	BLOCK_BRANCH   BlockTypeEnum = 0
-	BLOCK_LUT      BlockTypeEnum = 1
-	BLOCK_EXTERNAL BlockTypeEnum = 2
-)
+type LUT uint64
 
 //block (whether external, lut, or branch):
 //[ number of trits in block definition (positive integer)
 //, value...
 //]
-
-type BlockStruct struct {
-	BlockType BlockTypeEnum
-	Branche   *BranchStruct
-	LUT       *LUTDef
-	External  *ExternalBlockStruct
-}
 
 //branch:
 //[ number of inputs (positive integer)
@@ -132,15 +118,12 @@ type BlockStruct struct {
 //, memory latch site definitions...
 //]
 
-type BranchStruct struct {
-	NumberOfInputs             int
-	InputLengths               []int
-	NumberOfBodySites          int
-	NumberOfOutputSites        int
-	NumberOfMemoryLatchSites   int
-	BodySiteDefinions          []*SiteStruct
-	OutputSiteDefinitions      []*SiteStruct
-	MemoryLatchSiteDefinitions []*SiteStruct
+type Branch struct {
+	NumberOfInputs   int
+	InputLengths     []int
+	BodySites        []*Site
+	OutputSites      []*Site
+	MemoryLatchSites []*Site
 }
 
 //site:
@@ -148,25 +131,12 @@ type BranchStruct struct {
 //, value...
 //]
 
-type SiteTypeEnum int
-
-const (
-	SITE_MERGE SiteTypeEnum = 0
-	SITE_KNOT  SiteTypeEnum = 1
-)
-
-type SiteStruct struct {
-	SiteType SiteTypeEnum
-	Merge    *MergeStruct
-	Knot     *KnotStruct
-}
-
 //merge:
 //[ number of input sites (positive integer)
 //, input site indices (positive integers)...
 //]
 
-type MergeStruct struct {
+type MergeSite struct {
 	NumberOfInputSites int
 	InputSiteIndices   []int
 }
@@ -177,10 +147,14 @@ type MergeStruct struct {
 //, block index
 //]
 
-type KnotStruct struct {
+type KnotSite struct {
 	NumberOfInputSites int
 	InputSiteIndices   []int
 	BlockIndex         int
+}
+
+type Site interface {
+	Tritcode
 }
 
 //external block:
@@ -189,8 +163,7 @@ type KnotStruct struct {
 //, block indices (positive integers)...
 //]
 
-type ExternalBlockStruct struct {
-	CodeHash               Trits
-	NumberOfBlocksToInport int
-	BlockIndices           []int
+type ExternalBlock struct {
+	CodeHash     Trits
+	BlockIndices []int
 }

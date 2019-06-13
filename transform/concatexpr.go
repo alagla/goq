@@ -1,4 +1,4 @@
-package optimize
+package transform
 
 import . "github.com/lunfardo314/goq/qupla"
 

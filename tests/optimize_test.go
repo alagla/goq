@@ -3,9 +3,9 @@ package tests
 import (
 	"github.com/lunfardo314/goq/analyzeyaml"
 	"github.com/lunfardo314/goq/cfg"
-	"github.com/lunfardo314/goq/optimize"
 	"github.com/lunfardo314/goq/qupla"
 	"github.com/lunfardo314/goq/readyaml"
+	"github.com/lunfardo314/goq/transform"
 	"sort"
 	"testing"
 )
@@ -39,12 +39,12 @@ func moduleOptimize_0_Test(fname string, t *testing.T) {
 		return
 	}
 	stats1 := make(map[string]int)
-	optimize.OptimizeModule(module, stats1)
+	transform.OptimizeModule(module, stats1)
 	cfg.Logf(0, "Optimization stats for %v (1st optimization)", name)
 	cfg.LogStats(0, stats1)
 
 	stats2 := make(map[string]int)
-	optimize.OptimizeModule(module, stats2)
+	transform.OptimizeModule(module, stats2)
 	if len(stats2) != 0 {
 		t.Errorf("Some part left unoptimized in '%v'", name)
 		return
@@ -69,7 +69,7 @@ func moduleOptimize_1_Test(fname string, t *testing.T) {
 		return
 	}
 	stats1 := make(map[string]int)
-	optimize.OptimizeModule(module1, stats1)
+	transform.OptimizeModule(module1, stats1)
 	cfg.Logf(1, "Optimization stats for %v (1st optimization)", name)
 	cfg.LogStats(1, stats1)
 
@@ -79,7 +79,7 @@ func moduleOptimize_1_Test(fname string, t *testing.T) {
 		return
 	}
 	stats2 := make(map[string]int)
-	optimize.OptimizeModule(module2, stats2)
+	transform.OptimizeModule(module2, stats2)
 	cfg.Logf(1, "Optimization stats for %v (2nd optimization)", name)
 	cfg.LogStats(1, stats2)
 
