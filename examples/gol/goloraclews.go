@@ -193,12 +193,18 @@ func (gol *GolOracle) randomizeCmd(id string, idtrits Trits) {
 	}
 }
 
+var gliders = [][]struct{ x, y int }{
+	{{-1, 0}, {0, 1}, {1, 1}, {1, 0}, {1, -1}},
+	{{0, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}},
+	{{-1, -1}, {0, -1}, {-1, 0}, {1, 0}, {-1, 1}},
+	{{-1, -1}, {0, -1}, {1, -1}, {1, 0}, {0, 1}},
+}
+
 func putGlider(themap Trits, x, y int) {
-	_ = putCell(themap, x-1, y, 1)
-	_ = putCell(themap, x, y+1, 1)
-	_ = putCell(themap, x+1, y+1, 1)
-	_ = putCell(themap, x+1, y, 1)
-	_ = putCell(themap, x+1, y-1, 1)
+	rnd := rand.Intn(4)
+	for _, offset := range gliders[rnd] {
+		_ = putCell(themap, x+offset.x, y+offset.y, 1)
+	}
 }
 
 func (gol *GolOracle) randomizeGlidersCmd(id string, idtrits Trits) {
@@ -209,7 +215,7 @@ func (gol *GolOracle) randomizeGlidersCmd(id string, idtrits Trits) {
 		return
 	}
 
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		rx := rand.Intn(golW)
 		ry := rand.Intn(golH)
 		putGlider(themapCopy, rx, ry)

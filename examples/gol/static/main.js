@@ -46,7 +46,7 @@ function clearCanvas(ctx) {
 }
 
 function drawCell(ctx, x, y){
-    console.log("drawCell", x, y)
+    // console.log("drawCell", x, y)
     ctx.fillRect(x * cellH, y * cellW, cellH, cellW);
 }
 
@@ -113,7 +113,7 @@ function randomizeEvent(event){
 }
 
 function randomizeGlidersEvent(event){
-    console.log("randomizeEvent");
+    console.log("randomizeGlidersEvent");
     socket.send(JSON.stringify({cmd: 4, x:0, y:0}));
 }
 
@@ -122,21 +122,23 @@ var coords = [];
 
 function mouseDown(event){
     dragState = true;
+    // console.log("mouseDown")
     coords = [];
-    console.log("mouseDown")
     genCoord(event);
 }
 
 function mouseUp(event){
-    console.log("mouseUp");
+    // console.log("mouseUp");
     if (dragState){
+        console.log("send map update to server")
         socket.send(JSON.stringify({cmd: 0, coord:coords}));
+        coords = [];
     }
     dragState = false;
 }
 
 function mouseMove(event){
-    console.log("mouseMove")
+    // console.log("mouseMove")
     if (dragState){
         genCoord(event);
     }
@@ -147,14 +149,15 @@ function genCoord(event){
     let elemY = Math.floor(Math.min((event.pageY - canvas.offsetTop) / cellH, golHeight-1)) ;
     if (coords.length == 0){
         coords.push({x:elemX, y:elemY});
+        updateMapAt(elemX, elemY);
     } else {
         let lastX = coords[coords.length-1].x;
         let lastY = coords[coords.length-1].y;
         if ( lastX!= elemX || lastY != elemY){
             coords.push({x:elemX, y:elemY});
+            updateMapAt(elemX, elemY);
         }
     }
-    updateMapAt(elemX, elemY);
     drawMap();
 }
 
