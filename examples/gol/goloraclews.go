@@ -166,14 +166,14 @@ func (gol *GolOracle) randomizeCmd(id string, idtrits Trits) {
 	}
 
 	for i := 0; i < 50; i++ {
-		rx := int(rand.NormFloat64()*golW/15 + golW/2)
+		rx := int(rand.NormFloat64()*golW/5 + golW/2)
 		if rx < 0 {
 			rx = 0
 		}
 		if rx >= golW {
 			rx = golW - 1
 		}
-		ry := int(rand.NormFloat64()*golH/15 + golH/2)
+		ry := int(rand.NormFloat64()*golH/5 + golH/2)
 		if ry < 0 {
 			ry = 0
 		}
