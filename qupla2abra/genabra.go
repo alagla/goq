@@ -5,25 +5,42 @@ import (
 )
 
 type AbraIR struct {
-	module *qupla.QuplaModule
-	luts   []*qupla.LutDef // luts for Tritcode (not include size > 1)
+	module    *qupla.QuplaModule
+	luts      []string // string representation
+	functions []string
 }
 
-func PrepareQupla4Abra(module *qupla.QuplaModule) *AbraIR {
-	ret := AbraIR{
-		module: module,
-		luts:   make([]*qupla.LutDef, 0, len(module.Luts)+10),
-	}
-	ret.PrepareLuts()
-	return &ret
-}
-
-func (air *AbraIR) PrepareLuts() {
-	for _, lutDef := range air.module.Luts {
-		if lutDef.Size() == 1 {
-			air.luts = append(air.luts, lutDef)
-		} else {
-
+func (air *AbraIR) FindLutBlockIndex(lutDef *qupla.LutDef) int {
+	strRepr := lutDef.GetStringRepr()
+	for i, sr := range air.luts {
+		if strRepr == sr {
+			return i
 		}
 	}
+	return -1
+}
+
+func (air *AbraIR) EnsureLutIndex(lutDef *qupla.LutDef) int {
+	if ret := air.FindLutBlockIndex(lutDef); ret >= 0 {
+		return ret
+	}
+	air.luts = append(air.luts, lutDef.GetStringRepr())
+	return len(air.luts)
+}
+
+func (air *AbraIR) FindFunctionBranchBlockIndex(fun *qupla.Function) int {
+	for i := range air.functions {
+		if air.functions[i] == fun.Name {
+			return i
+		}
+	}
+	return -1
+}
+
+func (air *AbraIR) EnsureFunctionIndex(fun *qupla.Function) int {
+	if ret := air.FindFunctionBranchBlockIndex(fun); ret >= 0 {
+		return ret
+	}
+	air.luts = append(air.luts, fun.Name)
+	return len(air.luts)
 }

@@ -1,7 +1,6 @@
 package qupla
 
 import (
-	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 )
 
@@ -49,31 +48,86 @@ func Trits3ToLutIdx(trits Trits) int {
 	return int(idx)
 }
 
-func (lutDef *LutDef) MustGetProjectionName(outpos int) string {
-	if outpos < 0 || outpos >= lutDef.Size() {
-		panic(fmt.Errorf("wrong arg num"))
-	}
-	return lutDef.Name + fmt.Sprintf("_proj_arg_%d", outpos)
+// lookup table adjusted for 3 inputs
+func (lutDef *LutDef) LookupTable() [27]Trits {
+	return lutDef.lookupTable
 }
 
-//  it is assumed, that lookup table is adjusted for 3 inputs regardless real input size
-//
-// creates new lut def out of the old one, with same args gives outpos position of the result
-// with output size = 1
-// arg = 0,1,2
+const (
+	TRIT_MINUS1 = 0x0003
+	TRIT_ZERO   = 0x0000
+	TRIT_ONE    = 0x0001
+	TRIT_NULL   = 0x0002
+)
 
-func (lutDef *LutDef) MakeAdjustedProjection(outpos int) *LutDef {
-	if outpos < 0 || outpos >= lutDef.InputSize {
-		panic(fmt.Errorf("wrong lut argument index"))
+func binaryEncodeTrit(trit []int8) int64 {
+	if len(trit) != 1 {
+		panic("wrong param")
 	}
-	ret := LutDef{
-		Name:       lutDef.MustGetProjectionName(outpos),
-		InputSize:  lutDef.InputSize,
-		outputSize: 1,
+	if trit == nil {
+		return TRIT_NULL
 	}
-	// assumed, that lookupTable is adjusted for all three outputs
-	for i := range lutDef.lookupTable {
-		ret.lookupTable[i] = lutDef.lookupTable[i][outpos : outpos+1]
+	switch trit[0] {
+	case -1:
+		return TRIT_MINUS1
+	case 0:
+		return TRIT_ZERO
+	case 1:
+		return TRIT_ONE
 	}
-	return &ret
+	panic("wrong trit")
+}
+
+func charEncodeTrit(trit []int8) byte {
+	if len(trit) != 1 {
+		panic("wrong param")
+	}
+	if trit == nil {
+		return '@'
+	}
+	switch trit[0] {
+	case -1:
+		return '-'
+	case 0:
+		return '0'
+	case 1:
+		return '1'
+	}
+	panic("wrong trit")
+}
+
+func (lutDef *LutDef) BinaryEncodedLUT() int64 {
+	var ret int64
+	var bet int64
+	lt := lutDef.LookupTable()
+	for i := 0; i < 27; i++ {
+		bet = binaryEncodeTrit(lt[i])
+		ret = ret << 2
+		ret |= bet
+	}
+	return ret
+}
+
+func (lutDef *LutDef) GetTritcode() Trits {
+	ret := IntToTrits(lutDef.BinaryEncodedLUT())
+	ret = PadTrits(ret, 35)
+	if len(ret) != 35 {
+		panic("wrong LUT tritcode")
+	}
+	return ret
+}
+
+func (lutDef *LutDef) GetStringRepr() string {
+	var ret [27]byte
+	for i, t := range lutDef.LookupTable() {
+		ret[i] = charEncodeTrit(t)
+	}
+	return string(ret[:])
+}
+
+func (lutDef *LutDef) GetBranch(numInputs int) {
+	if numInputs != 1 && numInputs != 2 && numInputs != 3 {
+		panic("wrong number of inputs")
+	}
+
 }
