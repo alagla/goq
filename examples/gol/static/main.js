@@ -16,6 +16,8 @@ function main(){
     } catch (e) {
         console.error(e);
     }
+    themap = "0".repeat(golWidth * golHeight);
+
     canvas = document.getElementById("GOLCanvas");
     let ctx = canvas.getContext("2d");
 
@@ -26,7 +28,10 @@ function main(){
 
     clearCanvas(ctx);
 
-    canvas.addEventListener('click', clickEvent);
+    // canvas.addEventListener('click', clickEvent);
+    canvas.addEventListener('mousemove', mouseMove);
+    canvas.addEventListener('mousedown', mouseDown);
+    canvas.addEventListener('mouseup', mouseUp);
 
     document.getElementById("nextGenButton").addEventListener('click', nextGenEvent);
     document.getElementById("clearButton").addEventListener('click', clearEvent);
@@ -41,11 +46,13 @@ function clearCanvas(ctx) {
 }
 
 function drawCell(ctx, x, y){
-    console.log("drawCell", x, y)
+    // console.log("drawCell", x, y)
     ctx.fillRect(x * cellH, y * cellW, cellH, cellW);
 }
 
-function drawMap(themap){
+var themap = null;
+
+function drawMap(){
     let ctx = canvas.getContext("2d");
     clearCanvas(ctx);
     // console.log("map data: "+themap);
@@ -56,12 +63,23 @@ function drawMap(themap){
     }
 }
 
+function updateMapAt(x, y){
+    if (themap != null){
+        let idx = y * golWidth + x;
+        if (idx > 0 && idx < themap.length){
+            let c = themap.charAt(idx) == "1" ? "0" : "1";
+            themap = themap.slice(0, idx) + c + themap.slice(idx+1, themap.length);
+        }
+    }
+}
+
 function connectToHost(){
     socket = new WebSocket("ws://" + location.host + "/ws");
     socket.onmessage = function(evt){
         // let map =JSON.parse(evt.data);
         // drawMap(map);
-        drawMap(String(evt.data))
+        themap = String(evt.data);
+        drawMap();
     };
 
     socket.onopen = () => {
@@ -77,16 +95,6 @@ function connectToHost(){
     socket.onerror = error => {
         console.log("Socket Error: ", error);
     };
-}
-
-function clickEvent(event){
-    console.log(event);
-    console.log(cellW, cellH);
-    console.log(event.pageX - canvas.offsetLeft, event.pageY - canvas.offsetTop)
-    let elemX = Math.floor(Math.min((event.pageX - canvas.offsetLeft) / cellW, golWidth-1)) ;
-    let elemY = Math.floor(Math.min((event.pageY - canvas.offsetTop) / cellH, golHeight-1)) ;
-    console.log("mpouseClick", elemX, elemY);
-    socket.send(JSON.stringify({cmd: 0, x:elemX, y:elemY}));
 }
 
 function nextGenEvent(event){
@@ -105,6 +113,51 @@ function randomizeEvent(event){
 }
 
 function randomizeGlidersEvent(event){
-    console.log("randomizeEvent");
+    console.log("randomizeGlidersEvent");
     socket.send(JSON.stringify({cmd: 4, x:0, y:0}));
 }
+
+var dragState = false;
+var coords = [];
+
+function mouseDown(event){
+    dragState = true;
+    // console.log("mouseDown")
+    coords = [];
+    genCoord(event);
+}
+
+function mouseUp(event){
+    // console.log("mouseUp");
+    if (dragState){
+        console.log("send map update to server")
+        socket.send(JSON.stringify({cmd: 0, coord:coords}));
+        coords = [];
+    }
+    dragState = false;
+}
+
+function mouseMove(event){
+    // console.log("mouseMove")
+    if (dragState){
+        genCoord(event);
+    }
+}
+
+function genCoord(event){
+    let elemX = Math.floor(Math.min((event.pageX - canvas.offsetLeft) / cellW, golWidth-1)) ;
+    let elemY = Math.floor(Math.min((event.pageY - canvas.offsetTop) / cellH, golHeight-1)) ;
+    if (coords.length == 0){
+        coords.push({x:elemX, y:elemY});
+        updateMapAt(elemX, elemY);
+    } else {
+        let lastX = coords[coords.length-1].x;
+        let lastY = coords[coords.length-1].y;
+        if ( lastX!= elemX || lastY != elemY){
+            coords.push({x:elemX, y:elemY});
+            updateMapAt(elemX, elemY);
+        }
+    }
+    drawMap();
+}
+
