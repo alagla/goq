@@ -36,3 +36,9 @@ func (e *ValueExpr) Eval(_ *EvalFrame, result Trits) bool {
 	copy(result, e.TritValue)
 	return false
 }
+
+// Abra branch corresponding the constant value
+//
+// value const   t1, t2, t3,...tn
+//
+//

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/cfg"
@@ -258,9 +259,19 @@ func (gol *GolOracle) Call(effect Trits, _ Trits) bool {
 		return true
 	}
 	err = gol.SetMap(id, golInfo["grid"])
+	//logMapString(data)
+
 	if err != nil {
 		Logf(0, "error while saving map for id = %v", id)
 	}
 	Logf(0, "Call duration on GolView: %v", gol.CallDuration(id))
 	return true
+}
+
+func logMapString(themap []byte) {
+	ret := ""
+	for y := 0; y < golH; y++ {
+		fmt.Printf("%s\n", string(themap[y*golW:(y+1)*golW]))
+	}
+	Logf(0, "Map ccords: %s", ret)
 }
