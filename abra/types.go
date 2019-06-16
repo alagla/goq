@@ -119,7 +119,7 @@ type LUT uint64
 //]
 
 type Branch struct {
-	NumberOfInputs   int
+	//NumberOfInputs   int
 	InputLengths     []int
 	BodySites        []*Site
 	OutputSites      []*Site
@@ -136,9 +136,9 @@ type Branch struct {
 //, input site indices (positive integers)...
 //]
 
-type MergeSite struct {
-	NumberOfInputSites int
-	InputSiteIndices   []int
+type Merge struct {
+	//NumberOfInputSites int
+	InputSiteIndices []int
 }
 
 //knot:
@@ -147,14 +147,16 @@ type MergeSite struct {
 //, block index
 //]
 
-type KnotSite struct {
-	NumberOfInputSites int
-	InputSiteIndices   []int
-	BlockIndex         int
+type Knot struct {
+	//NumberOfInputSites int
+	InputSiteIndices []int
+	BlockIndex       int
 }
 
-type Site interface {
-	Tritcode
+type Site struct {
+	isMerge bool
+	merge   *Merge // isMerge == true
+	knot    *Knot  // isMerge == false
 }
 
 //external block:

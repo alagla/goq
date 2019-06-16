@@ -2,6 +2,7 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"strings"
 )
 
 type LutDef struct {
@@ -54,10 +55,10 @@ func (lutDef *LutDef) LookupTable() [27]Trits {
 }
 
 const (
-	TRIT_MINUS1 = 0x0003
+	TRIT_MINUS1 = 0x0002
 	TRIT_ZERO   = 0x0000
 	TRIT_ONE    = 0x0001
-	TRIT_NULL   = 0x0002
+	TRIT_NULL   = 0x0003
 )
 
 func binaryEncodeTrit(trit []int8) int64 {
@@ -78,7 +79,7 @@ func binaryEncodeTrit(trit []int8) int64 {
 	panic("wrong trit")
 }
 
-func charEncodeTrit(trit []int8) byte {
+func CharEncodeLutOutTrit(trit []int8) byte {
 	if len(trit) != 1 {
 		panic("wrong param")
 	}
@@ -96,6 +97,11 @@ func charEncodeTrit(trit []int8) byte {
 	panic("wrong trit")
 }
 
+func Get1TritConstLutRepr(val int8) string {
+	return strings.Repeat(string(CharEncodeLutOutTrit(Trits{val})), 27)
+}
+
+//
 func (lutDef *LutDef) BinaryEncodedLUT() int64 {
 	var ret int64
 	var bet int64
@@ -120,7 +126,7 @@ func (lutDef *LutDef) GetTritcode() Trits {
 func (lutDef *LutDef) GetStringRepr() string {
 	var ret [27]byte
 	for i, t := range lutDef.LookupTable() {
-		ret[i] = charEncodeTrit(t)
+		ret[i] = CharEncodeLutOutTrit(t)
 	}
 	return string(ret[:])
 }
