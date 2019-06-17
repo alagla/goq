@@ -64,23 +64,3 @@ func (air *AbraIR) GetLut(strRepr string) *LutIR {
 	air.luts = append(air.luts, ret)
 	return ret
 }
-
-func (air *AbraIR) GetConcatBranchForSize(size int) *BranchIR {
-	for _, b := range air.branches {
-		if b.branchType == BRANCH_QUPLA_CONCAT && b.size == size {
-			return b
-		}
-	}
-	inputs := []*SiteIR{{siteType: SITE_INPUT, size: size}}
-	ret := &BranchIR{
-		branchType: BRANCH_QUPLA_CONCAT,
-		size:       size,
-		inputs:     inputs,
-		bodySites: []*SiteIR{{
-			siteType: SITE_MERGE, // merges the only input site
-			inputs:   inputs,
-		}},
-	}
-	air.branches = append(air.branches, ret)
-	return ret
-}

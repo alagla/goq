@@ -2,6 +2,7 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type FieldExpr struct {
@@ -12,6 +13,10 @@ type TypeExpr struct {
 	ExpressionBase
 	size   int
 	Fields []FieldExpr
+}
+
+func (e *TypeExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func NewQuplaTypeExpr(src string, size int) *TypeExpr {

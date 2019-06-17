@@ -2,6 +2,7 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type SliceInline struct {
@@ -12,6 +13,10 @@ type SliceInline struct {
 	SliceEnd     int
 	NoSlice      bool
 	oneTrit      bool
+}
+
+func (e *SliceInline) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func NewSliceInline(sliceExpr *SliceExpr, expr ExpressionInterface) *SliceInline {

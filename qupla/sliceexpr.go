@@ -2,6 +2,7 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type SliceExpr struct {
@@ -11,6 +12,10 @@ type SliceExpr struct {
 	size     int
 	sliceEnd int
 	oneTrit  bool
+}
+
+func (e *SliceExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func NewQuplaSliceExpr(site *QuplaSite, src string, offset, size int) *SliceExpr {

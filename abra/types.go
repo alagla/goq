@@ -94,7 +94,7 @@ type Code struct {
 //
 //This final value is treated as a binary number, and encoded within a 35-trit vector.
 
-type LUT uint64
+type LUT int64
 
 //block (whether external, lut, or branch):
 //[ number of trits in block definition (positive integer)
@@ -113,10 +113,10 @@ type LUT uint64
 //]
 
 type Branch struct {
-	InputSites       []*Site
-	BodySites        []*Site
-	OutputSites      []*Site
-	MemoryLatchSites []*Site
+	InputSites  []*Site
+	BodySites   []*Site
+	OutputSites []*Site
+	StateSites  []*Site
 	// compile time
 	Size int
 }
@@ -161,7 +161,7 @@ type Merge struct {
 
 type Knot struct {
 	//NumberOfInputSites int
-	Sites []Site
+	Sites []*Site
 	Block *Block
 }
 
@@ -188,7 +188,7 @@ type Block struct {
 	Index         int // block index, one for LUTs and branches
 	BlockType     BlockType
 	Branch        *Branch
-	LUT           *LUT
+	LUT           LUT
 	ExternalBlock *ExternalBlock
 	// lookup name, compile time only
 	LookupName string
@@ -208,24 +208,26 @@ func NewCodeUnit() *CodeUnit {
 	}
 }
 
-func (codeUnit *CodeUnit) NewBranch(lookupName string, size int) *Branch {
+func (codeUnit *CodeUnit) NewBranchBlock(lookupName string, size int) *Block {
 	ret := &Branch{
-		InputSites:       make([]*Site, 0, 10),
-		BodySites:        make([]*Site, 0, 10),
-		OutputSites:      make([]*Site, 0, 10),
-		MemoryLatchSites: make([]*Site, 0, 10),
-		Size:             size,
+		InputSites:  make([]*Site, 0, 10),
+		BodySites:   make([]*Site, 0, 10),
+		OutputSites: make([]*Site, 0, 10),
+		StateSites:  make([]*Site, 0, 10),
+		Size:        size,
 	}
-	if codeUnit.addBlock(ret.NewBlock(lookupName)) {
-		return ret
+	retblock := ret.NewBlock(lookupName)
+	if codeUnit.addBlock(retblock) {
+		return retblock
 	}
 	return nil
 }
 
-func (codeUnit *CodeUnit) NewLUT(lookupName string, binaryEncodedLUT int64) *LUT {
+func (codeUnit *CodeUnit) NewLUTBlock(lookupName string, binaryEncodedLUT int64) *Block {
 	ret := LUT(binaryEncodedLUT)
-	if codeUnit.addBlock(ret.NewBlock(lookupName)) {
-		return &ret
+	block := ret.NewBlock(lookupName)
+	if codeUnit.addBlock(block) {
+		return block
 	}
 	return nil
 }
@@ -249,7 +251,7 @@ func (branch *Branch) NewBlock(lookupName string) *Block {
 	}
 }
 
-func (lut *LUT) NewBlock(lookupName string) *Block {
+func (lut LUT) NewBlock(lookupName string) *Block {
 	return &Block{
 		BlockType:  BLOCK_LUT,
 		LUT:        lut,
@@ -281,6 +283,34 @@ func (branch *Branch) AddBodySite(site *Site) bool {
 	}
 	branch.BodySites = append(branch.BodySites, site)
 	return true
+}
+
+func (branch *Branch) AddStateSite(site *Site) bool {
+	for _, b := range branch.StateSites {
+		if site.LookupName == b.LookupName {
+			return false
+		}
+	}
+	branch.StateSites = append(branch.StateSites, site)
+	return true
+}
+
+func (branch *Branch) AddOutputSite(site *Site) bool {
+	branch.OutputSites = append(branch.OutputSites, site)
+	return true
+}
+
+func NewMerge(sites ...*Site) *Merge {
+	return &Merge{
+		Sites: sites,
+	}
+}
+
+func NewKnot(block *Block, sites ...*Site) *Knot {
+	return &Knot{
+		Sites: sites,
+		Block: block,
+	}
 }
 
 func (merge *Merge) NewSite(lookupName string) *Site {

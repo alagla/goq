@@ -3,6 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/utils"
 )
@@ -36,6 +37,7 @@ type ExpressionInterface interface {
 	GetSubexpressions() []ExpressionInterface
 	SetSubexpressions([]ExpressionInterface)
 	GetSource() string
+	GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site
 }
 
 const (

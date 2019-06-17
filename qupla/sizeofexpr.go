@@ -2,12 +2,17 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type SizeofExpr struct {
 	ExpressionBase
 	Value     int64
 	TritValue Trits
+}
+
+func (e *SizeofExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func NewQuplaSizeofExpr(value int64, tritValue Trits) *SizeofExpr {

@@ -79,6 +79,18 @@ func binaryEncodeTrit(trit []int8) int64 {
 	panic("wrong trit")
 }
 
+func TritName(trit int8) string {
+	switch trit {
+	case -1:
+		return "-1"
+	case 0:
+		return "0"
+	case 1:
+		return "1"
+	}
+	return "undef"
+}
+
 func CharEncodeLutOutTrit(trit []int8) byte {
 	if len(trit) != 1 {
 		panic("wrong param")
@@ -102,20 +114,8 @@ func Get1TritConstLutRepr(val int8) string {
 }
 
 //
-func (lutDef *LutDef) BinaryEncodedLUT() int64 {
-	var ret int64
-	var bet int64
-	lt := lutDef.LookupTable()
-	for i := 0; i < 27; i++ {
-		bet = binaryEncodeTrit(lt[i])
-		ret = ret << 2
-		ret |= bet
-	}
-	return ret
-}
-
 func (lutDef *LutDef) GetTritcode() Trits {
-	ret := IntToTrits(lutDef.BinaryEncodedLUT())
+	ret := IntToTrits(BinaryEncodedLUTFromString(lutDef.GetStringRepr()))
 	ret = PadTrits(ret, 35)
 	if len(ret) != 35 {
 		panic("wrong LUT tritcode")
@@ -129,6 +129,18 @@ func (lutDef *LutDef) GetStringRepr() string {
 		ret[i] = CharEncodeLutOutTrit(t)
 	}
 	return string(ret[:])
+}
+
+func BinaryEncodedLUTFromString(strRepr string) int64 {
+	var ret int64
+	var bet int64
+	bytes := []byte(strRepr)
+	for i := 0; i < 27; i++ {
+		bet = binaryEncodeTrit([]int8{int8(bytes[i])})
+		ret = ret << 2
+		ret |= bet
+	}
+	return ret
 }
 
 func (lutDef *LutDef) GetBranch(numInputs int) {

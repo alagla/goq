@@ -2,11 +2,16 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type ValueExpr struct {
 	ExpressionBase
 	TritValue Trits
+}
+
+func (e *ValueExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func NewValueExpr(t Trits) *ValueExpr {

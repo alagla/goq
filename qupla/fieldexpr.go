@@ -2,11 +2,16 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 // TODO with fields expressions
 type QuplaFieldExpr struct {
 	ExpressionBase
+}
+
+func (e *QuplaFieldExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func NewFieldExpr(src string, condExpr ExpressionInterface) *QuplaFieldExpr {
