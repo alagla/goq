@@ -1,4 +1,4 @@
-package qupla2abra
+package abragen
 
 // Interim representation for generating Abra tritcode form qupla
 // Mainly needed to assign indices to Abra object

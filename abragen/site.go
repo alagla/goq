@@ -1,4 +1,4 @@
-package qupla2abra
+package abragen
 
 func (site *SiteIR) Size() int {
 	if site.siteType == SITE_MERGE {

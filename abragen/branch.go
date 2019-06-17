@@ -1,4 +1,4 @@
-package qupla2abra
+package abragen
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"

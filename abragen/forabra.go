@@ -1,4 +1,4 @@
-package qupla2abra
+package abragen
 
 import (
 	. "github.com/lunfardo314/goq/qupla"

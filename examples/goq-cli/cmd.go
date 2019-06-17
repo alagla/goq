@@ -168,7 +168,7 @@ func CmdInline(words []string) {
 
 func CmdForAbra(_ []string) {
 	stats := make(map[string]int)
-	qupla2abra.PrepareModuleForAbra(module, stats)
+	abragen.PrepareModuleForAbra(module, stats)
 	Logf(0, "Transformation stats:")
 	LogStats(0, stats)
 	//module.PrintStats()
