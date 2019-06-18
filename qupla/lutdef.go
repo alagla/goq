@@ -2,7 +2,7 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
-	"strings"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type LutDef struct {
@@ -54,43 +54,6 @@ func (lutDef *LutDef) LookupTable() [27]Trits {
 	return lutDef.lookupTable
 }
 
-const (
-	TRIT_MINUS1 = 0x0002
-	TRIT_ZERO   = 0x0000
-	TRIT_ONE    = 0x0001
-	TRIT_NULL   = 0x0003
-)
-
-func binaryEncodeTrit(trit []int8) int64 {
-	if len(trit) != 1 {
-		panic("wrong param")
-	}
-	if trit == nil {
-		return TRIT_NULL
-	}
-	switch trit[0] {
-	case -1:
-		return TRIT_MINUS1
-	case 0:
-		return TRIT_ZERO
-	case 1:
-		return TRIT_ONE
-	}
-	panic("wrong trit")
-}
-
-func TritName(trit int8) string {
-	switch trit {
-	case -1:
-		return "-1"
-	case 0:
-		return "0"
-	case 1:
-		return "1"
-	}
-	return "undef"
-}
-
 func CharEncodeLutOutTrit(trit []int8) byte {
 	if len(trit) != 1 {
 		panic("wrong param")
@@ -109,13 +72,9 @@ func CharEncodeLutOutTrit(trit []int8) byte {
 	panic("wrong trit")
 }
 
-func Get1TritConstLutRepr(val int8) string {
-	return strings.Repeat(string(CharEncodeLutOutTrit(Trits{val})), 27)
-}
-
 //
 func (lutDef *LutDef) GetTritcode() Trits {
-	ret := IntToTrits(BinaryEncodedLUTFromString(lutDef.GetStringRepr()))
+	ret := IntToTrits(abra.BinaryEncodedLUTFromString(lutDef.GetStringRepr()))
 	ret = PadTrits(ret, 35)
 	if len(ret) != 35 {
 		panic("wrong LUT tritcode")
@@ -129,18 +88,6 @@ func (lutDef *LutDef) GetStringRepr() string {
 		ret[i] = CharEncodeLutOutTrit(t)
 	}
 	return string(ret[:])
-}
-
-func BinaryEncodedLUTFromString(strRepr string) int64 {
-	var ret int64
-	var bet int64
-	bytes := []byte(strRepr)
-	for i := 0; i < 27; i++ {
-		bet = binaryEncodeTrit([]int8{int8(bytes[i])})
-		ret = ret << 2
-		ret |= bet
-	}
-	return ret
 }
 
 func (lutDef *LutDef) GetBranch(numInputs int) {

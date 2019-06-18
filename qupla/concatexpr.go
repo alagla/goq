@@ -54,7 +54,11 @@ func (e *ConcatExpr) Copy() ExpressionInterface {
 func (e *ConcatExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
 	inputs := make([]*abra.Site, 0, len(e.subExpr))
 	for _, se := range e.subExpr {
-		inputs = append(inputs, se.GenAbraSite(branch, codeUnit))
+		s := se.GenAbraSite(branch, codeUnit)
+		inputs = append(inputs, s)
 	}
-	abra.NewKnot(codeUnit.GetConcatBlockForSize(e.Size()), inputs...)
+	concatBlock := codeUnit.GetConcatBlockForSize(e.Size())
+	ret := abra.NewKnot(concatBlock, inputs...).NewSite("")
+	ret, _ = branch.AddBodySite(ret)
+	return ret
 }

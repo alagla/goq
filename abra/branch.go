@@ -1,15 +1,29 @@
 package abra
 
-import (
-	"fmt"
-	. "github.com/iotaledger/iota.go/trinary"
-	"github.com/lunfardo314/goq/qupla"
-	"github.com/lunfardo314/goq/utils"
-)
+func (codeUnit *CodeUnit) AddNewBranchBlock(lookupName string, size int) *Block {
+	retbranch := &Branch{
+		InputSites:  make([]*Site, 0, 10),
+		BodySites:   make([]*Site, 0, 10),
+		OutputSites: make([]*Site, 0, 10),
+		StateSites:  make([]*Site, 0, 10),
+		Size:        size,
+	}
+	ret := retbranch.NewBlock(lookupName)
+	if codeUnit.addBlock(ret) {
+		return ret
+	}
+	return nil
+}
 
-// finds or creates branch for concatenation of inputs with size
+func (branch *Branch) NewBlock(lookupName string) *Block {
+	return &Block{
+		BlockType:  BLOCK_BRANCH,
+		Branch:     branch,
+		LookupName: lookupName,
+	}
+}
 
-func (branch *Branch) FindSite(lookupName string) *Site {
+func (branch *Branch) FindBodySite(lookupName string) *Site {
 	for _, site := range branch.BodySites {
 		if site.LookupName == lookupName {
 			return site
@@ -18,58 +32,39 @@ func (branch *Branch) FindSite(lookupName string) *Site {
 	return nil
 }
 
-func (branch *Branch) GenKnotSiteForInputs(knotBlock *Block, codeUnit *CodeUnit, lookupName string, inputs ...*Site) *Site {
-	return NewKnot(knotBlock, inputs...).NewSite(lookupName)
-}
-
-func (branch *Branch) Get1TritConstLutSite(codeUnit *CodeUnit, val int8) *Site {
-	// first try to find if there's constant lut site for val
-	// if not, create one
-	lookupName := fmt.Sprintf("1trit_const_site_%s", qupla.TritName(val))
-	ret := branch.FindSite(lookupName)
-	if ret != nil {
-		return ret
+func (branch *Branch) AddInputSite(size int) *Site {
+	ret := &Site{
+		SiteType: SITE_INPUT,
+		Size:     size,
 	}
-	// didn't find. Need to create one
-	// first find or create the only lut for 1 trit constant
-	lutRepr := qupla.Get1TritConstLutRepr(val)
-	lutValConstBlock := codeUnit.FindLUTBlock(lutRepr)
-	if lutValConstBlock == nil {
-		lut := qupla.BinaryEncodedLUTFromString(lutRepr)
-		lutValConstBlock = codeUnit.NewLUTBlock(lutRepr, lut)
-	}
-	// now create site in the branch
-	// it will always generate constant trit
-	// the input for lut is 3 repeated 1-trit sites from lsb of the branches input
-	any := branch.GetAnyTritSite(codeUnit)
-	ret = branch.GenKnotSiteForInputs(lutValConstBlock, codeUnit, lookupName, any, any, any)
+	branch.InputSites = append(branch.InputSites, ret)
 	return ret
 }
 
-func (branch *Branch) GetAnyTritSite(codeUnit *CodeUnit) *Site {
-	lookupName := "any_input_site" // each branch will have site with this name
-	ret := branch.FindSite(lookupName)
-	if ret != nil {
-		return ret
+func (branch *Branch) AddBodySite(site *Site) (*Site, bool) {
+	for _, bs := range branch.BodySites {
+		if site.LookupName == "" && site.LookupName == bs.LookupName {
+			return bs, false
+		}
 	}
-	lsbBlock := codeUnit.GetLsbSliceBlock()
-	ret = NewKnot(lsbBlock, branch.InputSites[0]).NewSite(lookupName + "_knot")
-	branch.AddBodySite(ret)
-	return ret
+	branch.BodySites = append(branch.BodySites, site)
+	return site, true
 }
 
-func (branch *Branch) GetTritConstSite(codeUnit *CodeUnit, val Trits) *Site {
-	lookupName := utils.TritsToString(val) + "_const_site"
-	ret := branch.FindSite(lookupName)
-	if ret != nil {
-		return ret
+func (branch *Branch) AddStateSite(site *Site) (*Site, bool) {
+	if site.LookupName == "" {
+		panic("state sites have names!")
 	}
-	inputs := make([]*Site, len(val))
-	for i, trit := range val {
-		inputs[i] = branch.Get1TritConstLutSite(codeUnit, trit)
+	for _, bs := range branch.StateSites {
+		if site.LookupName == bs.LookupName {
+			return bs, false
+		}
 	}
+	branch.StateSites = append(branch.StateSites, site)
+	return site, true
+}
 
-	concatBlock := codeUnit.GetConcatBlockForSize(len(val))
-	ret = branch.GenKnotSiteForInputs(concatBlock, codeUnit, lookupName, inputs...)
-	return ret
+func (branch *Branch) AddOutputSite(site *Site) bool {
+	branch.OutputSites = append(branch.OutputSites, site)
+	return true
 }
