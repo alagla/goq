@@ -68,7 +68,7 @@ func (e *SliceExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *a
 	}
 	var ret *abra.Site
 	// for other sites (body and state) we use variable name_offset_size
-	lookupName := fmt.Sprintf("qupla_site_%s_%d_%d", e.site.Name, e.offset, e.size)
+	lookupName := fmt.Sprintf("qupla_slice_site_%s_%d_%d", e.site.Name, e.offset, e.size)
 	ret = branch.FindBodySite(lookupName)
 	if ret != nil {
 		return ret
