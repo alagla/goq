@@ -7,13 +7,9 @@ import . "github.com/iotaledger/iota.go/trinary"
 
 // https://github.com/iotaledger/omega-docs/blob/master/qbc/abra/Spec.md
 
-type Tritcode interface {
-	GetTritcode() Trits
-}
-
 type CodeUnit struct {
 	EntityAttachment *EntityAttachment
-	Code             *CodeStruct
+	Code             *Code
 }
 
 //Entity attachment:
@@ -37,7 +33,7 @@ type EntityAttachment struct {
 //]
 
 type Attachment struct {
-	BranchBlockIndex      int
+	Branch                *Branch
 	MaximumRecursionDepth int
 	InputEnvironments     []*InputEnvironmentData
 	OutputEnvironments    []*OutputEnvironmentData
@@ -51,10 +47,10 @@ type Attachment struct {
 //]
 
 type InputEnvironmentData struct {
-	EnvironmentHash       Trits
-	Limit                 int
-	FirstBranchInputIndex int
-	LastBranchInputIndex  int
+	EnvironmentHash Trits
+	Limit           int
+	//FirstBranchInputIndex int   //???
+	//LastBranchInputIndex  int   //???
 }
 
 //output environment data:
@@ -65,10 +61,10 @@ type InputEnvironmentData struct {
 //]
 
 type OutputEnvironmentData struct {
-	EnvironmentHash       Trits
-	Delay                 int
-	FirstBranchInputIndex int
-	LastBranchInputIndex  int
+	EnvironmentHash Trits
+	Delay           int
+	//FirstBranchInputIndex int   //??
+	//LastBranchInputIndex  int   //??
 }
 
 //code:
@@ -81,11 +77,9 @@ type OutputEnvironmentData struct {
 //, external block definitions...
 //]
 
-type CodeStruct struct {
+type Code struct {
 	TritcodeVersion int
-	LUTs            []*LUT
-	Branches        []*Branch
-	ExternalBlocks  []*ExternalBlock
+	Blocks          []*Block
 }
 
 //LUT definition
@@ -100,7 +94,7 @@ type CodeStruct struct {
 //
 //This final value is treated as a binary number, and encoded within a 35-trit vector.
 
-type LUT uint64
+type LUT int64
 
 //block (whether external, lut, or branch):
 //[ number of trits in block definition (positive integer)
@@ -119,42 +113,56 @@ type LUT uint64
 //]
 
 type Branch struct {
-	NumberOfInputs   int
-	InputLengths     []int
-	BodySites        []*Site
-	OutputSites      []*Site
-	MemoryLatchSites []*Site
+	InputSites  []*Site
+	BodySites   []*Site
+	OutputSites []*Site
+	StateSites  []*Site
+	// compile time
+	Size int
 }
 
 //site:
-//[ merge / knot? 1 trit (1/-)
+//[ Merge / Knot? 1 trit (1/-)
 //, value...
 //]
+type SiteType int
 
-//merge:
+const (
+	SITE_MERGE = SiteType(0)
+	SITE_KNOT  = SiteType(1)
+	SITE_INPUT = SiteType(2)
+)
+
+type Site struct {
+	Index    int // index within branch
+	SiteType SiteType
+	Merge    *Merge // SITE_MERGE
+	Knot     *Knot  // SITE_KNOT
+	Size     int    // SITE_INPUT
+	// lookup name, compile time only
+	LookupName string
+}
+
+//Merge:
 //[ number of input sites (positive integer)
 //, input site indices (positive integers)...
 //]
 
-type MergeSite struct {
-	NumberOfInputSites int
-	InputSiteIndices   []int
+type Merge struct {
+	//NumberOfInputSites int
+	Sites []*Site
 }
 
-//knot:
+//Knot:
 //[ number of input sites (positive integer)
 //, input site indices (positive integers)...
 //, block index
 //]
 
-type KnotSite struct {
-	NumberOfInputSites int
-	InputSiteIndices   []int
-	BlockIndex         int
-}
-
-type Site interface {
-	Tritcode
+type Knot struct {
+	//NumberOfInputSites int
+	Sites []*Site
+	Block *Block
 }
 
 //external block:
@@ -166,4 +174,47 @@ type Site interface {
 type ExternalBlock struct {
 	CodeHash     Trits
 	BlockIndices []int
+}
+
+type BlockType int
+
+const (
+	BLOCK_LUT      = BlockType(0)
+	BLOCK_BRANCH   = BlockType(1)
+	BLOCK_EXTERNAL = BlockType(2)
+)
+
+type Block struct {
+	Index         int // block index, one for LUTs and branches
+	BlockType     BlockType
+	Branch        *Branch
+	LUT           LUT
+	ExternalBlock *ExternalBlock
+	// lookup name, compile time only
+	LookupName string
+}
+
+const TRITCODE_VERSION = 0
+
+func NewCodeUnit() *CodeUnit {
+	return &CodeUnit{
+		EntityAttachment: &EntityAttachment{
+			Attachments: make([]*Attachment, 0, 5),
+		},
+		Code: &Code{
+			TritcodeVersion: TRITCODE_VERSION,
+			Blocks:          make([]*Block, 0, 100),
+		},
+	}
+}
+
+func (codeUnit *CodeUnit) addBlock(block *Block) bool {
+	for _, b := range codeUnit.Code.Blocks {
+		if b.BlockType == block.BlockType && b.LookupName == block.LookupName {
+			return false
+		}
+	}
+	codeUnit.Code.Blocks = append(codeUnit.Code.Blocks, block)
+	block.Index = len(codeUnit.Code.Blocks)
+	return true
 }

@@ -2,6 +2,7 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type ConcatExpr struct {
@@ -48,4 +49,16 @@ func (e *ConcatExpr) Copy() ExpressionInterface {
 		offset:         e.offset,
 		endSlice:       e.endSlice,
 	}
+}
+
+func (e *ConcatExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	inputs := make([]*abra.Site, 0, len(e.subExpr))
+	for _, se := range e.subExpr {
+		s := se.GenAbraSite(branch, codeUnit)
+		inputs = append(inputs, s)
+	}
+	concatBlock := codeUnit.GetConcatBlockForSize(e.Size())
+	ret := abra.NewKnot(concatBlock, inputs...).NewSite("")
+	ret, _ = branch.AddBodySite(ret)
+	return ret
 }

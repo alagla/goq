@@ -2,11 +2,16 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type LutExpr struct {
 	ExpressionBase
 	LutDef *LutDef
+}
+
+func (e *LutExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func (e *LutExpr) Size() int {

@@ -2,11 +2,16 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type NullExpr struct {
 	ExpressionBase
 	size int
+}
+
+func (e *NullExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func NewNullExpr(size int) *NullExpr {

@@ -2,12 +2,17 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type FunctionExpr struct {
 	ExpressionBase
 	FuncDef   *Function
 	callIndex uint8
+}
+
+func (e *FunctionExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func NewFunctionExpr(src string, funcDef *Function, callIndex uint8) *FunctionExpr {

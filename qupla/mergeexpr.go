@@ -2,10 +2,15 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type MergeExpr struct {
 	ExpressionBase
+}
+
+func (e *MergeExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func NewMergeExpression(src string, args []ExpressionInterface) *MergeExpr {

@@ -3,6 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type ConstTypeFieldInfo struct {
@@ -14,6 +15,10 @@ type ConstTypeInfo struct {
 	name   string
 	size   int
 	Fields map[string]*ConstTypeFieldInfo
+}
+
+func (e *ConstTypeInfo) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func NewConstTypeInfo(name string, size int) *ConstTypeInfo {

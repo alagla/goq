@@ -3,6 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type ConstExpression interface {
@@ -16,6 +17,10 @@ type ConstValue struct {
 	value int
 	name  string
 	size  int
+}
+
+func (e *ConstValue) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }
 
 func (e *ConstValue) Copy() ExpressionInterface {

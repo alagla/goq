@@ -1,14 +1,17 @@
 package qupla
 
 import (
+	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type SliceExpr struct {
 	ExpressionBase
-	site     *QuplaSite
-	offset   int
-	size     int
+	site   *QuplaSite
+	offset int
+	size   int
+	// precalcs to speed up Qupla interpretation
 	sliceEnd int
 	oneTrit  bool
 }
@@ -56,4 +59,33 @@ func (e *SliceExpr) Eval(frame *EvalFrame, result Trits) bool {
 		}
 	}
 	return null
+}
+
+func (e *SliceExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	if e.site.IsParam {
+		// for inputs we take site not by name but by index
+		return branch.InputSites[e.site.Idx]
+	}
+	var ret *abra.Site
+	// for other sites (body and state) we use variable name_offset_size
+	lookupName := fmt.Sprintf("qupla_site_%s_%d_%d", e.site.Name, e.offset, e.size)
+	ret = branch.FindBodySite(lookupName)
+	if ret != nil {
+		return ret
+	}
+	if e.offset == 0 && e.size == e.site.Size {
+		// no actual slicing
+		// generate new site
+		ret = e.site.Assign.GenAbraSite(branch, codeUnit).SetLookupName(lookupName)
+		return ret
+	}
+	// for actual slicing we have to have a slicing branch
+	slicingBranchBlock := codeUnit.GetSlicingBranch(e.offset, e.size)
+	if e.site.IsParam {
+		ret = abra.NewKnot(slicingBranchBlock, branch.InputSites[e.site.Idx]).NewSite(lookupName)
+	} else {
+		input := e.site.Assign.GenAbraSite(branch, codeUnit)
+		ret = abra.NewKnot(slicingBranchBlock, input).NewSite(lookupName)
+	}
+	return ret
 }

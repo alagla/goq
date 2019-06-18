@@ -1,8 +1,8 @@
 package qupla
 
 import (
-	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type LutDef struct {
@@ -49,31 +49,50 @@ func Trits3ToLutIdx(trits Trits) int {
 	return int(idx)
 }
 
-func (lutDef *LutDef) MustGetProjectionName(outpos int) string {
-	if outpos < 0 || outpos >= lutDef.Size() {
-		panic(fmt.Errorf("wrong arg num"))
-	}
-	return lutDef.Name + fmt.Sprintf("_proj_arg_%d", outpos)
+// lookup table adjusted for 3 inputs
+func (lutDef *LutDef) LookupTable() [27]Trits {
+	return lutDef.lookupTable
 }
 
-//  it is assumed, that lookup table is adjusted for 3 inputs regardless real input size
-//
-// creates new lut def out of the old one, with same args gives outpos position of the result
-// with output size = 1
-// arg = 0,1,2
+func CharEncodeLutOutTrit(trit []int8) byte {
+	if len(trit) != 1 {
+		panic("wrong param")
+	}
+	if trit == nil {
+		return '@'
+	}
+	switch trit[0] {
+	case -1:
+		return '-'
+	case 0:
+		return '0'
+	case 1:
+		return '1'
+	}
+	panic("wrong trit")
+}
 
-func (lutDef *LutDef) MakeAdjustedProjection(outpos int) *LutDef {
-	if outpos < 0 || outpos >= lutDef.InputSize {
-		panic(fmt.Errorf("wrong lut argument index"))
+//
+func (lutDef *LutDef) GetTritcode() Trits {
+	ret := IntToTrits(abra.BinaryEncodedLUTFromString(lutDef.GetStringRepr()))
+	ret = PadTrits(ret, 35)
+	if len(ret) != 35 {
+		panic("wrong LUT tritcode")
 	}
-	ret := LutDef{
-		Name:       lutDef.MustGetProjectionName(outpos),
-		InputSize:  lutDef.InputSize,
-		outputSize: 1,
+	return ret
+}
+
+func (lutDef *LutDef) GetStringRepr() string {
+	var ret [27]byte
+	for i, t := range lutDef.LookupTable() {
+		ret[i] = CharEncodeLutOutTrit(t)
 	}
-	// assumed, that lookupTable is adjusted for all three outputs
-	for i := range lutDef.lookupTable {
-		ret.lookupTable[i] = lutDef.lookupTable[i][outpos : outpos+1]
+	return string(ret[:])
+}
+
+func (lutDef *LutDef) GetBranch(numInputs int) {
+	if numInputs != 1 && numInputs != 2 && numInputs != 3 {
+		panic("wrong number of inputs")
 	}
-	return &ret
+
 }

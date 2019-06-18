@@ -3,6 +3,7 @@ package qupla
 import (
 	. "fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 )
 
 type CondExpr struct {
@@ -43,4 +44,8 @@ func (e *CondExpr) Copy() ExpressionInterface {
 	return &CondExpr{
 		ExpressionBase: e.copyBase(),
 	}
+}
+
+func (e *CondExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	panic("implement me")
 }

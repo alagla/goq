@@ -3,6 +3,7 @@ package qupla
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/abra"
 	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/utils"
 )
@@ -181,5 +182,22 @@ func countTypesInExpression(expr ExpressionInterface, stats map[string]int) {
 	stats[t]++
 	for _, se := range expr.GetSubexpressions() {
 		countTypesInExpression(se, stats)
+	}
+}
+
+func (def *Function) GenAbraBranch(branch *abra.Branch, codeUnit *abra.CodeUnit) {
+	for _, vi := range def.Sites {
+		if vi.IsParam {
+			branch.AddInputSite(vi.Size)
+		}
+	}
+	// generate output sites and, recursively, the rest body sites
+	if concatExpr, ok := def.RetExpr.(*ConcatExpr); ok {
+		for _, se := range concatExpr.subExpr {
+			branch.OutputSites = append(branch.OutputSites, se.GenAbraSite(branch, codeUnit))
+		}
+	} else {
+		singleOutput := def.RetExpr.GenAbraSite(branch, codeUnit)
+		branch.OutputSites = []*abra.Site{singleOutput}
 	}
 }
