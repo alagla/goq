@@ -26,19 +26,19 @@ func (branch *Branch) Get1TritConstLutSite(codeUnit *CodeUnit, val int8) *Site {
 	// now create site in the branch
 	// it will always generate constant trit
 	// the input for lut is 3 repeated 1-trit sites from lsb of the branches input
-	any := branch.GetAnyTritSite(codeUnit)
+	any := branch.GetAnyTritInputSite(codeUnit)
 	ret = branch.AddKnotSiteForInputs(lutValConstBlock, lookupName, any, any, any)
 	return ret
 }
 
-func (branch *Branch) GetAnyTritSite(codeUnit *CodeUnit) *Site {
-	lookupName := "any_input_site" // each branch will have site with this name
+func (branch *Branch) GetAnyTritInputSite(codeUnit *CodeUnit) *Site {
+	lookupName := "any_input_site" // each branch will have the only site with this name
 	ret := branch.FindBodySite(lookupName)
 	if ret != nil {
 		return ret
 	}
 	// must be the only LstSliceBlock in the code unit
-	lstBlock := codeUnit.GetLstSliceBlock()
+	lstBlock := codeUnit.GetLstSliceBlock(branch.InputSites[0].Size) // get Lst branch for the size of first input
 	ret = NewKnot(lstBlock, branch.InputSites[0]).NewSite(lookupName + "_knot")
 	branch.AddBodySite(ret)
 	return ret
@@ -73,20 +73,22 @@ func (codeUnit *CodeUnit) GetConcatBlockForSize(size int) *Block {
 }
 
 // returns or creates block which takes to output least significant trit of it input
+// ue to requirement to have exact size matches, there's one block per each
 
-func (codeUnit *CodeUnit) GetLstSliceBlock() *Block {
-	lookupName := "LST_SLICE_BRANCH_BLOCK"
+func (codeUnit *CodeUnit) GetLstSliceBlock(inputSize int) *Block {
+	lookupName := fmt.Sprintf("LST_SLICE_BRANCH_BLOCK_%d", inputSize)
 	ret := codeUnit.FindBranchBlock(lookupName)
 	if ret != nil {
 		return ret
 	}
 	ret = codeUnit.AddNewBranchBlock(lookupName, 1)
-	input := ret.Branch.AddInputSite(1) // input lengths is 1, so any knot will truncate the rest
-	output := NewMerge(input).NewSite(lookupName + "_merge_site")
-	ret.Branch.AddOutputSite(output) //
+	inputLst := ret.Branch.AddInputSite(1) // two inputs
+	ret.Branch.AddInputSite(inputSize - 1) //
+	output := NewMerge(inputLst).NewSite("")
+	ret.Branch.AddOutputSite(output)
 	return ret
 }
 
 func (codeUnit *CodeUnit) GetSlicingBranch(offset, size int) *Block {
-	return nil
+	return nil // TODO
 }
