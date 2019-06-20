@@ -28,7 +28,7 @@ func NewSupervisor(name string, lockTimeout time.Duration) *Supervisor {
 // create new Entity
 // Params:
 //    - Name, used only for tracing
-//    - inSize, expected size of input trit vector. O means any not nil
+//    - inSize, expected size of input trit vector. 0 means any not nil
 //    - outSize, size of output trit vector
 //    - core, an object which implement EntityCore interface. It calculates output trits from inputs
 
