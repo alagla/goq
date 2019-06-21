@@ -10,10 +10,6 @@ type ValueExpr struct {
 	TritValue Trits
 }
 
-func (e *ValueExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
-	panic("implement me")
-}
-
 func NewValueExpr(t Trits) *ValueExpr {
 	return &ValueExpr{
 		TritValue: t,
@@ -42,8 +38,6 @@ func (e *ValueExpr) Eval(_ *EvalFrame, result Trits) bool {
 	return false
 }
 
-// Abra branch corresponding the constant value
-//
-// value const   t1, t2, t3,...tn
-//
-//
+func (e *ValueExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+	return branch.GetTritConstSite(codeUnit, e.TritValue)
+}

@@ -19,7 +19,7 @@ type ConstValue struct {
 	size  int
 }
 
-func (e *ConstValue) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *ConstValue) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
 	panic("implement me")
 }
 

@@ -1,11 +1,14 @@
 package abra
 
+import "fmt"
+
 func (codeUnit *CodeUnit) AddNewBranchBlock(lookupName string, size int) *Block {
 	retbranch := &Branch{
 		InputSites:  make([]*Site, 0, 10),
 		BodySites:   make([]*Site, 0, 10),
 		OutputSites: make([]*Site, 0, 10),
 		StateSites:  make([]*Site, 0, 10),
+		AllSites:    make([]*Site, 0, 10),
 		Size:        size,
 	}
 	ret := retbranch.NewBlock(lookupName)
@@ -23,9 +26,9 @@ func (branch *Branch) NewBlock(lookupName string) *Block {
 	}
 }
 
-func (branch *Branch) FindBodySite(lookupName string) *Site {
-	for _, site := range branch.BodySites {
-		if site.LookupName == lookupName {
+func (branch *Branch) FindSite(lookupName string) *Site {
+	for _, site := range branch.AllSites {
+		if site.LookupName != "" && site.LookupName == lookupName {
 			return site
 		}
 	}
@@ -41,30 +44,10 @@ func (branch *Branch) AddInputSite(size int) *Site {
 	return ret
 }
 
-func (branch *Branch) AddBodySite(site *Site) (*Site, bool) {
-	for _, bs := range branch.BodySites {
-		if site.LookupName == "" && site.LookupName == bs.LookupName {
-			return bs, false
-		}
+func (branch *Branch) AddNewSite(site *Site, lookupName string) {
+	ret := branch.FindSite(site.LookupName)
+	if ret != nil {
+		panic(fmt.Errorf("duplicate site lookup name '%s'", lookupName))
 	}
-	branch.BodySites = append(branch.BodySites, site)
-	return site, true
-}
-
-func (branch *Branch) AddStateSite(site *Site) (*Site, bool) {
-	if site.LookupName == "" {
-		panic("state sites have names!")
-	}
-	for _, bs := range branch.StateSites {
-		if site.LookupName == bs.LookupName {
-			return bs, false
-		}
-	}
-	branch.StateSites = append(branch.StateSites, site)
-	return site, true
-}
-
-func (branch *Branch) AddOutputSite(site *Site) bool {
-	branch.OutputSites = append(branch.OutputSites, site)
-	return true
+	branch.AllSites = append(branch.BodySites, site)
 }

@@ -118,7 +118,8 @@ type Branch struct {
 	OutputSites []*Site
 	StateSites  []*Site
 	// compile time
-	Size int
+	AllSites []*Site
+	Size     int
 }
 
 //site:
@@ -128,19 +129,21 @@ type Branch struct {
 type SiteType int
 
 const (
-	SITE_MERGE = SiteType(0)
-	SITE_KNOT  = SiteType(1)
-	SITE_INPUT = SiteType(2)
+	SITE_INPUT  = SiteType(0)
+	SITE_BODY   = SiteType(1)
+	SITE_STATE  = SiteType(2)
+	SITE_OUTPUT = SiteType(3)
 )
 
 type Site struct {
-	Index    int // index within branch
-	SiteType SiteType
-	Merge    *Merge // SITE_MERGE
-	Knot     *Knot  // SITE_KNOT
-	Size     int    // SITE_INPUT
+	Index  int // index within branch
+	IsKnot bool
+	Merge  *Merge // SITE_MERGE
+	Knot   *Knot  // SITE_KNOT
+	Size   int    // SITE_INPUT
 	// lookup name, compile time only
 	LookupName string
+	SiteType   SiteType
 }
 
 //Merge:

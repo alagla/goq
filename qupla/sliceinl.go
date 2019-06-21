@@ -15,7 +15,7 @@ type SliceInline struct {
 	oneTrit      bool
 }
 
-func (e *SliceInline) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *SliceInline) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
 	panic("implement me")
 }
 

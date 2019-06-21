@@ -5,6 +5,11 @@ func (site *Site) SetLookupName(ln string) *Site {
 	return site
 }
 
+func (site *Site) SetType(t SiteType) *Site {
+	site.SiteType = t
+	return site
+}
+
 func NewMerge(sites ...*Site) *Merge {
 	return &Merge{
 		Sites: sites,
@@ -18,24 +23,18 @@ func NewKnot(block *Block, sites ...*Site) *Knot {
 	}
 }
 
-func (merge *Merge) NewSite(lookupName string) *Site {
+func (merge *Merge) NewSite() *Site {
 	return &Site{
-		SiteType:   SITE_MERGE,
-		Merge:      merge,
-		LookupName: lookupName,
+		IsKnot:   false,
+		Merge:    merge,
+		SiteType: SITE_BODY,
 	}
 }
 
-func (knot *Knot) NewSite(lookupName string) *Site {
+func (knot *Knot) NewSite() *Site {
 	return &Site{
-		SiteType:   SITE_KNOT,
-		Knot:       knot,
-		LookupName: lookupName,
+		IsKnot:   true,
+		Knot:     knot,
+		SiteType: SITE_BODY,
 	}
-}
-
-func (branch *Branch) AddKnotSiteForInputs(knotBlock *Block, lookupName string, inputs ...*Site) *Site {
-	ret := NewKnot(knotBlock, inputs...).NewSite(lookupName)
-	branch.AddBodySite(ret)
-	return ret
 }

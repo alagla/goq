@@ -10,7 +10,7 @@ type NullExpr struct {
 	size int
 }
 
-func (e *NullExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *NullExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
 	panic("implement me")
 }
 

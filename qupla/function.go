@@ -185,19 +185,32 @@ func countTypesInExpression(expr ExpressionInterface, stats map[string]int) {
 	}
 }
 
-func (def *Function) GenAbraBranch(branch *abra.Branch, codeUnit *abra.CodeUnit) {
+func (def *Function) GetLookupName() string {
+	return "qupla_function_" + def.Name
+}
+
+func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
+	lookupName := def.GetLookupName()
+	ret := codeUnit.FindBranchBlock(lookupName)
+	if ret != nil {
+		return ret
+	}
+	ret = codeUnit.AddNewBranchBlock(lookupName, def.Size())
 	for _, vi := range def.Sites {
 		if vi.IsParam {
-			branch.AddInputSite(vi.Size)
+			ret.Branch.AddInputSite(vi.Size)
 		}
 	}
-	// generate output sites and, recursively, the rest body sites
 	if concatExpr, ok := def.RetExpr.(*ConcatExpr); ok {
 		for _, se := range concatExpr.subExpr {
-			branch.OutputSites = append(branch.OutputSites, se.GenAbraSite(branch, codeUnit))
+			site := se.GetAbraSite(ret.Branch, codeUnit)
+			site.SetType(abra.SITE_OUTPUT)
+			ret.Branch.AddNewSite(site, "")
 		}
 	} else {
-		singleOutput := def.RetExpr.GenAbraSite(branch, codeUnit)
-		branch.OutputSites = []*abra.Site{singleOutput}
+		singleOutput := def.RetExpr.GetAbraSite(ret.Branch, codeUnit)
+		singleOutput.SetType(abra.SITE_OUTPUT)
+		ret.Branch.AddNewSite(singleOutput, "")
 	}
+	return ret
 }

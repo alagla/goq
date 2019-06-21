@@ -37,7 +37,7 @@ type ExpressionInterface interface {
 	GetSubexpressions() []ExpressionInterface
 	SetSubexpressions([]ExpressionInterface)
 	GetSource() string
-	GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site
+	GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site
 }
 
 const (
