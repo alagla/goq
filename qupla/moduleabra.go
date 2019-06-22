@@ -15,11 +15,19 @@ func (module *QuplaModule) GetAbra(codeUnit *abra.CodeUnit) {
 	sort.Strings(names)
 
 	// TODO environments etc
+	Logf(2, "---- generating LUT blocks")
+	count := 0
 	for _, n := range names {
 		strRepr := module.Luts[n].GetStringRepr()
-		Logf(2, "generating LUT block: '%s' -> '%s'", n, strRepr)
-		codeUnit.NewLUTBlock(strRepr, abra.BinaryEncodedLUTFromString(strRepr))
+		if codeUnit.FindLUTBlock(strRepr) != nil {
+			Logf(2, "%20s -> '%s'  repeated", n, strRepr)
+			continue
+		}
+		Logf(2, "%20s -> '%s'", n, strRepr)
+		codeUnit.GetLUTBlock(strRepr)
+		count++
 	}
+	Logf(2, "total generated %d LUT blocks out of %d LUT definitions", count, len(names))
 
 	// sort functions by name
 	names = make([]string, 0)
@@ -27,6 +35,7 @@ func (module *QuplaModule) GetAbra(codeUnit *abra.CodeUnit) {
 		names = append(names, n)
 	}
 	sort.Strings(names)
+	Logf(2, "---- generating branch blocks")
 	for _, n := range names {
 		Logf(2, "generating branch for '%s'", n)
 		module.Functions[n].GetAbraBranchBlock(codeUnit)

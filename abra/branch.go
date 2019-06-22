@@ -15,7 +15,7 @@ func (codeUnit *CodeUnit) AddNewBranchBlock(lookupName string, size int) *Block 
 	if codeUnit.AddNewBlock(ret) {
 		return ret
 	}
-	return nil
+	panic(fmt.Errorf("branch block '%s' already exists", lookupName))
 }
 
 func (branch *Branch) NewBlock(lookupName string) *Block {
@@ -45,8 +45,7 @@ func (branch *Branch) AddInputSite(size int) *Site {
 }
 
 func (branch *Branch) AddNewSite(site *Site, lookupName string) {
-	ret := branch.FindSite(site.LookupName)
-	if ret != nil {
+	if lookupName != "" && branch.FindSite(site.LookupName) != nil {
 		panic(fmt.Errorf("duplicate site lookup name '%s'", lookupName))
 	}
 	branch.AllSites = append(branch.BodySites, site)

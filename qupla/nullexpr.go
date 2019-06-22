@@ -11,7 +11,7 @@ type NullExpr struct {
 }
 
 func (e *NullExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
-	panic("implement me")
+	panic("shouldn't be called")
 }
 
 func NewNullExpr(size int) *NullExpr {

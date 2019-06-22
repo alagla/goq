@@ -1,6 +1,9 @@
 package abra
 
-import . "github.com/iotaledger/iota.go/trinary"
+import (
+	"fmt"
+	. "github.com/iotaledger/iota.go/trinary"
+)
 
 const TRITCODE_VERSION = 0
 
@@ -25,13 +28,13 @@ func (codeUnit *CodeUnit) AddNewBlock(block *Block) bool {
 	return true
 }
 
-func (codeUnit *CodeUnit) NewLUTBlock(lookupName string, binaryEncodedLUT int64) *Block {
+func (codeUnit *CodeUnit) AddNewLUTBlock(lookupName string, binaryEncodedLUT int64) *Block {
 	ret := LUT(binaryEncodedLUT)
 	block := ret.NewBlock(lookupName)
 	if codeUnit.AddNewBlock(block) {
 		return block
 	}
-	return nil
+	panic(fmt.Errorf("LUT block '%s' already exists", lookupName))
 }
 
 func (lut LUT) NewBlock(lookupName string) *Block {
@@ -57,7 +60,7 @@ func (codeUnit *CodeUnit) GetLUTBlock(reprString string) *Block {
 		return ret
 	}
 	lut := BinaryEncodedLUTFromString(reprString)
-	ret = codeUnit.NewLUTBlock(reprString, lut)
+	ret = codeUnit.AddNewLUTBlock(reprString, lut)
 	return ret
 }
 
