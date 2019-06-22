@@ -49,5 +49,5 @@ func (e *MergeExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lo
 	}
 	ret := abra.NewMerge(inputs...).NewSite()
 	ret.SetLookupName(lookupName)
-	return branch.GenOrUpdateSite(ret)
+	return branch.AddOrUpdateSite(ret)
 }

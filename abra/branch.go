@@ -4,10 +4,10 @@ import "fmt"
 
 func (codeUnit *CodeUnit) AddNewBranchBlock(lookupName string, size int) *Block {
 	retbranch := &Branch{
-		InputSites:  make([]*Site, 0, 10),
-		BodySites:   make([]*Site, 0, 10),
-		OutputSites: make([]*Site, 0, 10),
-		StateSites:  make([]*Site, 0, 10),
+		inputSites:  make([]*Site, 0, 10),
+		bodySites:   make([]*Site, 0, 10),
+		outputSites: make([]*Site, 0, 10),
+		stateSites:  make([]*Site, 0, 10),
 		AllSites:    make([]*Site, 0, 10),
 		Size:        size,
 	}
@@ -43,8 +43,21 @@ func (branch *Branch) AddInputSite(size int) *Site {
 		SiteType: SITE_INPUT,
 		Size:     size,
 	}
-	branch.InputSites = append(branch.InputSites, ret)
+	branch.AllSites = append(branch.AllSites, ret)
 	return ret
+}
+
+func (branch *Branch) GetInputSite(idx int) *Site {
+	counter := 0
+	for _, s := range branch.AllSites {
+		if s.SiteType == SITE_INPUT {
+			if counter == idx {
+				return s
+			}
+			counter++
+		}
+	}
+	panic("input site index out of bound")
 }
 
 // if find site with same lookup name, updates its isKnot, Knot and merge field with new
@@ -52,7 +65,7 @@ func (branch *Branch) AddInputSite(size int) *Site {
 // this is needed for generation of state sites in two steps
 // therefore all site lookup names must be unique (if not "")
 
-func (branch *Branch) GenOrUpdateSite(site *Site) *Site {
+func (branch *Branch) AddOrUpdateSite(site *Site) *Site {
 	ret := branch.FindSite(site.LookupName)
 	if ret != nil {
 		ret.IsKnot = site.IsKnot
@@ -60,7 +73,7 @@ func (branch *Branch) GenOrUpdateSite(site *Site) *Site {
 		ret.Merge = site.Merge
 		return ret
 	}
-	branch.AllSites = append(branch.BodySites, site)
+	branch.AllSites = append(branch.AllSites, site)
 	return site
 }
 
@@ -69,7 +82,7 @@ func (branch *Branch) AddUnfinishedStateSite(lookupName string) *Site {
 		LookupName: lookupName,
 		SiteType:   SITE_STATE,
 	}
-	return branch.GenOrUpdateSite(ret)
+	return branch.AddOrUpdateSite(ret)
 }
 
 type BranchStats struct {
@@ -80,14 +93,19 @@ type BranchStats struct {
 	NumOutputs    int
 	NumKnots      int
 	NumMerges     int
+	InputSizes    []int
+	InputSize     int
 }
 
 func (branch *Branch) GetStats() *BranchStats {
-	ret := &BranchStats{}
+	ret := &BranchStats{
+		InputSizes: make([]int, 0, 5),
+	}
 	for _, s := range branch.AllSites {
 		switch s.SiteType {
 		case SITE_INPUT:
 			ret.NumInputs++
+			ret.InputSizes = append(ret.InputSizes, s.Size)
 		case SITE_BODY:
 			ret.NumBodySites++
 		case SITE_STATE:
@@ -102,5 +120,8 @@ func (branch *Branch) GetStats() *BranchStats {
 		}
 	}
 	ret.NumSites = len(branch.AllSites)
+	for _, s := range ret.InputSizes {
+		ret.InputSize += s
+	}
 	return ret
 }

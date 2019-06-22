@@ -53,5 +53,5 @@ func (e *LutExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, look
 	}
 	ret := abra.NewKnot(lut, in0, in1, in2).NewSite()
 	ret.SetLookupName(lookupName)
-	return branch.GenOrUpdateSite(ret)
+	return branch.AddOrUpdateSite(ret)
 }

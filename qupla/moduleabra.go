@@ -39,7 +39,7 @@ func (module *QuplaModule) GetAbra(codeUnit *abra.CodeUnit) {
 	for _, n := range names {
 		b := module.Functions[n].GetAbraBranchBlock(codeUnit)
 		st := b.Branch.GetStats()
-		Logf(2, "%s -> inputs: %d bodySites: %d, stateSites: %d, outputs: %d, knots: %d, merges: %d",
-			n, st.NumInputs, st.NumBodySites, st.NumStateSites, st.NumOutputs, st.NumKnots, st.NumMerges)
+		Logf(2, "%30s -> inputs: %2d, outputs: %2d, bodySites: %2d, stateSites: %2d, knots: %2d, merges: %2d inSizes: %v=%d",
+			n, st.NumInputs, st.NumOutputs, st.NumBodySites, st.NumStateSites, st.NumKnots, st.NumMerges, st.InputSizes, st.InputSize)
 	}
 }

@@ -79,7 +79,7 @@ func (e *SliceExpr) GetAbraSiteForNonparamVar(branch *abra.Branch, codeUnit *abr
 func (e *SliceExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
 	var varsite *abra.Site
 	if e.site.IsParam {
-		varsite = branch.InputSites[e.site.Idx]
+		varsite = branch.GetInputSite(e.site.Idx)
 	} else {
 		varsite = e.GetAbraSiteForNonparamVar(branch, codeUnit, e.site)
 	}
@@ -93,5 +93,5 @@ func (e *SliceExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lo
 
 	ret = abra.NewKnot(slicingBranchBlock, varsite).NewSite()
 	ret.SetLookupName(lookupName)
-	return branch.GenOrUpdateSite(ret)
+	return branch.AddOrUpdateSite(ret)
 }

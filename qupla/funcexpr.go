@@ -60,5 +60,5 @@ func (e *FunctionExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit,
 	}
 	ret := abra.NewKnot(branchBlock, inputs...).NewSite()
 	ret.SetLookupName(lookupName)
-	return branch.GenOrUpdateSite(ret)
+	return branch.AddOrUpdateSite(ret)
 }

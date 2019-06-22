@@ -116,10 +116,10 @@ type LUT int64
 //]
 
 type Branch struct {
-	InputSites  []*Site
-	BodySites   []*Site
-	OutputSites []*Site
-	StateSites  []*Site
+	inputSites  []*Site
+	bodySites   []*Site
+	outputSites []*Site
+	stateSites  []*Site
 	// compile time
 	AllSites []*Site
 	Size     int

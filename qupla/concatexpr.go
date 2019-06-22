@@ -60,5 +60,5 @@ func (e *ConcatExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, l
 	concatBlock := codeUnit.GetConcatBlockForSize(e.Size())
 	ret := abra.NewKnot(concatBlock, inputs...).NewSite()
 	ret.SetLookupName(lookupName)
-	return branch.GenOrUpdateSite(ret)
+	return branch.AddOrUpdateSite(ret)
 }
