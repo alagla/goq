@@ -12,7 +12,7 @@ func (codeUnit *CodeUnit) AddNewBranchBlock(lookupName string, size int) *Block 
 		Size:        size,
 	}
 	ret := retbranch.NewBlock(lookupName)
-	if codeUnit.addBlock(ret) {
+	if codeUnit.AddNewBlock(ret) {
 		return ret
 	}
 	return nil

@@ -8,8 +8,8 @@ import . "github.com/iotaledger/iota.go/trinary"
 // https://github.com/iotaledger/omega-docs/blob/master/qbc/abra/Spec.md
 
 type CodeUnit struct {
-	EntityAttachment *EntityAttachment
-	Code             *Code
+	EntityAttachments []*EntityAttachment
+	Code              *Code
 }
 
 //Entity attachment:
@@ -19,7 +19,7 @@ type CodeUnit struct {
 //]
 
 type EntityAttachment struct {
-	CodeHash    Trits // 243 trit
+	CodeHash    Hash // 243 trits = 81 trytes
 	Attachments []*Attachment
 }
 
@@ -37,6 +37,9 @@ type Attachment struct {
 	MaximumRecursionDepth int
 	InputEnvironments     []*InputEnvironmentData
 	OutputEnvironments    []*OutputEnvironmentData
+	// compile time
+	InputEnvironmentsDict  map[Hash]*InputEnvironmentData
+	OutputEnvironmentsDict map[Hash]*OutputEnvironmentData
 }
 
 //input environment data:
@@ -47,7 +50,7 @@ type Attachment struct {
 //]
 
 type InputEnvironmentData struct {
-	EnvironmentHash Trits
+	EnvironmentHash Hash
 	Limit           int
 	//FirstBranchInputIndex int   //???
 	//LastBranchInputIndex  int   //???
@@ -61,7 +64,7 @@ type InputEnvironmentData struct {
 //]
 
 type OutputEnvironmentData struct {
-	EnvironmentHash Trits
+	EnvironmentHash Hash
 	Delay           int
 	//FirstBranchInputIndex int   //??
 	//LastBranchInputIndex  int   //??
@@ -195,29 +198,4 @@ type Block struct {
 	ExternalBlock *ExternalBlock
 	// lookup name, compile time only
 	LookupName string
-}
-
-const TRITCODE_VERSION = 0
-
-func NewCodeUnit() *CodeUnit {
-	return &CodeUnit{
-		EntityAttachment: &EntityAttachment{
-			Attachments: make([]*Attachment, 0, 5),
-		},
-		Code: &Code{
-			TritcodeVersion: TRITCODE_VERSION,
-			Blocks:          make([]*Block, 0, 100),
-		},
-	}
-}
-
-func (codeUnit *CodeUnit) addBlock(block *Block) bool {
-	for _, b := range codeUnit.Code.Blocks {
-		if b.BlockType == block.BlockType && b.LookupName == block.LookupName {
-			return false
-		}
-	}
-	codeUnit.Code.Blocks = append(codeUnit.Code.Blocks, block)
-	block.Index = len(codeUnit.Code.Blocks)
-	return true
 }

@@ -214,3 +214,17 @@ func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
 	}
 	return ret
 }
+
+// TODO
+//func (def *Function) GetAbraEntityAttachment(codeUnit *abra.CodeUnit) *abra.EntityAttachment{
+//	//
+//	lookupName := def.GetLookupName()
+//	branch := codeUnit.FindBranchBlock(lookupName)
+//	if branch == nil {
+//		panic(fmt.Errorf("can't find abra branch for function '%s'", def.Name))
+//	}
+//
+//	ret := codeUnit.NewEntityAttachment()
+//
+//
+//}
