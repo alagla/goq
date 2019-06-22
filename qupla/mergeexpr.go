@@ -41,13 +41,13 @@ func (e *MergeExpr) Eval(frame *EvalFrame, result Trits) bool {
 	return true // all nulls
 }
 
-func (e *MergeExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *MergeExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
 	inputs := make([]*abra.Site, 0, len(e.subExpr))
 	for _, se := range e.subExpr {
-		s := se.GetAbraSite(branch, codeUnit)
+		s := se.GetAbraSite(branch, codeUnit, "")
 		inputs = append(inputs, s)
 	}
 	ret := abra.NewMerge(inputs...).NewSite()
-	branch.AddNewSite(ret, "")
-	return ret
+	ret.SetLookupName(lookupName)
+	return branch.GenOrUpdateSite(ret)
 }

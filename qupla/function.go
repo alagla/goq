@@ -203,14 +203,22 @@ func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
 	}
 	if concatExpr, ok := def.RetExpr.(*ConcatExpr); ok {
 		for _, se := range concatExpr.subExpr {
-			site := se.GetAbraSite(ret.Branch, codeUnit)
+			site := se.GetAbraSite(ret.Branch, codeUnit, "")
 			site.SetType(abra.SITE_OUTPUT)
-			ret.Branch.AddNewSite(site, "")
+			ret.Branch.GenOrUpdateSite(site)
 		}
 	} else {
-		singleOutput := def.RetExpr.GetAbraSite(ret.Branch, codeUnit)
+		singleOutput := def.RetExpr.GetAbraSite(ret.Branch, codeUnit, "")
 		singleOutput.SetType(abra.SITE_OUTPUT)
-		ret.Branch.AddNewSite(singleOutput, "")
+		ret.Branch.GenOrUpdateSite(singleOutput)
+	}
+	// finalize with state sites
+	// for each state var site generate abra site and update temporary site with the new
+	for _, vi := range def.Sites {
+		if !vi.IsState {
+			continue
+		}
+		vi.Assign.GetAbraSite(ret.Branch, codeUnit, vi.GetAbraLookupName())
 	}
 	return ret
 }

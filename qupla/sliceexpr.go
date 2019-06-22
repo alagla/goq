@@ -62,19 +62,21 @@ func (e *SliceExpr) Eval(frame *EvalFrame, result Trits) bool {
 
 func (e *SliceExpr) GetAbraSiteForNonparamVar(branch *abra.Branch, codeUnit *abra.CodeUnit, vi *QuplaSite) *abra.Site {
 	var ret *abra.Site
-	lookupName := "var_site_" + vi.Name
+	lookupName := vi.GetAbraLookupName()
 	ret = branch.FindSite(lookupName)
 	if ret != nil {
 		return ret
 	}
-	ret = e.site.Assign.GetAbraSite(branch, codeUnit).SetLookupName(lookupName)
 	if vi.IsState {
-		ret.SetType(abra.SITE_STATE)
+		// state sites go in cycles.
+		// This will be placeholder, will be resolved later
+		return branch.AddUnfinishedStateSite(lookupName)
 	}
+	ret = e.site.Assign.GetAbraSite(branch, codeUnit, lookupName)
 	return ret
 }
 
-func (e *SliceExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *SliceExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
 	var varsite *abra.Site
 	if e.site.IsParam {
 		varsite = branch.InputSites[e.site.Idx]
@@ -90,6 +92,6 @@ func (e *SliceExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *a
 	var ret *abra.Site
 
 	ret = abra.NewKnot(slicingBranchBlock, varsite).NewSite()
-	branch.AddNewSite(ret, "")
-	return ret
+	ret.SetLookupName(lookupName)
+	return branch.GenOrUpdateSite(ret)
 }

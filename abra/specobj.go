@@ -25,8 +25,8 @@ func (branch *Branch) Get1TritConstLutSite(codeUnit *CodeUnit, val int8) *Site {
 	// the input for lut is 3 repeated 1-trit sites from lsb of the branches input
 	any := branch.GetAnyTritInputSite(codeUnit)
 	ret = NewKnot(lutValConstBlock, any, any, any).NewSite()
-	branch.AddNewSite(ret, lookupName)
-	return ret
+	ret.SetLookupName(lookupName)
+	return branch.GenOrUpdateSite(ret)
 }
 
 func (branch *Branch) GetAnyTritInputSite(codeUnit *CodeUnit) *Site {
@@ -38,8 +38,8 @@ func (branch *Branch) GetAnyTritInputSite(codeUnit *CodeUnit) *Site {
 	// must be the only LstSliceBlock in the code unit
 	lstBlock := codeUnit.GetSlicingBranchBlock(branch.InputSites[0].Size, 0, 1)
 	ret = NewKnot(lstBlock, branch.InputSites[0]).NewSite()
-	branch.AddNewSite(ret, "")
-	return ret
+	ret.SetLookupName(lookupName)
+	return branch.GenOrUpdateSite(ret)
 }
 
 func (branch *Branch) GetTritConstSite(codeUnit *CodeUnit, val Trits) *Site {
@@ -55,8 +55,8 @@ func (branch *Branch) GetTritConstSite(codeUnit *CodeUnit, val Trits) *Site {
 
 	concatBlock := codeUnit.GetConcatBlockForSize(len(val))
 	ret = NewKnot(concatBlock, inputs...).NewSite()
-	branch.AddNewSite(ret, lookupName)
-	return ret
+	ret.SetLookupName(lookupName)
+	return branch.GenOrUpdateSite(ret)
 }
 
 func (codeUnit *CodeUnit) GetConcatBlockForSize(size int) *Block {
@@ -69,7 +69,7 @@ func (codeUnit *CodeUnit) GetConcatBlockForSize(size int) *Block {
 	input := ret.Branch.AddInputSite(size)
 	output := NewMerge(input).NewSite()
 	output.SiteType = SITE_OUTPUT
-	ret.Branch.AddNewSite(output, lookupName)
+	ret.Branch.GenOrUpdateSite(output)
 	return ret
 }
 
@@ -95,7 +95,7 @@ func (codeUnit *CodeUnit) GetSlicingBranchBlock(inputSize, offset, size int) *Bl
 	}
 	output := NewMerge(theSlice).NewSite()
 	output.SiteType = SITE_OUTPUT
-	ret.Branch.AddNewSite(output, lookupName)
+	ret.Branch.GenOrUpdateSite(output)
 	return ret
 }
 
@@ -122,7 +122,7 @@ func (codeUnit *CodeUnit) GetNullifyBranchBlock(size int, trueFalse bool) *Block
 			NewKnot(nullifyLutBlock, condInput, ret.Branch.InputSites[i+1], condInput)
 		nullifyTritSite := nullifyTritKnot.NewSite()
 		nullifyTritSite.SiteType = SITE_OUTPUT
-		ret.Branch.AddNewSite(nullifyTritSite, "")
+		ret.Branch.GenOrUpdateSite(nullifyTritSite)
 	}
 	return ret
 }

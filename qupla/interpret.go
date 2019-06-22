@@ -37,7 +37,7 @@ type ExpressionInterface interface {
 	GetSubexpressions() []ExpressionInterface
 	SetSubexpressions([]ExpressionInterface)
 	GetSource() string
-	GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site
+	GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site
 }
 
 const (
@@ -72,6 +72,10 @@ func (frame *EvalFrame) getCallTrace() []uint8 {
 		}
 	}
 	return ret
+}
+
+func (vi *QuplaSite) GetAbraLookupName() string {
+	return "var_site_" + vi.Name
 }
 
 func (vi *QuplaSite) Eval(frame *EvalFrame) (Trits, bool) {

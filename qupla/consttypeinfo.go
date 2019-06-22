@@ -17,7 +17,7 @@ type ConstTypeInfo struct {
 	Fields map[string]*ConstTypeFieldInfo
 }
 
-func (e *ConstTypeInfo) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *ConstTypeInfo) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
 	panic("implement me")
 }
 

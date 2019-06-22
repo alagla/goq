@@ -52,13 +52,13 @@ func (e *FunctionExpr) Copy() ExpressionInterface {
 	}
 }
 
-func (e *FunctionExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *FunctionExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
 	branchBlock := e.FuncDef.GetAbraBranchBlock(codeUnit)
 	inputs := make([]*abra.Site, e.FuncDef.NumParams)
 	for i, se := range e.GetSubexpressions() {
-		inputs[i] = se.GetAbraSite(branch, codeUnit)
+		inputs[i] = se.GetAbraSite(branch, codeUnit, "")
 	}
 	ret := abra.NewKnot(branchBlock, inputs...).NewSite()
-	branch.AddNewSite(ret, "")
-	return ret
+	ret.SetLookupName(lookupName)
+	return branch.GenOrUpdateSite(ret)
 }

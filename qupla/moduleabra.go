@@ -37,7 +37,9 @@ func (module *QuplaModule) GetAbra(codeUnit *abra.CodeUnit) {
 	sort.Strings(names)
 	Logf(2, "---- generating branch blocks")
 	for _, n := range names {
-		Logf(2, "generating branch for '%s'", n)
-		module.Functions[n].GetAbraBranchBlock(codeUnit)
+		b := module.Functions[n].GetAbraBranchBlock(codeUnit)
+		st := b.Branch.GetStats()
+		Logf(2, "%s -> inputs: %d bodySites: %d, stateSites: %d, outputs: %d, knots: %d, merges: %d",
+			n, st.NumInputs, st.NumBodySites, st.NumStateSites, st.NumOutputs, st.NumKnots, st.NumMerges)
 	}
 }

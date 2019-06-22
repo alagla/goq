@@ -53,7 +53,7 @@ type fieldExprPair struct {
 	field *FieldExpr
 }
 
-func (e *TypeExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *TypeExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
 	// sort field expression by field offset
 	sortedByOffset := make([]*fieldExprPair, len(e.Fields))
 	for i, fe := range e.Fields {
@@ -67,10 +67,10 @@ func (e *TypeExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *ab
 	})
 	inputs := make([]*abra.Site, len(sortedByOffset))
 	for i, fi := range sortedByOffset {
-		inputs[i] = fi.expr.GetAbraSite(branch, codeUnit)
+		inputs[i] = fi.expr.GetAbraSite(branch, codeUnit, "")
 	}
 	concatBranch := codeUnit.GetConcatBlockForSize(e.Size())
 	ret := abra.NewKnot(concatBranch, inputs...).NewSite()
-	branch.AddNewSite(ret, "")
-	return ret
+	ret.SetLookupName(lookupName)
+	return branch.GenOrUpdateSite(ret)
 }

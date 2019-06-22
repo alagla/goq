@@ -41,6 +41,6 @@ func (e *SizeofExpr) Eval(_ *EvalFrame, result Trits) bool {
 	return false
 }
 
-func (e *SizeofExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *SizeofExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, _ string) *abra.Site {
 	return branch.GetTritConstSite(codeUnit, e.TritValue)
 }

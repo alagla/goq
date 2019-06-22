@@ -51,14 +51,14 @@ func (e *ConcatExpr) Copy() ExpressionInterface {
 	}
 }
 
-func (e *ConcatExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *ConcatExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
 	inputs := make([]*abra.Site, 0, len(e.subExpr))
 	for _, se := range e.subExpr {
-		s := se.GetAbraSite(branch, codeUnit)
+		s := se.GetAbraSite(branch, codeUnit, "")
 		inputs = append(inputs, s)
 	}
 	concatBlock := codeUnit.GetConcatBlockForSize(e.Size())
 	ret := abra.NewKnot(concatBlock, inputs...).NewSite()
-	branch.AddNewSite(ret, "")
-	return ret
+	ret.SetLookupName(lookupName)
+	return branch.GenOrUpdateSite(ret)
 }

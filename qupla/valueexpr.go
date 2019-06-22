@@ -38,6 +38,6 @@ func (e *ValueExpr) Eval(_ *EvalFrame, result Trits) bool {
 	return false
 }
 
-func (e *ValueExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *ValueExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, _ string) *abra.Site {
 	return branch.GetTritConstSite(codeUnit, e.TritValue)
 }
