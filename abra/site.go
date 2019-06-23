@@ -88,7 +88,7 @@ func (merge *Merge) Size() (int, error) {
 		}
 		lastsz = sz
 	}
-	return 0, fmt.Errorf("undetermined size of merge")
+	return lastsz, nil
 }
 
 // special way to determine size of state site
