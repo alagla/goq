@@ -64,8 +64,9 @@ func (knot *Knot) Size() (int, error) {
 		}
 		argsz += sz
 	}
-	if bsize != argsz {
-		return 0, fmt.Errorf("mismatch of block size %d and args size %d in the knot", bsize, argsz)
+	isize := knot.Block.GetInputSize()
+	if isize != argsz {
+		return 0, fmt.Errorf("mismatch of block input size %d and args size %d in the knot", isize, argsz)
 	}
 	return bsize, nil
 }

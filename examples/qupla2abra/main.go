@@ -5,6 +5,7 @@ import (
 	"github.com/lunfardo314/goq/analyzeyaml"
 	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/readyaml"
+	"sort"
 )
 
 const yamlToLoad = "C:/Users/evaldas/Documents/proj/Go/src/github.com/lunfardo314/goq/examples/modules/QuplaTests.yml"
@@ -32,7 +33,14 @@ func main() {
 	module.GetAbra(codeUnit)
 	sizes := codeUnit.CheckSizes()
 	Logf(0, "------ checking sizes")
-	for n, v := range sizes {
-		Logf(2, "%20s -> %v", n, v)
+
+	names := make([]string, 0, len(sizes))
+	for n := range sizes {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+
+	for _, n := range names {
+		Logf(2, "%20s -> %v", n, sizes[n])
 	}
 }

@@ -140,6 +140,14 @@ func (branch *Branch) GetSize() (int, error) {
 	return ret, nil
 }
 
+func (branch *Branch) GetInputSize() int {
+	ret := 0
+	for _, s := range branch.AllSites {
+		ret += s.Size
+	}
+	return ret
+}
+
 func (block *Block) GetSize() (int, error) {
 	switch block.BlockType {
 	case BLOCK_LUT:
@@ -150,4 +158,11 @@ func (block *Block) GetSize() (int, error) {
 		panic("implement me")
 	}
 	panic("wrong block type")
+}
+
+func (block *Block) GetInputSize() int {
+	if block.BlockType == BLOCK_LUT {
+		return 3
+	}
+	return block.Branch.GetInputSize()
 }
