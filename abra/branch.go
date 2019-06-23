@@ -125,3 +125,29 @@ func (branch *Branch) GetStats() *BranchStats {
 	}
 	return ret
 }
+
+func (branch *Branch) GetSize() (int, error) {
+	ret := 0
+	for _, s := range branch.AllSites {
+		if s.SiteType == SITE_OUTPUT {
+			sz, err := s.GetSize() // TODO
+			if err != nil {
+				return 0, err
+			}
+			ret += sz
+		}
+	}
+	return ret, nil
+}
+
+func (block *Block) GetSize() (int, error) {
+	switch block.BlockType {
+	case BLOCK_LUT:
+		return 1, nil
+	case BLOCK_BRANCH:
+		return block.Branch.GetSize()
+	case BLOCK_EXTERNAL:
+		panic("implement me")
+	}
+	panic("wrong block type")
+}

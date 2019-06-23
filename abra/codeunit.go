@@ -108,3 +108,18 @@ func (att *Attachment) Affect(envHash Hash, delay int) *OutputEnvironmentData {
 	att.OutputEnvironments = append(att.OutputEnvironments, ret)
 	return ret
 }
+
+func (codeUnit *CodeUnit) CheckSizes() map[string]interface{} {
+	ret := make(map[string]interface{})
+	for i, b := range codeUnit.Code.Blocks {
+		sz, err := b.GetSize()
+		var res interface{}
+		if err == nil {
+			res = sz
+		} else {
+			res = err
+		}
+		ret[fmt.Sprintf("%s.%d", b.LookupName, i)] = res
+	}
+	return ret
+}

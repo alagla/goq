@@ -30,4 +30,9 @@ func main() {
 
 	codeUnit := abra.NewCodeUnit()
 	module.GetAbra(codeUnit)
+	sizes := codeUnit.CheckSizes()
+	Logf(0, "----- checking sizes")
+	for n, v := range sizes {
+		Logf(2, "%20s -> %v", n, v)
+	}
 }
