@@ -190,12 +190,15 @@ func (def *Function) GetLookupName() string {
 }
 
 func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
+	if def.Name == "arcRadixLeaf_243_8019" {
+		fmt.Printf("kuku\n")
+	}
 	lookupName := def.GetLookupName()
 	ret := codeUnit.FindBranchBlock(lookupName)
 	if ret != nil {
 		return ret
 	}
-	ret = codeUnit.AddNewBranchBlock(lookupName, def.Size())
+	ret = codeUnit.AddNewBranchBlock(lookupName)
 	for _, vi := range def.Sites {
 		if vi.IsParam {
 			ret.Branch.AddInputSite(vi.Size)
@@ -204,22 +207,27 @@ func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
 	if concatExpr, ok := def.RetExpr.(*ConcatExpr); ok {
 		for _, se := range concatExpr.subExpr {
 			site := se.GetAbraSite(ret.Branch, codeUnit, "")
-			site.SetType(abra.SITE_OUTPUT)
+			site.ChangeType(abra.SITE_OUTPUT)
 			ret.Branch.AddOrUpdateSite(site)
 		}
 	} else {
 		singleOutput := def.RetExpr.GetAbraSite(ret.Branch, codeUnit, "")
-		singleOutput.SetType(abra.SITE_OUTPUT)
-		ret.Branch.AddOrUpdateSite(singleOutput)
+		if singleOutput.SiteType == abra.SITE_BODY {
+			singleOutput.ChangeType(abra.SITE_OUTPUT)
+		} else {
+			singleOutput = abra.NewMerge(singleOutput).NewSite()
+			singleOutput.ChangeType(abra.SITE_OUTPUT)
+			ret.Branch.AddOrUpdateSite(singleOutput)
+		}
 	}
 	// finalize with state sites
 	// for each state var site generate abra site and update temporary site with the new
 	for _, vi := range def.Sites {
-		if !vi.IsState {
-			continue
+		if vi.IsState {
+			vi.Assign.GetAbraSite(ret.Branch, codeUnit, vi.GetAbraLookupName())
 		}
-		vi.Assign.GetAbraSite(ret.Branch, codeUnit, vi.GetAbraLookupName())
 	}
+	ret.Branch.AssertValid()
 	return ret
 }
 

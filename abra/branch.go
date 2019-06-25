@@ -2,14 +2,13 @@ package abra
 
 import "fmt"
 
-func (codeUnit *CodeUnit) AddNewBranchBlock(lookupName string, size int) *Block {
+func (codeUnit *CodeUnit) AddNewBranchBlock(lookupName string) *Block {
 	retbranch := &Branch{
 		inputSites:  make([]*Site, 0, 10),
 		bodySites:   make([]*Site, 0, 10),
 		outputSites: make([]*Site, 0, 10),
 		stateSites:  make([]*Site, 0, 10),
 		AllSites:    make([]*Site, 0, 10),
-		Size:        size,
 	}
 	ret := retbranch.NewBlock(lookupName)
 	if codeUnit.AddNewBlock(ret) {
@@ -127,25 +126,44 @@ func (branch *Branch) GetStats() *BranchStats {
 }
 
 func (branch *Branch) GetSize() (int, error) {
+	if branch.Size < 0 {
+		return 0, RecursionRetected
+	}
+	branch.Size = -1
 	ret := 0
 	for _, s := range branch.AllSites {
 		if s.SiteType == SITE_OUTPUT {
-			sz, err := s.GetSize() // TODO
+			sz, err := s.GetSize()
 			if err != nil {
 				return 0, err
 			}
 			ret += sz
 		}
 	}
+	branch.Size = ret
 	return ret, nil
 }
 
 func (branch *Branch) GetInputSize() int {
 	ret := 0
 	for _, s := range branch.AllSites {
-		ret += s.Size
+		if s.SiteType == SITE_INPUT {
+			ret += s.Size
+		}
 	}
 	return ret
+}
+
+func (branch *Branch) AssertValid() {
+	// assert
+	for _, s := range branch.AllSites {
+		if s.SiteType == SITE_OUTPUT && s.Merge == nil && s.Knot == nil {
+			panic("assert: wrong output")
+		}
+	}
+	for _, s := range branch.AllSites {
+		s.AssertValidSite()
+	}
 }
 
 func (block *Block) GetSize() (int, error) {
@@ -161,8 +179,11 @@ func (block *Block) GetSize() (int, error) {
 }
 
 func (block *Block) GetInputSize() int {
-	if block.BlockType == BLOCK_LUT {
+	switch block.BlockType {
+	case BLOCK_LUT:
 		return 3
+	case BLOCK_BRANCH:
+		return block.Branch.GetInputSize()
 	}
-	return block.Branch.GetInputSize()
+	panic("implement me")
 }

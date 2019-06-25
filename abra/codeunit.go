@@ -111,9 +111,12 @@ func (att *Attachment) Affect(envHash Hash, delay int) *OutputEnvironmentData {
 
 func (codeUnit *CodeUnit) CheckSizes() map[string]interface{} {
 	ret := make(map[string]interface{})
+	var res interface{}
 	for i, b := range codeUnit.Code.Blocks {
+		if b.LookupName == "qupla_function_abs_108" {
+			fmt.Printf("kuku\n")
+		}
 		sz, err := b.GetSize()
-		var res interface{}
 		if err == nil {
 			res = sz
 		} else {

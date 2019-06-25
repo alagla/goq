@@ -7,9 +7,63 @@ func (site *Site) SetLookupName(ln string) *Site {
 	return site
 }
 
-func (site *Site) SetType(t SiteType) *Site {
+func (site *Site) ChangeType(t SiteType) *Site {
+	if site.SiteType != SITE_BODY {
+		panic("only type of the body site can be changed")
+	}
 	site.SiteType = t
 	return site
+}
+
+func (site *Site) AssertValidSite() {
+	switch site.SiteType {
+	case SITE_INPUT:
+		if site.Knot != nil {
+			panic("invalid site 1")
+		}
+		if site.Merge != nil {
+			panic("invalid site 2")
+		}
+	case SITE_BODY:
+		if (site.Merge == nil) == (site.Knot == nil) {
+			panic("invalid site 3")
+		}
+		if site.IsKnot {
+			if len(site.Knot.Sites) == 0 {
+				panic("invalid site 4")
+			}
+		} else {
+			if len(site.Merge.Sites) == 0 {
+				panic("invalid site 5")
+			}
+		}
+	case SITE_OUTPUT:
+		if (site.Merge == nil) == (site.Knot == nil) {
+			panic("invalid site 6")
+		}
+		if site.IsKnot {
+			if len(site.Knot.Sites) == 0 {
+				panic("invalid site 7")
+			}
+		} else {
+			if len(site.Merge.Sites) == 0 {
+				panic("invalid site 8")
+			}
+		}
+	case SITE_STATE:
+		if (site.Merge == nil) == (site.Knot == nil) {
+			panic("invalid site 9")
+		}
+		if site.IsKnot {
+			if len(site.Knot.Sites) == 0 {
+				panic("invalid site 10")
+			}
+		} else {
+			if len(site.Merge.Sites) == 0 {
+				panic("invalid site 11")
+			}
+		}
+	}
 }
 
 func NewMerge(sites ...*Site) *Merge {
@@ -41,15 +95,6 @@ func (knot *Knot) NewSite() *Site {
 	}
 }
 
-// special type of error to resolve cycles in state sites
-type ContainsState struct{}
-
-func (e *ContainsState) Error() string {
-	return "Contains state"
-}
-
-var ErrorContainsState = &ContainsState{}
-
 func (knot *Knot) Size() (int, error) {
 	bsize, err := knot.Block.GetSize()
 	if err != nil {
@@ -76,7 +121,8 @@ func (merge *Merge) Size() (int, error) {
 	var err error
 	for _, s := range merge.Sites {
 		sz, err = s.GetSize()
-		if err == ErrorContainsState {
+		if err == RecursionRetected {
+			// recursion will be resolved with another merge patch
 			continue
 		}
 		if err != nil {
@@ -93,18 +139,15 @@ func (merge *Merge) Size() (int, error) {
 
 // special way to determine size of state site
 func (site *Site) GetSize() (int, error) {
-	if site.SiteType == SITE_INPUT {
+	switch site.SiteType {
+	case SITE_INPUT:
 		return site.Size, nil
-	}
-	if site.SiteType == SITE_OUTPUT {
+	case SITE_STATE:
 		if site.Size < 0 {
-			return 0, ErrorContainsState
-		} else if site.Size > 0 {
-			return site.Size, nil
+			return 0, RecursionRetected
 		}
-		// site.Size == 0 -> first time evaluated
-		site.Size = -1
 	}
+	site.Size = -1
 	var err error
 	if site.IsKnot {
 		site.Size, err = site.Knot.Size()

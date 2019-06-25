@@ -51,18 +51,18 @@ func (e *CondExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, loo
 	trueSite := e.subExpr[1].GetAbraSite(branch, codeUnit, "")
 	nullifyTrueBlock := codeUnit.GetNullifyBranchBlock(e.subExpr[1].Size(), true)
 	nullifiedTrueSite := abra.NewKnot(nullifyTrueBlock, condSite, trueSite).NewSite()
+	ret := branch.AddOrUpdateSite(nullifiedTrueSite)
 
-	var ret *abra.Site
-	if _, ok := e.subExpr[2].(*NullExpr); ok {
-		// on the right side can be null (the ony place for null const)
-		ret = nullifiedTrueSite
-	} else {
+	if _, ok := e.subExpr[2].(*NullExpr); !ok {
 		falseSite := e.subExpr[2].GetAbraSite(branch, codeUnit, "")
 		nullifyFalseBlock := codeUnit.GetNullifyBranchBlock(e.subExpr[2].Size(), false)
 		nullifiedFalseSite := abra.NewKnot(nullifyFalseBlock, condSite, falseSite).NewSite()
+		nullifiedFalseSite = branch.AddOrUpdateSite(nullifiedFalseSite)
 
 		ret = abra.NewMerge(nullifiedTrueSite, nullifiedFalseSite).NewSite()
+		ret = branch.AddOrUpdateSite(ret)
 	}
 	ret.SetLookupName(lookupName)
-	return branch.AddOrUpdateSite(ret)
+	branch.AddOrUpdateSite(ret)
+	return ret
 }

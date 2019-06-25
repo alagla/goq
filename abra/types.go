@@ -199,3 +199,12 @@ type Block struct {
 	// lookup name, compile time only
 	LookupName string
 }
+
+// special type of error to resolve cycles in state sites
+type RecursionDetected struct{}
+
+func (e *RecursionDetected) Error() string {
+	return "Recursion detected"
+}
+
+var RecursionRetected = &RecursionDetected{}

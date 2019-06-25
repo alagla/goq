@@ -31,8 +31,9 @@ func main() {
 
 	codeUnit := abra.NewCodeUnit()
 	module.GetAbra(codeUnit)
-	sizes := codeUnit.CheckSizes()
+
 	Logf(0, "------ checking sizes")
+	sizes := codeUnit.CheckSizes()
 
 	names := make([]string, 0, len(sizes))
 	for n := range sizes {
