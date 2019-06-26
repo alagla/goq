@@ -121,8 +121,9 @@ type Branch struct {
 	outputSites []*Site
 	stateSites  []*Site
 	// compile time
-	AllSites []*Site
-	Size     int
+	AllSites    []*Site
+	Size        int
+	AssumedSize int
 }
 
 //site:
@@ -145,8 +146,9 @@ type Site struct {
 	Knot   *Knot  // SITE_KNOT
 	Size   int    // SITE_INPUT
 	// lookup name, compile time only
-	LookupName string
-	SiteType   SiteType
+	LookupName  string
+	SiteType    SiteType
+	AssumedSize int
 }
 
 //Merge:
@@ -180,6 +182,7 @@ type Knot struct {
 type ExternalBlock struct {
 	CodeHash     Trits
 	BlockIndices []int
+	AssumedSize  int
 }
 
 type BlockType int
@@ -197,7 +200,8 @@ type Block struct {
 	LUT           LUT
 	ExternalBlock *ExternalBlock
 	// lookup name, compile time only
-	LookupName string
+	LookupName  string
+	AssumedSize int
 }
 
 // special type of error to resolve cycles in state sites

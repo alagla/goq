@@ -91,7 +91,7 @@ func (e *SliceExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lo
 	slicingBranchBlock := codeUnit.GetSlicingBranchBlock(e.site.Size, e.offset, e.size)
 	var ret *abra.Site
 
-	ret = abra.NewKnot(slicingBranchBlock, varsite).NewSite()
+	ret = abra.NewKnot(slicingBranchBlock, varsite).NewSite(e.Size())
 	ret.SetLookupName(lookupName)
 	return branch.AddOrUpdateSite(ret)
 }

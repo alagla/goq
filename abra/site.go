@@ -79,19 +79,21 @@ func NewKnot(block *Block, sites ...*Site) *Knot {
 	}
 }
 
-func (merge *Merge) NewSite() *Site {
+func (merge *Merge) NewSite(assumedSize int) *Site {
 	return &Site{
-		IsKnot:   false,
-		Merge:    merge,
-		SiteType: SITE_BODY,
+		IsKnot:      false,
+		Merge:       merge,
+		SiteType:    SITE_BODY,
+		AssumedSize: assumedSize,
 	}
 }
 
-func (knot *Knot) NewSite() *Site {
+func (knot *Knot) NewSite(assumedSize int) *Site {
 	return &Site{
-		IsKnot:   true,
-		Knot:     knot,
-		SiteType: SITE_BODY,
+		IsKnot:      true,
+		Knot:        knot,
+		SiteType:    SITE_BODY,
+		AssumedSize: assumedSize,
 	}
 }
 
@@ -153,6 +155,9 @@ func (site *Site) GetSize() (int, error) {
 		site.Size, err = site.Knot.Size()
 	} else {
 		site.Size, err = site.Merge.Size()
+	}
+	if site.Size != site.AssumedSize {
+		return 0, fmt.Errorf("site Size %d != site AssumedSize %d", site.Size, site.AssumedSize)
 	}
 	return site.Size, err
 }

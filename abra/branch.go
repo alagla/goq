@@ -2,13 +2,14 @@ package abra
 
 import "fmt"
 
-func (codeUnit *CodeUnit) AddNewBranchBlock(lookupName string) *Block {
+func (codeUnit *CodeUnit) AddNewBranchBlock(lookupName string, assumedSize int) *Block {
 	retbranch := &Branch{
 		inputSites:  make([]*Site, 0, 10),
 		bodySites:   make([]*Site, 0, 10),
 		outputSites: make([]*Site, 0, 10),
 		stateSites:  make([]*Site, 0, 10),
 		AllSites:    make([]*Site, 0, 10),
+		AssumedSize: assumedSize,
 	}
 	ret := retbranch.NewBlock(lookupName)
 	if codeUnit.AddNewBlock(ret) {
@@ -141,6 +142,9 @@ func (branch *Branch) GetSize() (int, error) {
 		}
 	}
 	branch.Size = ret
+	if branch.Size != branch.AssumedSize {
+		return 0, fmt.Errorf("branch: Size %d != AssumedSize %d", branch.Size, branch.AssumedSize)
+	}
 	return ret, nil
 }
 

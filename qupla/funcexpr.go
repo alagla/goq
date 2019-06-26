@@ -58,7 +58,7 @@ func (e *FunctionExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit,
 	for i, se := range e.GetSubexpressions() {
 		inputs[i] = se.GetAbraSite(branch, codeUnit, "")
 	}
-	ret := abra.NewKnot(branchBlock, inputs...).NewSite()
+	ret := abra.NewKnot(branchBlock, inputs...).NewSite(e.Size())
 	ret.SetLookupName(lookupName)
 	return branch.AddOrUpdateSite(ret)
 }

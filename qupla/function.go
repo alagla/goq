@@ -190,7 +190,7 @@ func (def *Function) GetLookupName() string {
 }
 
 func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
-	if def.Name == "arcRadixLeaf_243_8019" {
+	if def.Name == "array_9" {
 		fmt.Printf("kuku\n")
 	}
 	lookupName := def.GetLookupName()
@@ -198,7 +198,8 @@ func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
 	if ret != nil {
 		return ret
 	}
-	ret = codeUnit.AddNewBranchBlock(lookupName)
+	ret = codeUnit.AddNewBranchBlock(lookupName, def.Size())
+
 	for _, vi := range def.Sites {
 		if vi.IsParam {
 			ret.Branch.AddInputSite(vi.Size)
@@ -214,7 +215,7 @@ func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
 		if singleOutput.SiteType == abra.SITE_BODY {
 			singleOutput.ChangeType(abra.SITE_OUTPUT)
 		} else {
-			singleOutput = abra.NewMerge(singleOutput).NewSite()
+			singleOutput = abra.NewMerge(singleOutput).NewSite(def.RetExpr.Size())
 			singleOutput.ChangeType(abra.SITE_OUTPUT)
 			ret.Branch.AddOrUpdateSite(singleOutput)
 		}

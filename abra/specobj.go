@@ -24,7 +24,7 @@ func (branch *Branch) Get1TritConstLutSite(codeUnit *CodeUnit, val int8) *Site {
 	// it will always generate constant trit
 	// the input for lut is 3 repeated 1-trit sites from lsb of the branches input
 	any := branch.GetAnyTritSite(codeUnit)
-	ret = NewKnot(lutValConstBlock, any, any, any).NewSite()
+	ret = NewKnot(lutValConstBlock, any, any, any).NewSite(1)
 	ret.SetLookupName(lookupName)
 	return branch.AddOrUpdateSite(ret)
 }
@@ -37,7 +37,7 @@ func (branch *Branch) GetAnyTritSite(codeUnit *CodeUnit) *Site {
 	}
 	// must be the only LstSliceBlock in the code unit
 	lstBlock := codeUnit.GetSlicingBranchBlock(branch.GetInputSite(0).Size, 0, 1)
-	ret = NewKnot(lstBlock, branch.GetInputSite(0)).NewSite()
+	ret = NewKnot(lstBlock, branch.GetInputSite(0)).NewSite(1)
 	ret.SetLookupName(lookupName)
 	return branch.AddOrUpdateSite(ret)
 }
@@ -54,7 +54,7 @@ func (branch *Branch) GetTritConstSite(codeUnit *CodeUnit, val Trits) *Site {
 	}
 
 	concatBlock := codeUnit.GetConcatBlockForSize(len(val))
-	ret = NewKnot(concatBlock, inputs...).NewSite()
+	ret = NewKnot(concatBlock, inputs...).NewSite(len(val))
 	ret.SetLookupName(lookupName)
 	return branch.AddOrUpdateSite(ret)
 }
@@ -65,9 +65,9 @@ func (codeUnit *CodeUnit) GetConcatBlockForSize(size int) *Block {
 	if ret != nil {
 		return ret
 	}
-	ret = codeUnit.AddNewBranchBlock(lookupName)
+	ret = codeUnit.AddNewBranchBlock(lookupName, size)
 	input := ret.Branch.AddInputSite(size)
-	output := NewMerge(input).NewSite()
+	output := NewMerge(input).NewSite(size)
 	output.SiteType = SITE_OUTPUT
 	ret.Branch.AddOrUpdateSite(output)
 
@@ -87,7 +87,7 @@ func (codeUnit *CodeUnit) GetSlicingBranchBlock(inputSize, offset, size int) *Bl
 	if ret != nil {
 		return ret
 	}
-	ret = codeUnit.AddNewBranchBlock(lookupName)
+	ret = codeUnit.AddNewBranchBlock(lookupName, size)
 	if offset != 0 {
 		ret.Branch.AddInputSite(offset)
 	}
@@ -95,7 +95,7 @@ func (codeUnit *CodeUnit) GetSlicingBranchBlock(inputSize, offset, size int) *Bl
 	if offset+size < inputSize {
 		ret.Branch.AddInputSite(inputSize - offset - size)
 	}
-	output := NewMerge(theSlice).NewSite()
+	output := NewMerge(theSlice).NewSite(size)
 	output.SiteType = SITE_OUTPUT
 	ret.Branch.AddOrUpdateSite(output)
 
@@ -114,7 +114,7 @@ func (codeUnit *CodeUnit) GetNullifyBranchBlock(size int, trueFalse bool) *Block
 	if ret != nil {
 		return ret
 	}
-	ret = codeUnit.AddNewBranchBlock(lookupName)
+	ret = codeUnit.AddNewBranchBlock(lookupName, size)
 	ret.Branch.AddInputSite(1) // condition
 	for i := 0; i < size; i++ {
 		ret.Branch.AddInputSite(1) // arg
@@ -124,7 +124,7 @@ func (codeUnit *CodeUnit) GetNullifyBranchBlock(size int, trueFalse bool) *Block
 	for i := 0; i < size; i++ {
 		nullifyTritKnot :=
 			NewKnot(nullifyLutBlock, condInput, ret.Branch.GetInputSite(i+1), condInput)
-		nullifyTritSite := nullifyTritKnot.NewSite()
+		nullifyTritSite := nullifyTritKnot.NewSite(1)
 		nullifyTritSite.SiteType = SITE_OUTPUT
 		ret.Branch.AddOrUpdateSite(nullifyTritSite)
 	}

@@ -51,7 +51,7 @@ func (e *LutExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, look
 	if e.LutDef.InputSize > 2 {
 		in2 = e.GetSubExpr(2).GetAbraSite(branch, codeUnit, "")
 	}
-	ret := abra.NewKnot(lut, in0, in1, in2).NewSite()
+	ret := abra.NewKnot(lut, in0, in1, in2).NewSite(e.Size())
 	ret.SetLookupName(lookupName)
 	return branch.AddOrUpdateSite(ret)
 }

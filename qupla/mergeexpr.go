@@ -47,7 +47,7 @@ func (e *MergeExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lo
 		s := se.GetAbraSite(branch, codeUnit, "")
 		inputs = append(inputs, s)
 	}
-	ret := abra.NewMerge(inputs...).NewSite()
+	ret := abra.NewMerge(inputs...).NewSite(e.Size())
 	ret.SetLookupName(lookupName)
 	return branch.AddOrUpdateSite(ret)
 }
