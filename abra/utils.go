@@ -35,13 +35,13 @@ func TritsToString(trits Trits) string {
 func TritName(trit int8) string {
 	switch trit {
 	case -1:
-		return "-1"
+		return "-"
 	case 0:
 		return "0"
 	case 1:
 		return "1"
 	}
-	return "undef"
+	return "?"
 }
 
 func Get1TritConstLutRepr(val int8) string {

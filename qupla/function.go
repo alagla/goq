@@ -208,7 +208,6 @@ func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
 		for _, se := range concatExpr.subExpr {
 			site := se.GetAbraSite(ret.Branch, codeUnit, "")
 			site.ChangeType(abra.SITE_OUTPUT)
-			ret.Branch.AddOrUpdateSite(site)
 		}
 	} else {
 		singleOutput := def.RetExpr.GetAbraSite(ret.Branch, codeUnit, "")

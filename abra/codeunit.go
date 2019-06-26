@@ -55,6 +55,9 @@ func (codeUnit *CodeUnit) FindLUTBlock(lookupName string) *Block {
 }
 
 func (codeUnit *CodeUnit) GetLUTBlock(reprString string) *Block {
+	if len(reprString) != 27 {
+		panic("wrong LUT reprString")
+	}
 	ret := codeUnit.FindLUTBlock(reprString)
 	if ret != nil {
 		return ret
@@ -113,7 +116,7 @@ func (codeUnit *CodeUnit) CheckSizes() map[string]interface{} {
 	ret := make(map[string]interface{})
 	var res interface{}
 	for i, b := range codeUnit.Code.Blocks {
-		if b.LookupName == "qupla_function_abs_108" {
+		if b.LookupName == "-1-1-1-1-1-1-1-1-1-1-1-1-1-" {
 			fmt.Printf("kuku\n")
 		}
 		sz, err := b.GetSize()

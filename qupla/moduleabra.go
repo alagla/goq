@@ -20,7 +20,6 @@ func (module *QuplaModule) GetAbra(codeUnit *abra.CodeUnit) {
 	for _, n := range names {
 		strRepr := module.Luts[n].GetStringRepr()
 		if codeUnit.FindLUTBlock(strRepr) != nil {
-			Logf(2, "%20s -> '%s'  repeated", n, strRepr)
 			continue
 		}
 		Logf(2, "%20s -> '%s'", n, strRepr)
