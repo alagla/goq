@@ -211,4 +211,4 @@ func (e *RecursionDetected) Error() string {
 	return "Recursion detected"
 }
 
-var RecursionRetected = &RecursionDetected{}
+var RecursionDetectedError = &RecursionDetected{}

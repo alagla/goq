@@ -123,7 +123,7 @@ func (merge *Merge) Size() (int, error) {
 	var err error
 	for _, s := range merge.Sites {
 		sz, err = s.GetSize()
-		if err == RecursionRetected {
+		if err == RecursionDetectedError {
 			// recursion will be resolved with another merge patch
 			continue
 		}
@@ -146,7 +146,7 @@ func (site *Site) GetSize() (int, error) {
 		return site.Size, nil
 	case SITE_STATE:
 		if site.Size < 0 {
-			return 0, RecursionRetected
+			return 0, RecursionDetectedError
 		}
 	}
 	site.Size = -1

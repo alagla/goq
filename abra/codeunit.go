@@ -39,9 +39,10 @@ func (codeUnit *CodeUnit) AddNewLUTBlock(lookupName string, binaryEncodedLUT int
 
 func (lut LUT) NewBlock(lookupName string) *Block {
 	return &Block{
-		BlockType:  BLOCK_LUT,
-		LUT:        lut,
-		LookupName: lookupName,
+		BlockType:   BLOCK_LUT,
+		LUT:         lut,
+		LookupName:  lookupName,
+		AssumedSize: 1,
 	}
 }
 

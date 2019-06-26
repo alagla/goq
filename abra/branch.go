@@ -1,6 +1,9 @@
 package abra
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func (codeUnit *CodeUnit) AddNewBranchBlock(lookupName string, assumedSize int) *Block {
 	retbranch := &Branch{
@@ -11,18 +14,19 @@ func (codeUnit *CodeUnit) AddNewBranchBlock(lookupName string, assumedSize int) 
 		AllSites:    make([]*Site, 0, 10),
 		AssumedSize: assumedSize,
 	}
-	ret := retbranch.NewBlock(lookupName)
+	ret := retbranch.NewBlock(lookupName, assumedSize)
 	if codeUnit.AddNewBlock(ret) {
 		return ret
 	}
 	panic(fmt.Errorf("branch block '%s' already exists", lookupName))
 }
 
-func (branch *Branch) NewBlock(lookupName string) *Block {
+func (branch *Branch) NewBlock(lookupName string, assumedSize int) *Block {
 	return &Block{
-		BlockType:  BLOCK_BRANCH,
-		Branch:     branch,
-		LookupName: lookupName,
+		BlockType:   BLOCK_BRANCH,
+		Branch:      branch,
+		LookupName:  lookupName,
+		AssumedSize: assumedSize,
 	}
 }
 
@@ -128,7 +132,7 @@ func (branch *Branch) GetStats() *BranchStats {
 
 func (branch *Branch) GetSize() (int, error) {
 	if branch.Size < 0 {
-		return 0, RecursionRetected
+		return 0, RecursionDetectedError
 	}
 	branch.Size = -1
 	ret := 0
@@ -171,6 +175,9 @@ func (branch *Branch) AssertValid() {
 }
 
 func (block *Block) GetSize() (int, error) {
+	if strings.Contains(block.LookupName, "arcRadixLeaf_243_8019") {
+		fmt.Printf("kuku")
+	}
 	switch block.BlockType {
 	case BLOCK_LUT:
 		return 1, nil

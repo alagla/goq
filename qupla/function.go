@@ -190,7 +190,7 @@ func (def *Function) GetLookupName() string {
 }
 
 func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
-	if def.Name == "array_9" {
+	if def.Name == "arcRadixLeaf_243_8019" {
 		fmt.Printf("kuku\n")
 	}
 	lookupName := def.GetLookupName()
