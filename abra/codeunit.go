@@ -2,7 +2,6 @@ package abra
 
 import (
 	"fmt"
-	. "github.com/iotaledger/iota.go/trinary"
 )
 
 const TRITCODE_VERSION = 0
@@ -77,56 +76,31 @@ func (codeUnit *CodeUnit) FindBranchBlock(lookupName string) *Block {
 	return nil
 }
 
-func (codeUnit *CodeUnit) NewEntityAttachment(codeHash Hash) *EntityAttachment {
-	return &EntityAttachment{
-		CodeHash:    codeHash,
-		Attachments: make([]*Attachment, 0, 10),
-	}
-}
-
-func (codeUnit *CodeUnit) NewAttachment(branch *Branch) *Attachment {
-	return &Attachment{
-		Branch:                 branch,
-		MaximumRecursionDepth:  10, // tmp
-		InputEnvironments:      make([]*InputEnvironmentData, 0, 5),
-		OutputEnvironments:     make([]*OutputEnvironmentData, 0, 5),
-		InputEnvironmentsDict:  make(map[Hash]*InputEnvironmentData),
-		OutputEnvironmentsDict: make(map[Hash]*OutputEnvironmentData),
-	}
-}
-
-func (att *Attachment) Join(envHash Hash, limit int) *InputEnvironmentData {
-	ret := &InputEnvironmentData{
-		EnvironmentHash: envHash,
-		Limit:           limit,
-	}
-	att.InputEnvironments = append(att.InputEnvironments, ret)
-	return ret
-}
-
-func (att *Attachment) Affect(envHash Hash, delay int) *OutputEnvironmentData {
-	ret := &OutputEnvironmentData{
-		EnvironmentHash: envHash,
-		Delay:           delay,
-	}
-	att.OutputEnvironments = append(att.OutputEnvironments, ret)
-	return ret
-}
-
-func (codeUnit *CodeUnit) CheckSizes() map[string]interface{} {
-	ret := make(map[string]interface{})
-	var res interface{}
-	for i, b := range codeUnit.Code.Blocks {
-		if b.LookupName == "-1-1-1-1-1-1-1-1-1-1-1-1-1-" {
-			fmt.Printf("kuku\n")
+func (codeUnit *CodeUnit) setZeroSizes() {
+	for _, b := range codeUnit.Code.Blocks {
+		switch b.BlockType {
+		case BLOCK_LUT:
+			b.Size = 0
+		case BLOCK_EXTERNAL:
+			b.Size = 0
+		case BLOCK_BRANCH:
+			b.Size = 0
+			b.Branch.setZeroSize()
 		}
-		sz, err := b.GetSize()
-		if err == nil {
-			res = sz
-		} else {
-			res = err
-		}
-		ret[fmt.Sprintf("%s.%d", b.LookupName, i)] = res
 	}
-	return ret
+}
+
+func (codeUnit *CodeUnit) CalcSizes() {
+	codeUnit.setZeroSizes()
+
+	notFinished := true
+	var saveSize int
+	for notFinished {
+		notFinished = false
+		for _, block := range codeUnit.Code.Blocks {
+			saveSize = block.Size
+			block.CalcSizes()
+			notFinished = notFinished || saveSize != block.Size
+		}
+	}
 }

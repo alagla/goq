@@ -33,15 +33,22 @@ func main() {
 	module.GetAbra(codeUnit)
 
 	Logf(0, "------ checking sizes")
-	sizes := codeUnit.CheckSizes()
+	codeUnit.CalcSizes()
+	printSizes(codeUnit)
+}
 
-	names := make([]string, 0, len(sizes))
-	for n := range sizes {
-		names = append(names, n)
+type sizeInfo struct{ size, assumedSize int }
+
+func printSizes(codeUnit *abra.CodeUnit) {
+	blockMap := make(map[string]*sizeInfo)
+	names := make([]string, 0, len(codeUnit.Code.Blocks))
+	for _, b := range codeUnit.Code.Blocks {
+		names = append(names, b.LookupName)
+		blockMap[b.LookupName] = &sizeInfo{size: b.Size, assumedSize: b.AssumedSize}
 	}
 	sort.Strings(names)
-
 	for _, n := range names {
-		Logf(2, "%20s -> %v", n, sizes[n])
+		Logf(0, "%20s -> size = %d (%d)", n, blockMap[n].size, blockMap[n].assumedSize)
 	}
+
 }

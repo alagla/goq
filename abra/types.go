@@ -201,6 +201,7 @@ type Block struct {
 	ExternalBlock *ExternalBlock
 	// lookup name, compile time only
 	LookupName  string
+	Size        int
 	AssumedSize int
 }
 

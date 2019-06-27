@@ -1,7 +1,5 @@
 package abra
 
-import "fmt"
-
 func (site *Site) SetLookupName(ln string) *Site {
 	site.LookupName = ln
 	return site
@@ -97,67 +95,27 @@ func (knot *Knot) NewSite(assumedSize int) *Site {
 	}
 }
 
-func (knot *Knot) Size() (int, error) {
-	bsize, err := knot.Block.GetSize()
-	if err != nil {
-		return 0, err
+func (site *Site) CalcSize() {
+	if site.SiteType == SITE_INPUT {
+		return
 	}
-	argsz := 0
-	var sz int
-	for _, s := range knot.Sites {
-		sz, err = s.GetSize()
-		if err != nil {
-			return 0, err
-		}
-		argsz += sz
-	}
-	isize := knot.Block.GetInputSize()
-	if isize != argsz {
-		return 0, fmt.Errorf("mismatch of block input size %d and args size %d in the knot", isize, argsz)
-	}
-	return bsize, nil
-}
-
-func (merge *Merge) Size() (int, error) {
-	var lastsz, sz int
-	var err error
-	for _, s := range merge.Sites {
-		sz, err = s.GetSize()
-		if err == RecursionDetectedError {
-			// recursion will be resolved with another merge patch
-			continue
-		}
-		if err != nil {
-			return 0, err
-		}
-		if lastsz != 0 && lastsz != sz {
-			// not 100% correct
-			return 0, fmt.Errorf("inputs of merge must be same size")
-		}
-		lastsz = sz
-	}
-	return lastsz, nil
-}
-
-// special way to determine size of state site
-func (site *Site) GetSize() (int, error) {
-	switch site.SiteType {
-	case SITE_INPUT:
-		return site.Size, nil
-	case SITE_STATE:
-		if site.Size < 0 {
-			return 0, RecursionDetectedError
-		}
-	}
-	site.Size = -1
-	var err error
 	if site.IsKnot {
-		site.Size, err = site.Knot.Size()
+		site.Size = site.Knot.CalcSize()
 	} else {
-		site.Size, err = site.Merge.Size()
+		site.Size = site.Merge.CalcSize()
 	}
-	if site.Size != site.AssumedSize {
-		return 0, fmt.Errorf("site Size %d != site AssumedSize %d", site.Size, site.AssumedSize)
+}
+
+func (knot *Knot) CalcSize() int {
+	return knot.Block.Size
+}
+
+func (merge *Merge) CalcSize() int {
+	ret := 0
+	for _, s := range merge.Sites {
+		if s.Size != 0 {
+			ret = s.Size
+		}
 	}
-	return site.Size, err
+	return ret
 }
