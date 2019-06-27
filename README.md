@@ -1,3 +1,5 @@
+**New** Qubic Game Of Life on GOQ: [gol.tanglebeat.com](http://gol.tanglebeat.com)
+
 # GOQ: Qupla library for Go
 
 This repository contains Go code for working with IOTA Qupla, a QUbic Programming Language 
