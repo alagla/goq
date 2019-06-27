@@ -55,11 +55,11 @@ func (lutDef *LutDef) LookupTable() [27]Trits {
 }
 
 func CharEncodeLutOutTrit(trit []int8) byte {
-	if len(trit) != 1 {
-		panic("wrong param")
-	}
 	if trit == nil {
 		return '@'
+	}
+	if len(trit) != 1 {
+		panic("wrong param")
 	}
 	switch trit[0] {
 	case -1:

@@ -10,8 +10,8 @@ type NullExpr struct {
 	size int
 }
 
-func (e *NullExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
-	panic("implement me")
+func (e *NullExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
+	panic("shouldn't be called")
 }
 
 func NewNullExpr(size int) *NullExpr {

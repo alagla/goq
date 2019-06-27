@@ -10,7 +10,7 @@ type QuplaFieldExpr struct {
 	ExpressionBase
 }
 
-func (e *QuplaFieldExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
+func (e *QuplaFieldExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
 	panic("implement me")
 }
 

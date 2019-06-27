@@ -11,10 +11,6 @@ type SizeofExpr struct {
 	TritValue Trits
 }
 
-func (e *SizeofExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
-	panic("implement me")
-}
-
 func NewQuplaSizeofExpr(value int64, tritValue Trits) *SizeofExpr {
 	return &SizeofExpr{
 		Value:     value,
@@ -43,4 +39,8 @@ func (e *SizeofExpr) Eval(_ *EvalFrame, result Trits) bool {
 	}
 	copy(result, e.TritValue)
 	return false
+}
+
+func (e *SizeofExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, _ string) *abra.Site {
+	return branch.GetTritConstSite(codeUnit, e.TritValue)
 }

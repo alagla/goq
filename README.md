@@ -1,3 +1,5 @@
+### New: Qubic Game Of Life on GOQ: [gol.tanglebeat.com](http://gol.tanglebeat.com)
+
 # GOQ: Qupla library for Go
 
 This repository contains Go code for working with IOTA Qupla, a QUbic Programming Language 
@@ -11,7 +13,7 @@ All Qupla tests pass.
 However, sometimes behavior may be different from what is expected, with execution of 
 _eval_ and _test_ statements in particular.
 
-Repository contains the following packages:
+Repository contains the following packages:  
 
 - [readyaml](https://github.com/lunfardo314/goq/tree/master/readyaml) library allows 
 to read YAML representation of the Qupla module into static Go structures without much parsing. 

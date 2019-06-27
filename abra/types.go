@@ -8,8 +8,8 @@ import . "github.com/iotaledger/iota.go/trinary"
 // https://github.com/iotaledger/omega-docs/blob/master/qbc/abra/Spec.md
 
 type CodeUnit struct {
-	EntityAttachment *EntityAttachment
-	Code             *Code
+	EntityAttachments []*EntityAttachment
+	Code              *Code
 }
 
 //Entity attachment:
@@ -19,7 +19,7 @@ type CodeUnit struct {
 //]
 
 type EntityAttachment struct {
-	CodeHash    Trits // 243 trit
+	CodeHash    Hash // 243 trits = 81 trytes
 	Attachments []*Attachment
 }
 
@@ -37,6 +37,9 @@ type Attachment struct {
 	MaximumRecursionDepth int
 	InputEnvironments     []*InputEnvironmentData
 	OutputEnvironments    []*OutputEnvironmentData
+	// compile time
+	InputEnvironmentsDict  map[Hash]*InputEnvironmentData
+	OutputEnvironmentsDict map[Hash]*OutputEnvironmentData
 }
 
 //input environment data:
@@ -47,7 +50,7 @@ type Attachment struct {
 //]
 
 type InputEnvironmentData struct {
-	EnvironmentHash Trits
+	EnvironmentHash Hash
 	Limit           int
 	//FirstBranchInputIndex int   //???
 	//LastBranchInputIndex  int   //???
@@ -61,7 +64,7 @@ type InputEnvironmentData struct {
 //]
 
 type OutputEnvironmentData struct {
-	EnvironmentHash Trits
+	EnvironmentHash Hash
 	Delay           int
 	//FirstBranchInputIndex int   //??
 	//LastBranchInputIndex  int   //??
@@ -113,12 +116,14 @@ type LUT int64
 //]
 
 type Branch struct {
-	InputSites  []*Site
-	BodySites   []*Site
-	OutputSites []*Site
-	StateSites  []*Site
+	inputSites  []*Site
+	bodySites   []*Site
+	outputSites []*Site
+	stateSites  []*Site
 	// compile time
-	Size int
+	AllSites    []*Site
+	Size        int
+	AssumedSize int
 }
 
 //site:
@@ -128,19 +133,22 @@ type Branch struct {
 type SiteType int
 
 const (
-	SITE_MERGE = SiteType(0)
-	SITE_KNOT  = SiteType(1)
-	SITE_INPUT = SiteType(2)
+	SITE_INPUT  = SiteType(0)
+	SITE_BODY   = SiteType(1)
+	SITE_STATE  = SiteType(2)
+	SITE_OUTPUT = SiteType(3)
 )
 
 type Site struct {
-	Index    int // index within branch
-	SiteType SiteType
-	Merge    *Merge // SITE_MERGE
-	Knot     *Knot  // SITE_KNOT
-	Size     int    // SITE_INPUT
+	Index  int // index within branch
+	IsKnot bool
+	Merge  *Merge // SITE_MERGE
+	Knot   *Knot  // SITE_KNOT
+	Size   int    // SITE_INPUT
 	// lookup name, compile time only
-	LookupName string
+	LookupName  string
+	SiteType    SiteType
+	AssumedSize int
 }
 
 //Merge:
@@ -174,6 +182,7 @@ type Knot struct {
 type ExternalBlock struct {
 	CodeHash     Trits
 	BlockIndices []int
+	AssumedSize  int
 }
 
 type BlockType int
@@ -191,30 +200,15 @@ type Block struct {
 	LUT           LUT
 	ExternalBlock *ExternalBlock
 	// lookup name, compile time only
-	LookupName string
+	LookupName  string
+	AssumedSize int
 }
 
-const TRITCODE_VERSION = 0
+// special type of error to resolve cycles in state sites
+type RecursionDetected struct{}
 
-func NewCodeUnit() *CodeUnit {
-	return &CodeUnit{
-		EntityAttachment: &EntityAttachment{
-			Attachments: make([]*Attachment, 0, 5),
-		},
-		Code: &Code{
-			TritcodeVersion: TRITCODE_VERSION,
-			Blocks:          make([]*Block, 0, 100),
-		},
-	}
+func (e *RecursionDetected) Error() string {
+	return "Recursion detected"
 }
 
-func (codeUnit *CodeUnit) addBlock(block *Block) bool {
-	for _, b := range codeUnit.Code.Blocks {
-		if b.BlockType == block.BlockType && b.LookupName == block.LookupName {
-			return false
-		}
-	}
-	codeUnit.Code.Blocks = append(codeUnit.Code.Blocks, block)
-	block.Index = len(codeUnit.Code.Blocks)
-	return true
-}
+var RecursionDetectedError = &RecursionDetected{}

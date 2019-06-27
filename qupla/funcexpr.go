@@ -11,10 +11,6 @@ type FunctionExpr struct {
 	callIndex uint8
 }
 
-func (e *FunctionExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
-	panic("implement me")
-}
-
 func NewFunctionExpr(src string, funcDef *Function, callIndex uint8) *FunctionExpr {
 	return &FunctionExpr{
 		ExpressionBase: NewExpressionBase(src),
@@ -54,4 +50,15 @@ func (e *FunctionExpr) Copy() ExpressionInterface {
 		FuncDef:        e.FuncDef,
 		callIndex:      e.callIndex,
 	}
+}
+
+func (e *FunctionExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
+	branchBlock := e.FuncDef.GetAbraBranchBlock(codeUnit)
+	inputs := make([]*abra.Site, e.FuncDef.NumParams)
+	for i, se := range e.GetSubexpressions() {
+		inputs[i] = se.GetAbraSite(branch, codeUnit, "")
+	}
+	ret := abra.NewKnot(branchBlock, inputs...).NewSite(e.Size())
+	ret.SetLookupName(lookupName)
+	return branch.AddOrUpdateSite(ret)
 }

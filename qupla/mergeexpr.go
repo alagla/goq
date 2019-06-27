@@ -9,10 +9,6 @@ type MergeExpr struct {
 	ExpressionBase
 }
 
-func (e *MergeExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
-	panic("implement me")
-}
-
 func NewMergeExpression(src string, args []ExpressionInterface) *MergeExpr {
 	ret := &MergeExpr{
 		ExpressionBase: NewExpressionBase(src),
@@ -43,4 +39,15 @@ func (e *MergeExpr) Eval(frame *EvalFrame, result Trits) bool {
 		}
 	}
 	return true // all nulls
+}
+
+func (e *MergeExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
+	inputs := make([]*abra.Site, 0, len(e.subExpr))
+	for _, se := range e.subExpr {
+		s := se.GetAbraSite(branch, codeUnit, "")
+		inputs = append(inputs, s)
+	}
+	ret := abra.NewMerge(inputs...).NewSite(e.Size())
+	ret.SetLookupName(lookupName)
+	return branch.AddOrUpdateSite(ret)
 }

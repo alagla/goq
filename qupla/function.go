@@ -185,19 +185,62 @@ func countTypesInExpression(expr ExpressionInterface, stats map[string]int) {
 	}
 }
 
-func (def *Function) GenAbraBranch(branch *abra.Branch, codeUnit *abra.CodeUnit) {
+func (def *Function) GetLookupName() string {
+	return "qupla_function_" + def.Name
+}
+
+func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
+	if def.Name == "arcRadixLeaf_243_8019" {
+		fmt.Printf("kuku\n")
+	}
+	lookupName := def.GetLookupName()
+	ret := codeUnit.FindBranchBlock(lookupName)
+	if ret != nil {
+		return ret
+	}
+	ret = codeUnit.AddNewBranchBlock(lookupName, def.Size())
+
 	for _, vi := range def.Sites {
 		if vi.IsParam {
-			branch.AddInputSite(vi.Size)
+			ret.Branch.AddInputSite(vi.Size)
 		}
 	}
-	// generate output sites and, recursively, the rest body sites
 	if concatExpr, ok := def.RetExpr.(*ConcatExpr); ok {
 		for _, se := range concatExpr.subExpr {
-			branch.OutputSites = append(branch.OutputSites, se.GenAbraSite(branch, codeUnit))
+			site := se.GetAbraSite(ret.Branch, codeUnit, "")
+			site.ChangeType(abra.SITE_OUTPUT)
 		}
 	} else {
-		singleOutput := def.RetExpr.GenAbraSite(branch, codeUnit)
-		branch.OutputSites = []*abra.Site{singleOutput}
+		singleOutput := def.RetExpr.GetAbraSite(ret.Branch, codeUnit, "")
+		if singleOutput.SiteType == abra.SITE_BODY {
+			singleOutput.ChangeType(abra.SITE_OUTPUT)
+		} else {
+			singleOutput = abra.NewMerge(singleOutput).NewSite(def.RetExpr.Size())
+			singleOutput.ChangeType(abra.SITE_OUTPUT)
+			ret.Branch.AddOrUpdateSite(singleOutput)
+		}
 	}
+	// finalize with state sites
+	// for each state var site generate abra site and update temporary site with the new
+	for _, vi := range def.Sites {
+		if vi.IsState {
+			vi.Assign.GetAbraSite(ret.Branch, codeUnit, vi.GetAbraLookupName())
+		}
+	}
+	ret.Branch.AssertValid()
+	return ret
 }
+
+// TODO
+//func (def *Function) GetAbraEntityAttachment(codeUnit *abra.CodeUnit) *abra.EntityAttachment{
+//	//
+//	lookupName := def.GetLookupName()
+//	branch := codeUnit.FindBranchBlock(lookupName)
+//	if branch == nil {
+//		panic(fmt.Errorf("can't find abra branch for function '%s'", def.Name))
+//	}
+//
+//	ret := codeUnit.NewEntityAttachment()
+//
+//
+//}

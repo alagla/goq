@@ -44,7 +44,7 @@ func AnalyzeTypeExpr(exprYAML *QuplaTypeExprYAML, module *QuplaModule, scope *Fu
 		if fe.Size() != fi.Size {
 			return nil, fmt.Errorf("field '%v' Size mismatch in type expression '%v'", fldName, exprYAML.Source)
 		}
-		ret.Fields = append(ret.Fields, FieldExpr{
+		ret.Fields = append(ret.Fields, &FieldExpr{
 			Offset: fi.Offset,
 			Size:   fi.Size,
 		})

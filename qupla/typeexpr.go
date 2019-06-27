@@ -3,6 +3,7 @@ package qupla
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
+	"sort"
 )
 
 type FieldExpr struct {
@@ -12,18 +13,14 @@ type FieldExpr struct {
 type TypeExpr struct {
 	ExpressionBase
 	size   int
-	Fields []FieldExpr
-}
-
-func (e *TypeExpr) GenAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit) *abra.Site {
-	panic("implement me")
+	Fields []*FieldExpr
 }
 
 func NewQuplaTypeExpr(src string, size int) *TypeExpr {
 	return &TypeExpr{
 		ExpressionBase: NewExpressionBase(src),
 		size:           size,
-		Fields:         make([]FieldExpr, 0, 5),
+		Fields:         make([]*FieldExpr, 0, 5),
 	}
 }
 
@@ -49,4 +46,31 @@ func (e *TypeExpr) Eval(frame *EvalFrame, result Trits) bool {
 		}
 	}
 	return false
+}
+
+type fieldExprPair struct {
+	expr  ExpressionInterface
+	field *FieldExpr
+}
+
+func (e *TypeExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
+	// sort field expression by field offset
+	sortedByOffset := make([]*fieldExprPair, len(e.Fields))
+	for i, fe := range e.Fields {
+		sortedByOffset[i] = &fieldExprPair{
+			expr:  e.GetSubExpr(i),
+			field: fe,
+		}
+	}
+	sort.SliceStable(sortedByOffset, func(i, j int) bool {
+		return sortedByOffset[i].field.Offset < sortedByOffset[j].field.Offset
+	})
+	inputs := make([]*abra.Site, len(sortedByOffset))
+	for i, fi := range sortedByOffset {
+		inputs[i] = fi.expr.GetAbraSite(branch, codeUnit, "")
+	}
+	concatBranch := codeUnit.GetConcatBlockForSize(e.Size())
+	ret := abra.NewKnot(concatBranch, inputs...).NewSite(e.Size())
+	ret.SetLookupName(lookupName)
+	return branch.AddOrUpdateSite(ret)
 }
