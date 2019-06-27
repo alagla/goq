@@ -1,4 +1,4 @@
-#####**New:** Qubic Game Of Life on GOQ: [gol.tanglebeat.com](http://gol.tanglebeat.com)
+##### **New:** Qubic Game Of Life on GOQ: [gol.tanglebeat.com](http://gol.tanglebeat.com)
 
 # GOQ: Qupla library for Go
 
