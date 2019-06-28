@@ -70,7 +70,7 @@ func (e *SliceExpr) GetAbraSiteForNonparamVar(branch *abra.Branch, codeUnit *abr
 	if vi.IsState {
 		// state sites go in cycles.
 		// This will be placeholder, will be resolved later
-		return branch.AddUnfinishedStateSite(lookupName)
+		return branch.AddUnfinishedStateSite(lookupName, vi.Size)
 	}
 	ret = e.site.Assign.GetAbraSite(branch, codeUnit, lookupName)
 	return ret

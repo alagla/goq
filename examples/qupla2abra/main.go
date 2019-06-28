@@ -34,7 +34,16 @@ func main() {
 
 	Logf(0, "------ checking sizes")
 	codeUnit.CalcSizes()
-	printSizes(codeUnit)
+	errs := codeUnit.Validate()
+	if len(errs) == 0 {
+		Logf(0, "code unit validate OK")
+		printSizes(codeUnit)
+	} else {
+		Logf(0, "Validation errors in code unit")
+		for _, err := range errs {
+			Logf(0, "    ->  %v", err)
+		}
+	}
 }
 
 type sizeInfo struct{ size, assumedSize int }

@@ -104,3 +104,44 @@ func (codeUnit *CodeUnit) CalcSizes() {
 		}
 	}
 }
+
+func (codeUnit *CodeUnit) Validate() []error {
+	ret := make([]error, 0, 10)
+	for _, block := range codeUnit.Code.Blocks {
+		if block.AssumedSize != block.Size || block.Size == 0 {
+			ret = append(ret, fmt.Errorf("AssumedSize (%d) != Size (%d) in block '%s'",
+				block.AssumedSize, block.Size, block.LookupName))
+		}
+		switch block.BlockType {
+		case BLOCK_LUT:
+			if block.Size != 1 {
+				ret = append(ret, fmt.Errorf("LUT size != 1 in '%s'", block.LookupName))
+			}
+		case BLOCK_BRANCH:
+			if block.Branch.Size == 0 || block.Branch.GetInputSize() == 0 {
+				ret = append(ret, fmt.Errorf("wrong branch size %d in '%s'", block.Branch.Size, block.LookupName))
+			}
+			for _, s := range block.Branch.AllSites {
+				if s.Size == 0 || s.Size != s.AssumedSize {
+					ret = append(ret, fmt.Errorf("site.AssumedSize (%d) != site.Size (%d) in site '%s' of block '%s'",
+						s.AssumedSize, s.Size, s.LookupName, block.LookupName))
+				}
+				if s.SiteType != SITE_INPUT && s.Knot == nil && s.Merge == nil {
+					ret = append(ret, fmt.Errorf("inconsistent site '%s' in branch '%s'", s.LookupName, block.LookupName))
+					continue
+				}
+				if s.SiteType != SITE_INPUT && s.IsKnot {
+					if s.Knot.Block.BlockType == BLOCK_BRANCH {
+						if s.Knot.Block.Branch.GetInputSize() != s.Knot.GetInputSize() {
+							ret = append(ret, fmt.Errorf("sum of sizes of the inputs (%d) != branch size (%d) in knot '%s' of branch '%s'",
+								s.Knot.GetInputSize(), s.Knot.Block.Branch.GetInputSize(), s.LookupName, block.LookupName))
+						}
+					}
+				}
+			}
+		case BLOCK_EXTERNAL:
+			panic("implement me")
+		}
+	}
+	return ret
+}

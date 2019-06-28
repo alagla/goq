@@ -43,8 +43,9 @@ func (branch *Branch) FindSite(lookupName string) *Site {
 
 func (branch *Branch) AddInputSite(size int) *Site {
 	ret := &Site{
-		SiteType: SITE_INPUT,
-		Size:     size,
+		SiteType:    SITE_INPUT,
+		Size:        size,
+		AssumedSize: size,
 	}
 	branch.AllSites = append(branch.AllSites, ret)
 	return ret
@@ -80,10 +81,11 @@ func (branch *Branch) AddOrUpdateSite(site *Site) *Site {
 	return site
 }
 
-func (branch *Branch) AddUnfinishedStateSite(lookupName string) *Site {
+func (branch *Branch) AddUnfinishedStateSite(lookupName string, assumedSize int) *Site {
 	ret := &Site{
-		LookupName: lookupName,
-		SiteType:   SITE_STATE,
+		LookupName:  lookupName,
+		SiteType:    SITE_STATE,
+		AssumedSize: assumedSize,
 	}
 	return branch.AddOrUpdateSite(ret)
 }

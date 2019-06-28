@@ -110,6 +110,17 @@ func (knot *Knot) CalcSize() int {
 	return knot.Block.Size
 }
 
+func (knot *Knot) GetInputSize() int {
+	ret := 0
+	for _, s := range knot.Sites {
+		if s.Size == 0 {
+			return 0
+		}
+		ret += s.Size
+	}
+	return ret
+}
+
 func (merge *Merge) CalcSize() int {
 	ret := 0
 	for _, s := range merge.Sites {
