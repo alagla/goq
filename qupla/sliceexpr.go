@@ -3,6 +3,7 @@ package qupla
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
+	cabra "github.com/lunfardo314/goq/abra/construct"
 )
 
 type SliceExpr struct {
@@ -63,14 +64,14 @@ func (e *SliceExpr) Eval(frame *EvalFrame, result Trits) bool {
 func (e *SliceExpr) GetAbraSiteForNonparamVar(branch *abra.Branch, codeUnit *abra.CodeUnit, vi *QuplaSite) *abra.Site {
 	var ret *abra.Site
 	lookupName := vi.GetAbraLookupName()
-	ret = branch.FindSite(lookupName)
+	ret = cabra.FindSite(branch, lookupName)
 	if ret != nil {
 		return ret
 	}
 	if vi.IsState {
 		// state sites go in cycles.
 		// This will be placeholder, will be resolved later
-		return branch.AddUnfinishedStateSite(lookupName, vi.Size)
+		return cabra.MustAddUnfinishedStateSite(branch, lookupName, vi.Size)
 	}
 	ret = e.site.Assign.GetAbraSite(branch, codeUnit, lookupName)
 	return ret
@@ -79,7 +80,7 @@ func (e *SliceExpr) GetAbraSiteForNonparamVar(branch *abra.Branch, codeUnit *abr
 func (e *SliceExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
 	var varsite *abra.Site
 	if e.site.IsParam {
-		varsite = branch.GetInputSite(e.site.Idx)
+		varsite = cabra.GetInputSite(branch, e.site.Idx)
 	} else {
 		varsite = e.GetAbraSiteForNonparamVar(branch, codeUnit, e.site)
 	}
@@ -88,10 +89,9 @@ func (e *SliceExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lo
 		return varsite
 	}
 	// for actual slicing we have to have a slicing branch
-	slicingBranchBlock := codeUnit.GetSlicingBranchBlock(e.site.Size, e.offset, e.size)
+	slicingBranchBlock := cabra.GetSliceBranchBlock(codeUnit, e.site.Size, e.offset, e.size)
 	var ret *abra.Site
 
-	ret = abra.NewKnot(slicingBranchBlock, varsite).NewSite(e.Size())
-	ret.SetLookupName(lookupName)
-	return branch.AddOrUpdateSite(ret)
+	ret = cabra.NewKnotSite(e.Size(), lookupName, slicingBranchBlock, varsite)
+	return cabra.AddOrUpdateSite(branch, ret)
 }

@@ -3,6 +3,7 @@ package qupla
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
+	cabra "github.com/lunfardo314/goq/abra/construct"
 	"sort"
 )
 
@@ -69,8 +70,7 @@ func (e *TypeExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, loo
 	for i, fi := range sortedByOffset {
 		inputs[i] = fi.expr.GetAbraSite(branch, codeUnit, "")
 	}
-	concatBranch := codeUnit.GetConcatBlockForSize(e.Size())
-	ret := abra.NewKnot(concatBranch, inputs...).NewSite(e.Size())
-	ret.SetLookupName(lookupName)
-	return branch.AddOrUpdateSite(ret)
+	concatBranch := cabra.GetConcatBlockForSize(codeUnit, e.Size())
+	ret := cabra.NewKnotSite(e.Size(), lookupName, concatBranch, inputs...)
+	return cabra.AddOrUpdateSite(branch, ret)
 }

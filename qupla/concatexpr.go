@@ -3,6 +3,7 @@ package qupla
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
+	cabra "github.com/lunfardo314/goq/abra/construct"
 )
 
 type ConcatExpr struct {
@@ -57,8 +58,7 @@ func (e *ConcatExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, l
 		s := se.GetAbraSite(branch, codeUnit, "")
 		inputs = append(inputs, s)
 	}
-	concatBlock := codeUnit.GetConcatBlockForSize(e.Size())
-	ret := abra.NewKnot(concatBlock, inputs...).NewSite(e.Size())
-	ret.SetLookupName(lookupName)
-	return branch.AddOrUpdateSite(ret)
+	concatBlock := cabra.GetConcatBlockForSize(codeUnit, e.Size())
+	ret := cabra.NewKnotSite(e.Size(), lookupName, concatBlock, inputs...)
+	return cabra.AddOrUpdateSite(branch, ret)
 }

@@ -3,6 +3,7 @@ package qupla
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
+	cabra "github.com/lunfardo314/goq/abra/construct"
 )
 
 type MergeExpr struct {
@@ -47,7 +48,6 @@ func (e *MergeExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lo
 		s := se.GetAbraSite(branch, codeUnit, "")
 		inputs = append(inputs, s)
 	}
-	ret := abra.NewMerge(inputs...).NewSite(e.Size())
-	ret.SetLookupName(lookupName)
-	return branch.AddOrUpdateSite(ret)
+	ret := cabra.NewMergeSite(e.Size(), lookupName, inputs...)
+	return cabra.AddOrUpdateSite(branch, ret)
 }

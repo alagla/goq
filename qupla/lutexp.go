@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
+	cabra "github.com/lunfardo314/goq/abra/construct"
 )
 
 type LutExpr struct {
@@ -38,7 +39,7 @@ func (e *LutExpr) Eval(frame *EvalFrame, result Trits) bool {
 }
 
 func (e *LutExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
-	lut := codeUnit.FindLUTBlock(e.LutDef.GetStringRepr())
+	lut := cabra.FindLUTBlock(codeUnit, e.LutDef.GetStringRepr())
 	if lut == nil {
 		panic(fmt.Errorf("can't find lut block '%s'", e.LutDef.GetStringRepr()))
 	}
@@ -51,7 +52,6 @@ func (e *LutExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, look
 	if e.LutDef.InputSize > 2 {
 		in2 = e.GetSubExpr(2).GetAbraSite(branch, codeUnit, "")
 	}
-	ret := abra.NewKnot(lut, in0, in1, in2).NewSite(e.Size())
-	ret.SetLookupName(lookupName)
-	return branch.AddOrUpdateSite(ret)
+	ret := cabra.NewKnotSite(e.Size(), lookupName, lut, in0, in1, in2)
+	return cabra.AddOrUpdateSite(branch, ret)
 }

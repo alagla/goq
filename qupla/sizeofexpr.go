@@ -3,6 +3,7 @@ package qupla
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
+	cabra "github.com/lunfardo314/goq/abra/construct"
 )
 
 type SizeofExpr struct {
@@ -42,5 +43,5 @@ func (e *SizeofExpr) Eval(_ *EvalFrame, result Trits) bool {
 }
 
 func (e *SizeofExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, _ string) *abra.Site {
-	return branch.GetTritConstSite(codeUnit, e.TritValue)
+	return cabra.GetTritVectorConstSite(codeUnit, branch, e.TritValue)
 }

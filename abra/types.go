@@ -116,10 +116,10 @@ type LUT int64
 //]
 
 type Branch struct {
-	inputSites  []*Site
-	bodySites   []*Site
-	outputSites []*Site
-	stateSites  []*Site
+	InputSites  []*Site
+	BodySites   []*Site
+	OutputSites []*Site
+	StateSites  []*Site
 	// compile time
 	AllSites    []*Site
 	Size        int
@@ -204,12 +204,3 @@ type Block struct {
 	Size        int
 	AssumedSize int
 }
-
-// special type of error to resolve cycles in state sites
-type RecursionDetected struct{}
-
-func (e *RecursionDetected) Error() string {
-	return "Recursion detected"
-}
-
-var RecursionDetectedError = &RecursionDetected{}

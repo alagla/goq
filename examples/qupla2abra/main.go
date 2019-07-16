@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/lunfardo314/goq/abra"
+	cabra "github.com/lunfardo314/goq/abra/construct"
+	vabra "github.com/lunfardo314/goq/abra/validate"
 	"github.com/lunfardo314/goq/analyzeyaml"
 	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/readyaml"
@@ -29,12 +31,12 @@ func main() {
 	Logf(0, "------------------------")
 	Logf(0, "generating Abra code")
 
-	codeUnit := abra.NewCodeUnit()
+	codeUnit := cabra.NewCodeUnit()
 	module.GetAbra(codeUnit)
 
 	Logf(0, "------ checking sizes")
-	codeUnit.CalcSizes()
-	errs := codeUnit.Validate()
+	vabra.CalcAllSizes(codeUnit)
+	errs := vabra.Validate(codeUnit)
 	if len(errs) == 0 {
 		Logf(0, "code unit validate OK")
 		printSizes(codeUnit)

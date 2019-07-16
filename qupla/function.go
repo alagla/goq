@@ -4,6 +4,8 @@ import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
+	cabra "github.com/lunfardo314/goq/abra/construct"
+	vabra "github.com/lunfardo314/goq/abra/validate"
 	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/utils"
 )
@@ -190,34 +192,34 @@ func (def *Function) GetLookupName() string {
 }
 
 func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
-	if def.Name == "arcRadixLeaf_243_8019" {
-		fmt.Printf("kuku\n")
-	}
+	//if def.Name == "arcRadixLeaf_243_8019" {
+	//	fmt.Printf("kuku\n")
+	//}
 	lookupName := def.GetLookupName()
-	ret := codeUnit.FindBranchBlock(lookupName)
+	ret := cabra.FindBranchBlock(codeUnit, lookupName)
 	if ret != nil {
 		return ret
 	}
-	ret = codeUnit.AddNewBranchBlock(lookupName, def.Size())
+	ret = cabra.MustAddNewBranchBlock(codeUnit, lookupName, def.Size())
 
 	for _, vi := range def.Sites {
 		if vi.IsParam {
-			ret.Branch.AddInputSite(vi.Size)
+			cabra.AddInputSite(ret.Branch, vi.Size)
 		}
 	}
 	if concatExpr, ok := def.RetExpr.(*ConcatExpr); ok {
 		for _, se := range concatExpr.subExpr {
 			site := se.GetAbraSite(ret.Branch, codeUnit, "")
-			site.ChangeType(abra.SITE_OUTPUT)
+			cabra.ChangeSiteType(site, abra.SITE_OUTPUT)
 		}
 	} else {
 		singleOutput := def.RetExpr.GetAbraSite(ret.Branch, codeUnit, "")
 		if singleOutput.SiteType == abra.SITE_BODY {
-			singleOutput.ChangeType(abra.SITE_OUTPUT)
+			cabra.ChangeSiteType(singleOutput, abra.SITE_OUTPUT)
 		} else {
-			singleOutput = abra.NewMerge(singleOutput).NewSite(def.RetExpr.Size())
-			singleOutput.ChangeType(abra.SITE_OUTPUT)
-			ret.Branch.AddOrUpdateSite(singleOutput)
+			singleOutput = cabra.NewMergeSite(def.RetExpr.Size(), "", singleOutput)
+			cabra.ChangeSiteType(singleOutput, abra.SITE_OUTPUT)
+			cabra.AddOrUpdateSite(ret.Branch, singleOutput)
 		}
 	}
 	// finalize with state sites
@@ -227,20 +229,6 @@ func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
 			vi.Assign.GetAbraSite(ret.Branch, codeUnit, vi.GetAbraLookupName())
 		}
 	}
-	ret.Branch.AssertValid()
+	vabra.AssertValid(ret.Branch)
 	return ret
 }
-
-// TODO
-//func (def *Function) GetAbraEntityAttachment(codeUnit *abra.CodeUnit) *abra.EntityAttachment{
-//	//
-//	lookupName := def.GetLookupName()
-//	branch := codeUnit.FindBranchBlock(lookupName)
-//	if branch == nil {
-//		panic(fmt.Errorf("can't find abra branch for function '%s'", def.Name))
-//	}
-//
-//	ret := codeUnit.NewEntityAttachment()
-//
-//
-//}

@@ -3,6 +3,7 @@ package qupla
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
+	cabra "github.com/lunfardo314/goq/abra/construct"
 )
 
 type FunctionExpr struct {
@@ -58,7 +59,6 @@ func (e *FunctionExpr) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit,
 	for i, se := range e.GetSubexpressions() {
 		inputs[i] = se.GetAbraSite(branch, codeUnit, "")
 	}
-	ret := abra.NewKnot(branchBlock, inputs...).NewSite(e.Size())
-	ret.SetLookupName(lookupName)
-	return branch.AddOrUpdateSite(ret)
+	ret := cabra.NewKnotSite(e.Size(), lookupName, branchBlock, inputs...)
+	return cabra.AddOrUpdateSite(branch, ret)
 }
