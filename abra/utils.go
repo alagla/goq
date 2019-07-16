@@ -45,6 +45,9 @@ func TritName(trit int8) string {
 }
 
 func Get1TritConstLutRepr(val int8) string {
+	if val != -1 && val != 0 && val != 1 {
+		panic("wrong trit value")
+	}
 	return strings.Repeat(TritName(val), 27)
 }
 

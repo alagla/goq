@@ -188,7 +188,7 @@ func countTypesInExpression(expr ExpressionInterface, stats map[string]int) {
 }
 
 func (def *Function) GetLookupName() string {
-	return "qupla_function_" + def.Name
+	return "qupla_" + def.Name
 }
 
 func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {

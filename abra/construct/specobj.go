@@ -1,5 +1,8 @@
 package construct
 
+// functions for construction and reuse of specific Abra objects necessary for generation of
+// tritcode from Qupla IR
+
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
@@ -21,11 +24,14 @@ func Get1TritConstSite(codeUnit *CodeUnit, branch *Branch, val int8) *Site {
 	// didn't find. Need to create one
 	// first find or create the only lut for 1 trit constant
 	lutRepr := Get1TritConstLutRepr(val)
-	lutValConstBlock := GetLUTBlock(codeUnit, lutRepr)
+	lutValConstBlock := FindLUTBlock(codeUnit, lutRepr)
+	if lutValConstBlock == nil {
+		lutValConstBlock = MustAddNewLUTBlock(codeUnit, lutRepr, fmt.Sprintf("1trit_const_lut_%v", TritName(val)))
+	}
 
 	// now create site in the branch
 	// it will always generate constant trit
-	// the input for lut is 3 repeated 1-trit sites from lst of the branche's input
+	// the input for lut is 3 repeated 1-trit sites from lst of the branch's input
 	any := GetAnyTritSite(codeUnit, branch)
 	ret = NewKnotSite(1, lookupName, lutValConstBlock, any, any, any)
 	MustAddNewSite(branch, ret)
@@ -121,7 +127,11 @@ func GetSliceBranchBlock(codeUnit *CodeUnit, inputSize, offset, size int) *Block
 // get nullify LUT block for true or false
 func GetNullifyLUTBlock(codeUnit *CodeUnit, trueFalse bool) *Block {
 	strRepr := GetNullifyLUTRepr(trueFalse)
-	return GetLUTBlock(codeUnit, strRepr)
+	ret := FindLUTBlock(codeUnit, strRepr)
+	if ret != nil {
+		return ret
+	}
+	return MustAddNewLUTBlock(codeUnit, strRepr, fmt.Sprintf("nullify_%v", trueFalse))
 }
 
 // finds of creates nullify branch block

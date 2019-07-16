@@ -97,7 +97,11 @@ type Code struct {
 //
 //This final value is treated as a binary number, and encoded within a 35-trit vector.
 
-type LUT int64
+type LUT struct {
+	Binary int64
+	// compile time
+	Name string
+}
 
 //block (whether external, lut, or branch):
 //[ number of trits in block definition (positive integer)
@@ -197,7 +201,7 @@ type Block struct {
 	Index         int // block index, one for LUTs and branches
 	BlockType     BlockType
 	Branch        *Branch
-	LUT           LUT
+	LUT           *LUT
 	ExternalBlock *ExternalBlock
 	// lookup name, compile time only
 	LookupName  string

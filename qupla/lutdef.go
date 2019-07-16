@@ -2,7 +2,6 @@ package qupla
 
 import (
 	. "github.com/iotaledger/iota.go/trinary"
-	"github.com/lunfardo314/goq/abra"
 )
 
 type LutDef struct {
@@ -72,27 +71,10 @@ func CharEncodeLutOutTrit(trit []int8) byte {
 	panic("wrong trit")
 }
 
-//
-func (lutDef *LutDef) GetTritcode() Trits {
-	ret := IntToTrits(abra.BinaryEncodedLUTFromString(lutDef.GetStringRepr()))
-	ret = PadTrits(ret, 35)
-	if len(ret) != 35 {
-		panic("wrong LUT tritcode")
-	}
-	return ret
-}
-
 func (lutDef *LutDef) GetStringRepr() string {
 	var ret [27]byte
 	for i, t := range lutDef.LookupTable() {
 		ret[i] = CharEncodeLutOutTrit(t)
 	}
 	return string(ret[:])
-}
-
-func (lutDef *LutDef) GetBranch(numInputs int) {
-	if numInputs != 1 && numInputs != 2 && numInputs != 3 {
-		panic("wrong number of inputs")
-	}
-
 }

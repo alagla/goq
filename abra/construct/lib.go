@@ -21,23 +21,21 @@ func addBlock(codeUnit *CodeUnit, block *Block) {
 	codeUnit.Code.Blocks = append(codeUnit.Code.Blocks, block)
 }
 
-func MustAddNewLUTBlock(codeUnit *CodeUnit, lookupName string, binaryEncodedLUT int64) *Block {
-	if FindLUTBlock(codeUnit, lookupName) != nil {
-		panic(fmt.Errorf("repeating LUT block '%s'", lookupName))
+func MustAddNewLUTBlock(codeUnit *CodeUnit, strRepr string, name string) *Block {
+	if FindLUTBlock(codeUnit, strRepr) != nil {
+		panic(fmt.Errorf("repeating LUT block '%s'", strRepr))
 	}
-	ret := LUT(binaryEncodedLUT)
-	block := NewLUTBlock(ret, lookupName)
-	addBlock(codeUnit, block)
-	return block
-}
-
-func NewLUTBlock(lut LUT, lookupName string) *Block {
-	return &Block{
-		BlockType:   BLOCK_LUT,
-		LUT:         lut,
-		LookupName:  lookupName,
+	block := &Block{
+		BlockType: BLOCK_LUT,
+		LUT: &LUT{
+			Binary: BinaryEncodedLUTFromString(strRepr),
+			Name:   name,
+		},
+		LookupName:  strRepr,
 		AssumedSize: 1,
 	}
+	addBlock(codeUnit, block)
+	return block
 }
 
 func FindLUTBlock(codeUnit *CodeUnit, lookupName string) *Block {
@@ -47,20 +45,6 @@ func FindLUTBlock(codeUnit *CodeUnit, lookupName string) *Block {
 		}
 	}
 	return nil
-}
-
-// finds or creates LUT block
-func GetLUTBlock(codeUnit *CodeUnit, reprString string) *Block {
-	if len(reprString) != 27 {
-		panic("wrong LUT reprString")
-	}
-	ret := FindLUTBlock(codeUnit, reprString)
-	if ret != nil {
-		return ret
-	}
-	lut := BinaryEncodedLUTFromString(reprString)
-	ret = MustAddNewLUTBlock(codeUnit, reprString, lut)
-	return ret
 }
 
 func FindBranchBlock(codeUnit *CodeUnit, lookupName string) *Block {
