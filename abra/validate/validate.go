@@ -5,35 +5,6 @@ import (
 	. "github.com/lunfardo314/goq/abra"
 )
 
-func setZeroSizes(codeUnit *CodeUnit) {
-	for _, b := range codeUnit.Code.Blocks {
-		switch b.BlockType {
-		case BLOCK_LUT:
-			b.Size = 0
-		case BLOCK_EXTERNAL:
-			b.Size = 0
-		case BLOCK_BRANCH:
-			b.Size = 0
-			setZeroSizesInBranch(b.Branch)
-		}
-	}
-}
-
-func CalcAllSizes(codeUnit *CodeUnit) {
-	setZeroSizes(codeUnit)
-
-	notFinished := true
-	var saveSize int
-	for notFinished {
-		notFinished = false
-		for _, block := range codeUnit.Code.Blocks {
-			saveSize = block.Size
-			CalcSizesInBlock(block)
-			notFinished = notFinished || saveSize != block.Size
-		}
-	}
-}
-
 func Validate(codeUnit *CodeUnit) []error {
 	ret := make([]error, 0, 10)
 	for _, block := range codeUnit.Code.Blocks {
@@ -41,32 +12,17 @@ func Validate(codeUnit *CodeUnit) []error {
 			ret = append(ret, fmt.Errorf("AssumedSize (%d) != Size (%d) in block '%s'",
 				block.AssumedSize, block.Size, block.LookupName))
 		}
+		var err error
 		switch block.BlockType {
 		case BLOCK_LUT:
 			if block.Size != 1 {
 				ret = append(ret, fmt.Errorf("LUT size != 1 in '%s'", block.LookupName))
 			}
 		case BLOCK_BRANCH:
-			if block.Branch.Size == 0 || GetBranchInputSize(block.Branch) == 0 {
-				ret = append(ret, fmt.Errorf("wrong branch size %d in '%s'", block.Branch.Size, block.LookupName))
-			}
-			for _, s := range block.Branch.AllSites {
-				if s.Size == 0 || s.Size != s.AssumedSize {
-					ret = append(ret, fmt.Errorf("site.AssumedSize (%d) != site.Size (%d) in site '%s' of block '%s'",
-						s.AssumedSize, s.Size, s.LookupName, block.LookupName))
-				}
-				if s.SiteType != SITE_INPUT && s.Knot == nil && s.Merge == nil {
-					ret = append(ret, fmt.Errorf("inconsistent site '%s' in branch '%s'", s.LookupName, block.LookupName))
-					continue
-				}
-				if s.SiteType != SITE_INPUT && s.IsKnot {
-					if s.Knot.Block.BlockType == BLOCK_BRANCH {
-						if GetBranchInputSize(s.Knot.Block.Branch) != GetKnotInputSize(s.Knot) {
-							ret = append(ret, fmt.Errorf("sum of sizes of the inputs (%d) != branch size (%d) in knot '%s' of branch '%s'",
-								GetKnotInputSize(s.Knot), GetBranchInputSize(s.Knot.Block.Branch), s.LookupName, block.LookupName))
-						}
-					}
-				}
+			if err = ValidateBranch(block.Branch, block.LookupName); err != nil {
+				ret = append(ret, fmt.Errorf("ValidateBranch for '%s': '%s'", block.LookupName, err))
+			} else if err = ValidateBranchSizes(block.Branch, block.LookupName); err != nil {
+				ret = append(ret, fmt.Errorf("ValidateBranchSizes for '%s': '%s'", block.LookupName, err))
 			}
 		case BLOCK_EXTERNAL:
 			panic("implement me")
@@ -116,161 +72,92 @@ func GetStats(branch *Branch) *BranchStats {
 	return ret
 }
 
-func GetBranchInputSize(branch *Branch) int {
-	ret := 0
-	for _, s := range branch.AllSites {
-		if s.SiteType == SITE_INPUT {
-			ret += s.Size
-		}
-	}
-	return ret
-}
-
-func AssertValid(branch *Branch) {
-	// assert
+func ValidateBranch(branch *Branch, lookupName string) error {
 	for _, s := range branch.AllSites {
 		if s.SiteType == SITE_OUTPUT && s.Merge == nil && s.Knot == nil {
-			panic("assert: wrong output")
+			return fmt.Errorf("wrong output in branch '%s'", lookupName)
 		}
 	}
 	for _, s := range branch.AllSites {
-		AssertValidSite(s)
-	}
-}
-
-func GetBlockInputSize(block *Block) int {
-	switch block.BlockType {
-	case BLOCK_LUT:
-		return 3
-	case BLOCK_BRANCH:
-		return GetBranchInputSize(block.Branch)
-	}
-	panic("implement me")
-}
-
-func setZeroSizesInBranch(branch *Branch) {
-	for _, s := range branch.AllSites {
-		if s.SiteType != SITE_INPUT {
-			s.Size = 0
+		err := ValidateSite(branch, s)
+		if err != nil {
+			return fmt.Errorf("ValidateSite for %s: '%v'", lookupName, err)
 		}
 	}
-	branch.Size = 0
+	return nil
 }
 
-func CalcSizesInBlock(block *Block) {
-	switch block.BlockType {
-	case BLOCK_LUT:
-		block.Size = 1
-		return
-	case BLOCK_EXTERNAL:
-		panic("implement me")
-	case BLOCK_BRANCH:
-		CalcSizesInBranch(block.Branch)
-		block.Size = block.Branch.Size
-		return
+func ValidateBranchSizes(branch *Branch, lookupName string) error {
+	if branch.Size == 0 || GetBranchInputSize(branch) == 0 {
+		return fmt.Errorf("wrong branch size %d in '%s'", branch.Size, lookupName)
 	}
-	panic("wrong block type")
-}
+	for _, s := range branch.AllSites {
 
-func CalcSizesInBranch(branch *Branch) {
-	for _, s := range branch.AllSites {
-		CalcSiteSize(s)
-	}
-	branch.Size = 0
-	for _, s := range branch.AllSites {
-		if s.SiteType == SITE_OUTPUT {
-			if s.Size == 0 {
-				branch.Size = 0
-				return
+		if s.Size == 0 || s.Size != s.AssumedSize {
+			return fmt.Errorf("site.AssumedSize (%d) != site.Size (%d) in site '%s' of block '%s'",
+				s.AssumedSize, s.Size, s.LookupName, lookupName)
+		}
+		if s.SiteType != SITE_INPUT && s.Knot == nil && s.Merge == nil {
+			return fmt.Errorf("inconsistent site '%s' in branch '%s'", s.LookupName, lookupName)
+		}
+		if s.SiteType != SITE_INPUT && s.IsKnot {
+			if s.Knot.Block.BlockType == BLOCK_BRANCH {
+				if GetBranchInputSize(s.Knot.Block.Branch) != GetKnotInputSize(s.Knot) {
+					return fmt.Errorf("sum of sizes of the inputs (%d) != branch size (%d) in knot '%s' of branch '%s'",
+						GetKnotInputSize(s.Knot), GetBranchInputSize(s.Knot.Block.Branch), s.LookupName, lookupName)
+				}
 			}
-			branch.Size += s.Size
 		}
 	}
+	return nil
 }
 
-func AssertValidSite(site *Site) {
-	switch site.SiteType {
-	case SITE_INPUT:
-		if site.Knot != nil {
-			panic("invalid site 1")
-		}
-		if site.Merge != nil {
-			panic("invalid site 2")
-		}
-	case SITE_BODY:
+func ValidateSite(branch *Branch, site *Site) error {
+	if site.SiteType != SITE_INPUT {
 		if (site.Merge == nil) == (site.Knot == nil) {
-			panic("invalid site 3")
+			return fmt.Errorf("invalid site '(site.Merge == nil) == (site.Knot == nil)'")
 		}
 		if site.IsKnot {
 			if len(site.Knot.Sites) == 0 {
-				panic("invalid site 4")
+				return fmt.Errorf("invalid body knot site 'len(site.Knot.Sites) == 0'")
 			}
 		} else {
 			if len(site.Merge.Sites) == 0 {
-				panic("invalid site 5")
-			}
-		}
-	case SITE_OUTPUT:
-		if (site.Merge == nil) == (site.Knot == nil) {
-			panic("invalid site 6")
-		}
-		if site.IsKnot {
-			if len(site.Knot.Sites) == 0 {
-				panic("invalid site 7")
-			}
-		} else {
-			if len(site.Merge.Sites) == 0 {
-				panic("invalid site 8")
-			}
-		}
-	case SITE_STATE:
-		if (site.Merge == nil) == (site.Knot == nil) {
-			panic("invalid site 9")
-		}
-		if site.IsKnot {
-			if len(site.Knot.Sites) == 0 {
-				panic("invalid site 10")
-			}
-		} else {
-			if len(site.Merge.Sites) == 0 {
-				panic("invalid site 11")
+				return fmt.Errorf("invalid body merge site 'len(site.Merge.Sites) == 0'")
 			}
 		}
 	}
+	if site.CalculatedSize && site.Size <= 0 {
+		return fmt.Errorf("invalid input site 'site.Size <= 0'")
+	}
+	return checkSiteIndices(branch, site)
 }
 
-func CalcSiteSize(site *Site) {
+func checkSiteIndices(branch *Branch, site *Site) error {
 	if site.SiteType == SITE_INPUT {
-		return
+		if site.Index < 0 || site.Index >= branch.NumInputs {
+			return fmt.Errorf("invalid input site: 'site.Index < 0 || site.Index >= branch.NumInputs'")
+		}
+		return nil
+	}
+	if site.Index < 0 {
+		return fmt.Errorf("invalid site: 'site.Index < 0'")
+	}
+	if site.Index < 0 || site.Index >= branch.SiteIndexCount {
+		return fmt.Errorf("invalid site: 'site.Index < 0 || site.Index >= branch.SiteIndexCount'")
 	}
 	if site.IsKnot {
-		site.Size = CalcKnotSize(site.Knot)
+		for _, s := range site.Knot.Sites {
+			if site.SiteType != SITE_STATE && s.SiteType != SITE_STATE && s.Index >= site.Index {
+				return fmt.Errorf("invalid knot site '%s': 's.Index >= site.Index'", site.LookupName)
+			}
+		}
 	} else {
-		site.Size = CalcMergeSize(site.Merge)
-	}
-}
-
-func CalcKnotSize(knot *Knot) int {
-	return knot.Block.Size
-}
-
-func GetKnotInputSize(knot *Knot) int {
-	ret := 0
-	for _, s := range knot.Sites {
-		if s.Size == 0 {
-			return 0
-		}
-		ret += s.Size
-	}
-	return ret
-}
-
-func CalcMergeSize(merge *Merge) int {
-	ret := 0
-	for _, s := range merge.Sites {
-		if s.Size != 0 {
-			ret = s.Size
+		for _, s := range site.Merge.Sites {
+			if site.SiteType != SITE_STATE && s.SiteType != SITE_STATE && s.Index >= site.Index {
+				return fmt.Errorf("invalid merge site '%s': 's.Index >= site.Index'", site.LookupName)
+			}
 		}
 	}
-	return ret
+	return nil
 }

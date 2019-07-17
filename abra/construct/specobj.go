@@ -34,7 +34,7 @@ func Get1TritConstSite(codeUnit *CodeUnit, branch *Branch, val int8) *Site {
 	// the input for lut is 3 repeated 1-trit sites from lst of the branch's input
 	any := GetAnyTritSite(codeUnit, branch)
 	ret = NewKnotSite(1, lookupName, lutValConstBlock, any, any, any)
-	MustAddNewSite(branch, ret)
+	MustAddNewNoninputSite(branch, ret)
 	return ret
 }
 
@@ -49,7 +49,7 @@ func GetAnyTritSite(codeUnit *CodeUnit, branch *Branch) *Site {
 	// must be the only LstSliceBlock in the code unit
 	lstBlock := GetSliceBranchBlock(codeUnit, GetInputSite(branch, 0).Size, 0, 1)
 	ret = NewKnotSite(1, lookupName, lstBlock, GetInputSite(branch, 0))
-	MustAddNewSite(branch, ret)
+	MustAddNewNoninputSite(branch, ret)
 	return ret
 }
 
@@ -68,7 +68,7 @@ func GetTritVectorConstSite(codeUnit *CodeUnit, branch *Branch, val Trits) *Site
 
 	concatBlock := GetConcatBlockForSize(codeUnit, len(val))
 	ret = NewKnotSite(len(val), lookupName, concatBlock, inputs...)
-	MustAddNewSite(branch, ret)
+	MustAddNewNoninputSite(branch, ret)
 	return ret
 }
 
@@ -85,9 +85,11 @@ func GetConcatBlockForSize(codeUnit *CodeUnit, size int) *Block {
 	output := NewMergeSite(size, "", input)
 
 	output.SiteType = SITE_OUTPUT
-	MustAddNewSite(ret.Branch, output)
+	MustAddNewNoninputSite(ret.Branch, output)
 
-	validate.AssertValid(ret.Branch)
+	if err := validate.ValidateBranch(ret.Branch, lookupName); err != nil {
+		panic(err)
+	}
 	return ret
 }
 
@@ -118,9 +120,11 @@ func GetSliceBranchBlock(codeUnit *CodeUnit, inputSize, offset, size int) *Block
 	}
 	output := NewMergeSite(size, "", theSlice)
 	output.SiteType = SITE_OUTPUT
-	MustAddNewSite(ret.Branch, output)
+	MustAddNewNoninputSite(ret.Branch, output)
 
-	validate.AssertValid(ret.Branch)
+	if err := validate.ValidateBranch(ret.Branch, lookupName); err != nil {
+		panic(err)
+	}
 	return ret
 }
 
@@ -153,9 +157,11 @@ func GetNullifyBranchBlock(codeUnit *CodeUnit, size int, trueFalse bool) *Block 
 	for i := 0; i < size; i++ {
 		nullifyTritSite :=
 			NewKnotSite(1, "", nullifyLutBlock, condInput, GetInputSite(ret.Branch, i+1), condInput)
-		ChangeSiteType(nullifyTritSite, SITE_OUTPUT)
-		MustAddNewSite(ret.Branch, nullifyTritSite)
+		MustAddNewNoninputSite(ret.Branch, nullifyTritSite)
+		MoveBodyToOutput(ret.Branch, nullifyTritSite)
 	}
-	validate.AssertValid(ret.Branch)
+	if err := validate.ValidateBranch(ret.Branch, lookupName); err != nil {
+		panic(err)
+	}
 	return ret
 }

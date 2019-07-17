@@ -3,7 +3,6 @@ package qupla
 import (
 	"github.com/lunfardo314/goq/abra"
 	cabra "github.com/lunfardo314/goq/abra/construct"
-	gabra "github.com/lunfardo314/goq/abra/generate"
 	vabra "github.com/lunfardo314/goq/abra/validate"
 	. "github.com/lunfardo314/goq/cfg"
 )
@@ -26,8 +25,10 @@ func (module *QuplaModule) GetAbra(codeUnit *abra.CodeUnit) {
 		fun.GetAbraBranchBlock(codeUnit)
 	}
 
-	numLUTs, numBranch := gabra.SortAndEnumerateBocks(codeUnit)
-	Logf(0, "total %d LUTs and %d branches", numLUTs, numBranch)
+	numLUTs, numBranch, numExternal := vabra.SortAndEnumerateBlocks(codeUnit)
+	vabra.SortAndEnumerateSites(codeUnit)
+
+	Logf(0, "total %d LUTs, %d branches, %d external blocks", numLUTs, numBranch, numExternal)
 
 	for _, block := range codeUnit.Code.Blocks {
 		switch block.BlockType {

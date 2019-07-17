@@ -120,14 +120,14 @@ type LUT struct {
 //]
 
 type Branch struct {
-	InputSites  []*Site
-	BodySites   []*Site
-	OutputSites []*Site
-	StateSites  []*Site
-	// compile time
-	AllSites    []*Site
-	Size        int
-	AssumedSize int
+	AllSites       []*Site
+	Size           int
+	AssumedSize    int
+	SiteIndexCount int
+	NumInputs      int
+	NumBodySites   int
+	NumStateSites  int
+	NumOutputs     int
 }
 
 //site:
@@ -144,15 +144,17 @@ const (
 )
 
 type Site struct {
-	Index  int // index within branch
+	Index  int // index within branch. During compile is used for sorting
 	IsKnot bool
 	Merge  *Merge // SITE_MERGE
 	Knot   *Knot  // SITE_KNOT
 	Size   int    // SITE_INPUT
 	// lookup name, compile time only
-	LookupName  string
-	SiteType    SiteType
-	AssumedSize int
+	LookupName       string
+	SiteType         SiteType
+	AssumedSize      int
+	AddedToTheBranch bool
+	CalculatedSize   bool
 }
 
 //Merge:

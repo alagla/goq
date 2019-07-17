@@ -207,19 +207,23 @@ func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
 			cabra.AddInputSite(ret.Branch, vi.Size)
 		}
 	}
+	var siteLookupName string
 	if concatExpr, ok := def.RetExpr.(*ConcatExpr); ok {
-		for _, se := range concatExpr.subExpr {
-			site := se.GetAbraSite(ret.Branch, codeUnit, "")
-			cabra.ChangeSiteType(site, abra.SITE_OUTPUT)
+		for i, se := range concatExpr.subExpr {
+			siteLookupName = fmt.Sprintf("%s_output_%d", def.Name, i)
+			site := se.GetAbraSite(ret.Branch, codeUnit, siteLookupName)
+			cabra.MoveBodyToOutput(ret.Branch, site)
 		}
 	} else {
-		singleOutput := def.RetExpr.GetAbraSite(ret.Branch, codeUnit, "")
+		siteLookupName = def.Name + "_output"
+		singleOutput := def.RetExpr.GetAbraSite(ret.Branch, codeUnit, siteLookupName)
 		if singleOutput.SiteType == abra.SITE_BODY {
-			cabra.ChangeSiteType(singleOutput, abra.SITE_OUTPUT)
+			cabra.MoveBodyToOutput(ret.Branch, singleOutput)
 		} else {
-			singleOutput = cabra.NewMergeSite(def.RetExpr.Size(), "", singleOutput)
-			cabra.ChangeSiteType(singleOutput, abra.SITE_OUTPUT)
+			siteLookupName = siteLookupName + "_wrap"
+			singleOutput = cabra.NewMergeSite(def.RetExpr.Size(), siteLookupName, singleOutput)
 			cabra.AddOrUpdateSite(ret.Branch, singleOutput)
+			cabra.MoveBodyToOutput(ret.Branch, singleOutput)
 		}
 	}
 	// finalize with state sites
@@ -229,6 +233,8 @@ func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
 			vi.Assign.GetAbraSite(ret.Branch, codeUnit, vi.GetAbraLookupName())
 		}
 	}
-	vabra.AssertValid(ret.Branch)
+	if err := vabra.ValidateBranch(ret.Branch, lookupName); err != nil {
+		panic(err)
+	}
 	return ret
 }
