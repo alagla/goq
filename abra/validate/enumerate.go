@@ -38,23 +38,26 @@ func (sb SortedBlocks) Less(i, j int) bool {
 	panic("wrong block type")
 }
 
-func SortAndEnumerateBlocks(codeUnit *CodeUnit) (int, int, int) {
-	var numBranch, numLUTs, numExternal int
+func SortAndEnumerateBlocks(codeUnit *CodeUnit) {
+
+	codeUnit.Code.NumLUTs = 0
+	codeUnit.Code.NumBranches = 0
+	codeUnit.Code.NumExternalBlocks = 0
+
 	sort.Sort(SortedBlocks(codeUnit.Code.Blocks))
 	for i, block := range codeUnit.Code.Blocks {
 		block.Index = i
 		switch block.BlockType {
 		case BLOCK_LUT:
-			numLUTs++
+			codeUnit.Code.NumLUTs++
 		case BLOCK_BRANCH:
-			numBranch++
+			codeUnit.Code.NumBranches++
 		case BLOCK_EXTERNAL:
-			numExternal++
+			codeUnit.Code.NumExternalBlocks++
 		default:
 			panic("wrong block type")
 		}
 	}
-	return numLUTs, numBranch, numExternal
 }
 
 type SortedSites []*Site
@@ -69,13 +72,14 @@ func (ss SortedSites) Swap(i, j int) {
 
 type stronglyOrderedTypes struct{ lhs, rhs SiteType }
 
+// SITE_INPUT < SITE_BODY < SITE_OUTPUT < SITE_STATE
 var stronglylLessPairs = []stronglyOrderedTypes{
 	{SITE_INPUT, SITE_BODY},
-	{SITE_INPUT, SITE_STATE},
 	{SITE_INPUT, SITE_OUTPUT},
-	{SITE_BODY, SITE_STATE},
+	{SITE_INPUT, SITE_STATE},
 	{SITE_BODY, SITE_OUTPUT},
-	{SITE_STATE, SITE_OUTPUT},
+	{SITE_BODY, SITE_STATE},
+	{SITE_OUTPUT, SITE_STATE},
 }
 
 func (ss SortedSites) Less(i, j int) bool {

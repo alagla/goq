@@ -25,10 +25,11 @@ func (module *QuplaModule) GetAbra(codeUnit *abra.CodeUnit) {
 		fun.GetAbraBranchBlock(codeUnit)
 	}
 
-	numLUTs, numBranch, numExternal := vabra.SortAndEnumerateBlocks(codeUnit)
+	vabra.SortAndEnumerateBlocks(codeUnit)
 	vabra.SortAndEnumerateSites(codeUnit)
 
-	Logf(0, "total %d LUTs, %d branches, %d external blocks", numLUTs, numBranch, numExternal)
+	Logf(0, "total %d LUTs, %d branches, %d external blocks",
+		codeUnit.Code.NumLUTs, codeUnit.Code.NumBranches, codeUnit.Code.NumExternalBlocks)
 
 	for _, block := range codeUnit.Code.Blocks {
 		switch block.BlockType {

@@ -73,6 +73,9 @@ func GetStats(branch *Branch) *BranchStats {
 }
 
 func ValidateBranch(branch *Branch, lookupName string) error {
+	if branch.NumInputs+branch.NumBodySites+branch.NumStateSites+branch.NumOutputs != branch.SiteIndexCount {
+		return fmt.Errorf("something wrong with enumerating sites in branch '%s'", lookupName)
+	}
 	for _, s := range branch.AllSites {
 		if s.SiteType == SITE_OUTPUT && s.Merge == nil && s.Knot == nil {
 			return fmt.Errorf("wrong output in branch '%s'", lookupName)

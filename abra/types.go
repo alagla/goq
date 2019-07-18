@@ -81,8 +81,11 @@ type OutputEnvironmentData struct {
 //]
 
 type Code struct {
-	TritcodeVersion int
-	Blocks          []*Block
+	TritcodeVersion   int
+	Blocks            []*Block
+	NumLUTs           int
+	NumBranches       int
+	NumExternalBlocks int
 }
 
 //LUT definition
@@ -98,7 +101,7 @@ type Code struct {
 //This final value is treated as a binary number, and encoded within a 35-trit vector.
 
 type LUT struct {
-	Binary int64
+	Binary uint64
 	// compile time
 	Name string
 }

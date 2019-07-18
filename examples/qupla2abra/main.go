@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/lunfardo314/goq/abra"
 	cabra "github.com/lunfardo314/goq/abra/construct"
+	gabra "github.com/lunfardo314/goq/abra/generate"
 	vabra "github.com/lunfardo314/goq/abra/validate"
 	"github.com/lunfardo314/goq/analyzeyaml"
 	. "github.com/lunfardo314/goq/cfg"
@@ -34,7 +35,7 @@ func main() {
 	codeUnit := cabra.NewCodeUnit()
 	module.GetAbra(codeUnit)
 
-	Logf(0, "------ checking sizes")
+	Logf(0, "------ validating entire code unit")
 	vabra.CalcAllSizes(codeUnit)
 	errs := vabra.Validate(codeUnit)
 	if len(errs) == 0 {
@@ -46,6 +47,16 @@ func main() {
 			Logf(0, "    ->  %v", err)
 		}
 	}
+	Logf(0, "Generating Abra tritcode")
+
+	tritcode := gabra.NewTritcode()
+	numtrits := tritcode.MustWriteCode(codeUnit.Code)
+	Logf(0, "Number of trits generated: %d", numtrits)
+
+	trytecode := abra.MustBTrits2Bytes(tritcode.Buf.Bytes())
+	Logf(0, "Number of trytes generated: %d", len(trytecode))
+
+	Logf(0, "First 200 of trytes: %s...", string(trytecode[:200]))
 }
 
 type sizeInfo struct{ size, assumedSize int }
@@ -59,7 +70,7 @@ func printSizes(codeUnit *abra.CodeUnit) {
 	}
 	sort.Strings(names)
 	for _, n := range names {
-		Logf(0, "%20s -> size = %d (%d)", n, blockMap[n].size, blockMap[n].assumedSize)
+		Logf(3, "%20s -> size = %d (%d)", n, blockMap[n].size, blockMap[n].assumedSize)
 	}
 
 }
