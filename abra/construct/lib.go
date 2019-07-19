@@ -22,8 +22,16 @@ func addBlock(codeUnit *CodeUnit, block *Block) {
 }
 
 func MustAddNewLUTBlock(codeUnit *CodeUnit, strRepr string, name string) *Block {
+	ret, err := AddNewLUTBlock(codeUnit, strRepr, name)
+	if err != nil {
+		panic(err)
+	}
+	return ret
+}
+
+func AddNewLUTBlock(codeUnit *CodeUnit, strRepr string, name string) (*Block, error) {
 	if FindLUTBlock(codeUnit, strRepr) != nil {
-		panic(fmt.Errorf("repeating LUT block '%s'", strRepr))
+		return nil, fmt.Errorf("repeating LUT block '%s'", strRepr)
 	}
 	block := &Block{
 		BlockType: BLOCK_LUT,
@@ -35,7 +43,7 @@ func MustAddNewLUTBlock(codeUnit *CodeUnit, strRepr string, name string) *Block 
 		AssumedSize: 1,
 	}
 	addBlock(codeUnit, block)
-	return block
+	return block, nil
 }
 
 func FindLUTBlock(codeUnit *CodeUnit, lookupName string) *Block {

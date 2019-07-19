@@ -77,6 +77,24 @@ func BinaryEncodedLUTFromString(strRepr string) uint64 {
 	return ret
 }
 
+func StringFromBinaryEncodedLUT(binary uint64) string {
+	ret := make([]byte, 27)
+	for i := 0; i < 27; i++ {
+		switch binary & 0x3 {
+		case TRIT_NULL:
+			ret[i] = '@'
+		case TRIT_ONE:
+			ret[i] = '1'
+		case TRIT_ZERO:
+			ret[i] = '0'
+		case TRIT_MINUS1:
+			ret[i] = '-'
+		}
+		binary >>= 2
+	}
+	return string(ret)
+}
+
 // https://github.com/iotaledger/omega-docs/blob/master/qbc/abra/Spec.md#lut-definition
 // Encoding
 // Positive integers (as listed above) are encoded as binary.1/-, little endian, terminated with 0.

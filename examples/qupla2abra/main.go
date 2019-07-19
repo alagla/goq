@@ -92,6 +92,10 @@ func main() {
 		panic(err)
 	}
 	Logf(0, "tritcode version is '%d'", codeEcho.Code.TritcodeVersion)
+	Logf(0, "number of LUT blocks is '%d'", codeEcho.Code.NumLUTs)
+	Logf(0, "number of branch blocks is '%d'", codeEcho.Code.NumBranches)
+	Logf(0, "number of external blocks is '%d'", codeEcho.Code.NumExternalBlocks)
+
 }
 
 type sizeInfo struct{ size, assumedSize int }

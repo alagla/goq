@@ -74,29 +74,69 @@ func ParseTritcode(trits Trits) (*abra.CodeUnit, error) {
 	ret := construct.NewCodeUnit()
 	tReader := &tritReader{trits: trits}
 
-	var err error
-	var ver int
-	ver, err = ReadPosInt(tReader)
+	err := ParseCode(tReader, ret)
 	if err != nil {
 		return nil, err
-	}
-	if ver != ret.Code.TritcodeVersion {
-		return nil, fmt.Errorf("expected tritcode version %d, got %d", ret.Code.TritcodeVersion, ver)
 	}
 	return ret, nil
 }
 
-func ReadPosInt(tReader *tritReader) (int, error) {
+func ParseCode(tReader *tritReader, codeUnit *abra.CodeUnit) error {
+	var err error
+	var ver int
+	ver, err = ParsePosInt(tReader)
+	if err != nil {
+		return err
+	}
+	if ver != codeUnit.Code.TritcodeVersion {
+		return fmt.Errorf("expected tritcode version %d, got %d", codeUnit.Code.TritcodeVersion, ver)
+	}
+	codeUnit.Code.NumLUTs, err = ParsePosInt(tReader)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < codeUnit.Code.NumLUTs; i++ {
+		err = ParseLUTBlock(tReader, codeUnit)
+		if err != nil {
+			return err
+		}
+	}
+	// TODO branches and externals
+	return nil
+}
+
+func ParseLUTBlock(tReader *tritReader, codeUnit *abra.CodeUnit) error {
+	n, err := ParsePosInt(tReader)
+	if err != nil {
+		return err
+	}
+	if n != 35 {
+		return fmt.Errorf("expected PosInt == 35 at position %d", tReader.curPos)
+	}
+	var trits Trits
+	trits, err = ReadNTrits(tReader, 35)
+	if err != nil {
+		return err
+	}
+	strRepr := abra.StringFromBinaryEncodedLUT(uint64(TritsToInt(trits)))
+	_, err = construct.AddNewLUTBlock(codeUnit, strRepr, "")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ParsePosInt(tReader *tritReader) (int, error) {
 	buf := make(Trits, 0, 31)
 	exit := false
 	for !exit {
 		if len(buf) >= 31 {
-			return -1, fmt.Errorf("ReadPosInt: wrong PosInt: longer that 31 bit at position %d", tReader.curPos-1)
+			return -1, fmt.Errorf("ParsePosInt: wrong PosInt: longer that 31 bit at position %d", tReader.curPos-1)
 		}
 		t, eof := tReader.readTrit()
 		switch {
 		case eof:
-			return -1, fmt.Errorf("ReadPosInt: unexpected EOF at position %d", tReader.curPos)
+			return -1, fmt.Errorf("ParsePosInt: unexpected EOF at position %d", tReader.curPos)
 		case t == 0:
 			exit = true
 		case t == -1:
@@ -104,7 +144,7 @@ func ReadPosInt(tReader *tritReader) (int, error) {
 		case t == 1:
 			buf = append(buf, 1)
 		default:
-			return -1, fmt.Errorf("ReadPosInt: wrong trit at position %d", tReader.curPos-1)
+			return -1, fmt.Errorf("ParsePosInt: wrong trit at position %d", tReader.curPos-1)
 		}
 	}
 	ret := 0
@@ -112,6 +152,18 @@ func ReadPosInt(tReader *tritReader) (int, error) {
 		ret <<= 1
 		if buf[i] == 1 {
 			ret |= 0x1
+		}
+	}
+	return ret, nil
+}
+
+func ReadNTrits(tReader *tritReader, n int) (Trits, error) {
+	ret := make(Trits, n)
+	var eof bool
+	for i := 0; i < n; i++ {
+		ret[i], eof = tReader.readTrit()
+		if eof {
+			return nil, fmt.Errorf("unexpected EOF at pos %d", tReader.curPos)
 		}
 	}
 	return ret, nil
