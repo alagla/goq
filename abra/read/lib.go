@@ -71,11 +71,14 @@ func ParseCode(tReader *tritReader, codeUnit *abra.CodeUnit) error {
 	if err != nil {
 		return err
 	}
+	branchDefs := make([]*branchSiteDefinitions, 0, codeUnit.Code.NumBranches)
+	var bd *branchSiteDefinitions
 	for i := 0; i < codeUnit.Code.NumBranches; i++ {
-		err = ParseBranchBlock(tReader, codeUnit)
+		bd, err = ParseBranchBlock(tReader, codeUnit)
 		if err != nil {
 			return err
 		}
+		branchDefs = append(branchDefs, bd)
 	}
 	// read External blocks
 	codeUnit.Code.NumExternalBlocks, err = ParsePosInt(tReader)
@@ -88,8 +91,8 @@ func ParseCode(tReader *tritReader, codeUnit *abra.CodeUnit) error {
 			return err
 		}
 	}
-
-	return nil
+	err = finalizeBranches(codeUnit, branchDefs)
+	return err
 }
 
 func ParseLUTBlock(tReader *tritReader, codeUnit *abra.CodeUnit) error {
@@ -113,104 +116,173 @@ func ParseLUTBlock(tReader *tritReader, codeUnit *abra.CodeUnit) error {
 	return nil
 }
 
-func ParseBranchBlock(tReader *tritReader, codeUnit *abra.CodeUnit) error {
+func ParseBranchBlock(tReader *tritReader, codeUnit *abra.CodeUnit) (*branchSiteDefinitions, error) {
 	blen, err := ParsePosInt(tReader)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	var trits Trits
 	trits, err = readNTrits(tReader, blen)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	bReader := &tritReader{trits: trits}
 	var numInputs, numBodySites, numOutputSites, numStateSites int
 
 	numInputs, err = ParsePosInt(bReader)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	inputLengths := make([]int, numInputs)
 	for i := 0; i < numInputs; i++ {
 		inputLengths[i], err = ParsePosInt(bReader)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 	numBodySites, err = ParsePosInt(bReader)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	numOutputSites, err = ParsePosInt(bReader)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	numStateSites, err = ParsePosInt(bReader)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	block := construct.AddNewBranchBlock(codeUnit, numInputs, numBodySites, numOutputSites, numStateSites)
-
-	for i := 0; i < numInputs; i++ {
-		block.Branch.AllSites[i] = construct.NewInputSite(inputLengths[i], i)
+	ret := &branchSiteDefinitions{
+		inputLengths:   inputLengths,
+		bodySiteDefs:   make([]*siteDefinition, numBodySites),
+		outputSiteDefs: make([]*siteDefinition, numOutputSites),
+		stateSiteDefs:  make([]*siteDefinition, numStateSites),
 	}
-	bodySiteDefs := make([]*siteDefinition, numBodySites)
+
+	//for i := 0; i < numInputs; i++ {
+	//	block.Branch.AllSites[i] = construct.NewInputSite(inputLengths[i], i)
+	//}
+
+	// create unfinished sites
 	for i := 0; i < numBodySites; i++ {
-		bodySiteDefs[i], err = ReadSiteDefinition(bReader)
+		ret.bodySiteDefs[i], err = ReadSiteDefinition(bReader)
 		if err != nil {
-			return err
+			return nil, err
+		}
+		err = createUnfinishedSite(block.Branch, ret.bodySiteDefs[i], numInputs+i, abra.SITE_BODY)
+		if err != nil {
+			return nil, err
 		}
 	}
-	outputSiteDefs := make([]*siteDefinition, numOutputSites)
 	for i := 0; i < numOutputSites; i++ {
-		outputSiteDefs[i], err = ReadSiteDefinition(bReader)
+		ret.outputSiteDefs[i], err = ReadSiteDefinition(bReader)
 		if err != nil {
-			return err
+			return nil, err
+		}
+		err = createUnfinishedSite(block.Branch, ret.outputSiteDefs[i], numInputs+numBodySites+i, abra.SITE_OUTPUT)
+		if err != nil {
+			return nil, err
 		}
 	}
-	stateSiteDefs := make([]*siteDefinition, numStateSites)
 	for i := 0; i < numStateSites; i++ {
-		stateSiteDefs[i], err = ReadSiteDefinition(bReader)
+		ret.stateSiteDefs[i], err = ReadSiteDefinition(bReader)
+		if err != nil {
+			return nil, err
+		}
+		err = createUnfinishedSite(block.Branch, ret.stateSiteDefs[i], numInputs+numBodySites+numOutputSites+i, abra.SITE_STATE)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ret, nil
+}
+
+func finalizeBranches(codeUnit *abra.CodeUnit, branchDefs []*branchSiteDefinitions) error {
+	if codeUnit.Code.NumBranches != len(branchDefs) {
+		return fmt.Errorf("inconsistency with number of branches")
+	}
+	var err error
+	for i := 0; i < codeUnit.Code.NumBranches; i++ {
+		err = finalizeBranch(codeUnit, codeUnit.Code.Blocks[codeUnit.Code.NumLUTs+i].Branch, branchDefs[i])
 		if err != nil {
 			return err
 		}
 	}
-	err = ParseSites(block.Branch, bodySiteDefs, abra.SITE_BODY)
-	if err != nil {
-		return err
-	}
-	err = ParseSites(block.Branch, outputSiteDefs, abra.SITE_OUTPUT)
-	if err != nil {
-		return err
-	}
-	err = ParseSites(block.Branch, stateSiteDefs, abra.SITE_STATE)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
-func ParseSites(branch *abra.Branch, siteDefs []*siteDefinition, siteType abra.SiteType) error {
+func finalizeBranch(codeUnit *abra.CodeUnit, branch *abra.Branch, branchDef *branchSiteDefinitions) error {
+	if branch.NumInputs != len(branchDef.inputLengths) {
+		return fmt.Errorf("inconsistency with inputLengths")
+	}
+	for i := 0; i < branch.NumInputs; i++ {
+		branch.AllSites[i] = construct.NewInputSite(branchDef.inputLengths[i], i)
+	}
 	var err error
-	switch siteType {
-	case abra.SITE_BODY:
-		c := 0
-		for i := 0; i < branch.NumBodySites; i++ {
-			branch.AllSites[branch.NumInputs+i], err = ParseSite(siteDefs[c], abra.SITE_BODY)
-			if err != nil {
-				return err
-			}
+	for i := 0; i < branch.NumBodySites; i++ {
+		err = finalizeSite(codeUnit, branch, branch.AllSites[branch.NumInputs+i], branchDef.bodySiteDefs[i])
+		if err != nil {
+			return err
 		}
-	case abra.SITE_OUTPUT:
-	case abra.SITE_STATE:
-	default:
-		return fmt.Errorf("internal: wrong site type")
 	}
 	return nil
 }
 
-func ParseSite(siteDef *siteDefinition, siteType abra.SiteType) (*abra.Site, error) {
-	return nil, nil
+func finalizeSite(codeUnit *abra.CodeUnit, branch *abra.Branch, site *abra.Site, siteDef *siteDefinition) error {
+	if site.IsKnot != siteDef.isKnot {
+		return fmt.Errorf("inconsistency: site.IsKnot != siteDef.isKnot")
+	}
+	if site.IsKnot {
+		if siteDef.blockIndex < 0 || siteDef.blockIndex >= len(codeUnit.Code.Blocks) {
+			return fmt.Errorf("wrong block index in knot")
+		}
+		site.Knot.Block = codeUnit.Code.Blocks[siteDef.blockIndex]
+
+		if len(site.Knot.Sites) != len(siteDef.inputSiteIndices) {
+			return fmt.Errorf("inconsistency in inpout sites knot")
+		}
+		for i, idx := range siteDef.inputSiteIndices {
+			if idx < 0 || idx >= branch.NumSites {
+				return fmt.Errorf("site index out of range in knot")
+			}
+			if idx >= site.Index {
+				if site.SiteType != abra.SITE_STATE && branch.AllSites[idx].SiteType != abra.SITE_STATE {
+					return fmt.Errorf("wrong site index in knot: must be pointing backwards")
+				}
+			}
+			site.Knot.Sites[i] = branch.AllSites[idx]
+		}
+	} else {
+		if len(site.Merge.Sites) != len(siteDef.inputSiteIndices) {
+			return fmt.Errorf("inconsistency in input sites in merge")
+		}
+		for i, idx := range siteDef.inputSiteIndices {
+			if idx < 0 || idx >= branch.NumSites {
+				return fmt.Errorf("site index out of range in merge")
+			}
+			if idx >= site.Index {
+				if site.SiteType != abra.SITE_OUTPUT && branch.AllSites[idx].SiteType != abra.SITE_OUTPUT {
+					return fmt.Errorf("wrong site index in merge: must be pointing backwards")
+				}
+			}
+			site.Merge.Sites[i] = branch.AllSites[idx]
+		}
+	}
+	return nil
+}
+
+// creates site with unresolved links to input sites and branch
+func createUnfinishedSite(branch *abra.Branch, siteDef *siteDefinition, index int, siteType abra.SiteType) error {
+	sites := make([]*abra.Site, len(siteDef.inputSiteIndices)) // empty array
+	if siteDef.isKnot {
+		branch.AllSites[index] = construct.NewKnotSite(0, "", nil, sites...)
+	} else {
+		branch.AllSites[index] = construct.NewMergeSite(0, "", sites...)
+	}
+	branch.AllSites[index].SiteType = siteType
+	branch.AllSites[index].Index = index
+	return nil
 }
 
 func ParseExternalBlock(tReader *tritReader, codeUnit *abra.CodeUnit) error {
@@ -219,9 +291,15 @@ func ParseExternalBlock(tReader *tritReader, codeUnit *abra.CodeUnit) error {
 
 type siteDefinition struct {
 	isKnot           bool
-	numInputSites    int
 	inputSiteIndices []int
 	blockIndex       int
+}
+
+type branchSiteDefinitions struct {
+	inputLengths   []int
+	bodySiteDefs   []*siteDefinition
+	outputSiteDefs []*siteDefinition
+	stateSiteDefs  []*siteDefinition
 }
 
 func ReadSiteDefinition(tReader *tritReader) (*siteDefinition, error) {
@@ -231,12 +309,13 @@ func ReadSiteDefinition(tReader *tritReader) (*siteDefinition, error) {
 		return nil, fmt.Errorf("wrong site type")
 	}
 	ret.isKnot = siteType[0] == -1
-	ret.numInputSites, err = ParsePosInt(tReader)
+	var numInputSites int
+	numInputSites, err = ParsePosInt(tReader)
 	if err != nil {
 		return nil, err
 	}
-	ret.inputSiteIndices = make([]int, ret.numInputSites)
-	for i := 0; i < ret.numInputSites; i++ {
+	ret.inputSiteIndices = make([]int, numInputSites)
+	for i := 0; i < numInputSites; i++ {
 		ret.inputSiteIndices[i], err = ParsePosInt(tReader)
 		if err != nil {
 			return nil, err
