@@ -102,13 +102,13 @@ func WriteLUTTrits(tcode Tritcode, lut *LUT) Tritcode {
 
 func WriteBranchTrits(tcode Tritcode, branch *Branch) Tritcode {
 	switch {
-	case branch.NumInputs > branch.SiteIndexCount:
+	case branch.NumInputs > branch.NumSites:
 		panic("something wrong with enumerating sites in branch 1")
-	case branch.NumInputs+branch.NumBodySites > branch.SiteIndexCount:
+	case branch.NumInputs+branch.NumBodySites > branch.NumSites:
 		panic("something wrong with enumerating sites in branch 2")
-	case branch.NumInputs+branch.NumBodySites+branch.NumOutputs > branch.SiteIndexCount:
+	case branch.NumInputs+branch.NumBodySites+branch.NumOutputs > branch.NumSites:
 		panic("something wrong with enumerating sites in branch 3")
-	case branch.NumInputs+branch.NumBodySites+branch.NumOutputs+branch.NumStateSites != branch.SiteIndexCount:
+	case branch.NumInputs+branch.NumBodySites+branch.NumOutputs+branch.NumStateSites != branch.NumSites:
 		panic("something wrong with enumerating sites in branch 4")
 	}
 	// first writing branch to determine length in trits
@@ -138,7 +138,7 @@ func WriteBranchTrits(tcode Tritcode, branch *Branch) Tritcode {
 		tbranch = tbranch.WriteSiteDefinition(branch.AllSites[i])
 	}
 
-	for i := branch.NumInputs + branch.NumBodySites + branch.NumOutputs; i < branch.SiteIndexCount; i++ {
+	for i := branch.NumInputs + branch.NumBodySites + branch.NumOutputs; i < branch.NumSites; i++ {
 		if branch.AllSites[i].SiteType != SITE_STATE {
 			panic("state site expected")
 		}

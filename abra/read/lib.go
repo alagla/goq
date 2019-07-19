@@ -7,54 +7,6 @@ import (
 	"github.com/lunfardo314/goq/abra/construct"
 )
 
-var tryteAlpabet = map[byte][3]int8{
-	'9': {0, 0, 0},    //    0
-	'A': {1, 0, 0},    //    1
-	'B': {-1, 1, 0},   //	    2
-	'C': {0, 1, 0},    //	    3
-	'D': {1, 1, 0},    //	    4
-	'E': {-1, -1, 1},  //	    5
-	'F': {0, -1, 1},   //	    6
-	'G': {1, -1, 1},   //	    7
-	'H': {-1, 0, 1},   //	    8
-	'I': {0, 0, 1},    //	    9
-	'J': {1, 0, 1},    //	   10
-	'K': {-1, 1, 1},   //	   11
-	'L': {0, 1, 1},    //	   12
-	'M': {1, 1, 1},    //	   13
-	'N': {-1, -1, -1}, //	  -13
-	'O': {0, -1, -1},  //	  -12
-	'P': {1, -1, -1},  //	  -11
-	'Q': {-1, 0, -1},  //	  -10
-	'R': {0, 0, -1},   //	   -9
-	'S': {1, 0, -1},   //	   -8
-	'T': {-1, 1, -1},  //	   -7
-	'U': {0, 1, -1},   //	   -6
-	'V': {1, 1, -1},   //	   -5
-	'W': {-1, -1, 0},  //	   -4
-	'X': {0, -1, 0},   //	   -3
-	'Y': {1, -1, 0},   //	   -2
-	'Z': {-1, 0, 0},   //    -1
-}
-
-func Trytes2Trits(trytes string) (Trits, error) {
-	ret := make(Trits, len(trytes)*3)
-	c := 0
-	for i, t := range []byte(trytes) {
-		trits, ok := tryteAlpabet[t]
-		if !ok {
-			return nil, fmt.Errorf("wrong tryte character at pos %d", i)
-		}
-		ret[c] = trits[0]
-		c++
-		ret[c] = trits[1]
-		c++
-		ret[c] = trits[2]
-		c++
-	}
-	return ret, nil
-}
-
 type tritReader struct {
 	trits  Trits
 	curPos int
@@ -68,6 +20,18 @@ func (tr *tritReader) readTrit() (int8, bool) {
 	ret := tr.trits[tr.curPos]
 	tr.curPos++
 	return ret, false
+}
+
+func readNTrits(tReader *tritReader, n int) (Trits, error) {
+	ret := make(Trits, n)
+	var eof bool
+	for i := 0; i < n; i++ {
+		ret[i], eof = tReader.readTrit()
+		if eof {
+			return nil, fmt.Errorf("unexpected EOF at pos %d", tReader.curPos)
+		}
+	}
+	return ret, nil
 }
 
 func ParseTritcode(trits Trits) (*abra.CodeUnit, error) {
@@ -91,6 +55,7 @@ func ParseCode(tReader *tritReader, codeUnit *abra.CodeUnit) error {
 	if ver != codeUnit.Code.TritcodeVersion {
 		return fmt.Errorf("expected tritcode version %d, got %d", codeUnit.Code.TritcodeVersion, ver)
 	}
+	// read LUTs
 	codeUnit.Code.NumLUTs, err = ParsePosInt(tReader)
 	if err != nil {
 		return err
@@ -101,7 +66,29 @@ func ParseCode(tReader *tritReader, codeUnit *abra.CodeUnit) error {
 			return err
 		}
 	}
-	// TODO branches and externals
+	// read Branche blocks
+	codeUnit.Code.NumBranches, err = ParsePosInt(tReader)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < codeUnit.Code.NumBranches; i++ {
+		err = ParseBranchBlock(tReader, codeUnit)
+		if err != nil {
+			return err
+		}
+	}
+	// read External blocks
+	codeUnit.Code.NumExternalBlocks, err = ParsePosInt(tReader)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < codeUnit.Code.NumExternalBlocks; i++ {
+		err = ParseExternalBlock(tReader, codeUnit)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -114,7 +101,7 @@ func ParseLUTBlock(tReader *tritReader, codeUnit *abra.CodeUnit) error {
 		return fmt.Errorf("expected PosInt == 35 at position %d", tReader.curPos)
 	}
 	var trits Trits
-	trits, err = ReadNTrits(tReader, 35)
+	trits, err = readNTrits(tReader, 35)
 	if err != nil {
 		return err
 	}
@@ -124,6 +111,144 @@ func ParseLUTBlock(tReader *tritReader, codeUnit *abra.CodeUnit) error {
 		return err
 	}
 	return nil
+}
+
+func ParseBranchBlock(tReader *tritReader, codeUnit *abra.CodeUnit) error {
+	blen, err := ParsePosInt(tReader)
+	if err != nil {
+		return err
+	}
+	var trits Trits
+	trits, err = readNTrits(tReader, blen)
+	if err != nil {
+		return err
+	}
+	bReader := &tritReader{trits: trits}
+	var numInputs, numBodySites, numOutputSites, numStateSites int
+
+	numInputs, err = ParsePosInt(bReader)
+	if err != nil {
+		return err
+	}
+	inputLengths := make([]int, numInputs)
+	for i := 0; i < numInputs; i++ {
+		inputLengths[i], err = ParsePosInt(bReader)
+		if err != nil {
+			return err
+		}
+	}
+	numBodySites, err = ParsePosInt(bReader)
+	if err != nil {
+		return err
+	}
+	numOutputSites, err = ParsePosInt(bReader)
+	if err != nil {
+		return err
+	}
+	numStateSites, err = ParsePosInt(bReader)
+	if err != nil {
+		return err
+	}
+	block := construct.AddNewBranchBlock(codeUnit, numInputs, numBodySites, numOutputSites, numStateSites)
+
+	for i := 0; i < numInputs; i++ {
+		block.Branch.AllSites[i] = construct.NewInputSite(inputLengths[i], i)
+	}
+	bodySiteDefs := make([]*siteDefinition, numBodySites)
+	for i := 0; i < numBodySites; i++ {
+		bodySiteDefs[i], err = ReadSiteDefinition(bReader)
+		if err != nil {
+			return err
+		}
+	}
+	outputSiteDefs := make([]*siteDefinition, numOutputSites)
+	for i := 0; i < numOutputSites; i++ {
+		outputSiteDefs[i], err = ReadSiteDefinition(bReader)
+		if err != nil {
+			return err
+		}
+	}
+	stateSiteDefs := make([]*siteDefinition, numStateSites)
+	for i := 0; i < numStateSites; i++ {
+		stateSiteDefs[i], err = ReadSiteDefinition(bReader)
+		if err != nil {
+			return err
+		}
+	}
+	err = ParseSites(block.Branch, bodySiteDefs, abra.SITE_BODY)
+	if err != nil {
+		return err
+	}
+	err = ParseSites(block.Branch, outputSiteDefs, abra.SITE_OUTPUT)
+	if err != nil {
+		return err
+	}
+	err = ParseSites(block.Branch, stateSiteDefs, abra.SITE_STATE)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ParseSites(branch *abra.Branch, siteDefs []*siteDefinition, siteType abra.SiteType) error {
+	var err error
+	switch siteType {
+	case abra.SITE_BODY:
+		c := 0
+		for i := 0; i < branch.NumBodySites; i++ {
+			branch.AllSites[branch.NumInputs+i], err = ParseSite(siteDefs[c], abra.SITE_BODY)
+			if err != nil {
+				return err
+			}
+		}
+	case abra.SITE_OUTPUT:
+	case abra.SITE_STATE:
+	default:
+		return fmt.Errorf("internal: wrong site type")
+	}
+	return nil
+}
+
+func ParseSite(siteDef *siteDefinition, siteType abra.SiteType) (*abra.Site, error) {
+	return nil, nil
+}
+
+func ParseExternalBlock(tReader *tritReader, codeUnit *abra.CodeUnit) error {
+	panic("implement me")
+}
+
+type siteDefinition struct {
+	isKnot           bool
+	numInputSites    int
+	inputSiteIndices []int
+	blockIndex       int
+}
+
+func ReadSiteDefinition(tReader *tritReader) (*siteDefinition, error) {
+	ret := &siteDefinition{}
+	siteType, err := readNTrits(tReader, 1)
+	if siteType[0] != -1 && siteType[0] != 1 {
+		return nil, fmt.Errorf("wrong site type")
+	}
+	ret.isKnot = siteType[0] == -1
+	ret.numInputSites, err = ParsePosInt(tReader)
+	if err != nil {
+		return nil, err
+	}
+	ret.inputSiteIndices = make([]int, ret.numInputSites)
+	for i := 0; i < ret.numInputSites; i++ {
+		ret.inputSiteIndices[i], err = ParsePosInt(tReader)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if ret.isKnot {
+		ret.blockIndex, err = ParsePosInt(tReader)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ret, nil
 }
 
 func ParsePosInt(tReader *tritReader) (int, error) {
@@ -152,18 +277,6 @@ func ParsePosInt(tReader *tritReader) (int, error) {
 		ret <<= 1
 		if buf[i] == 1 {
 			ret |= 0x1
-		}
-	}
-	return ret, nil
-}
-
-func ReadNTrits(tReader *tritReader, n int) (Trits, error) {
-	ret := make(Trits, n)
-	var eof bool
-	for i := 0; i < n; i++ {
-		ret[i], eof = tReader.readTrit()
-		if eof {
-			return nil, fmt.Errorf("unexpected EOF at pos %d", tReader.curPos)
 		}
 	}
 	return ret, nil

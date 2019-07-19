@@ -123,14 +123,14 @@ type LUT struct {
 //]
 
 type Branch struct {
-	AllSites       []*Site
-	Size           int
-	AssumedSize    int
-	SiteIndexCount int
-	NumInputs      int
-	NumBodySites   int
-	NumStateSites  int
-	NumOutputs     int
+	AllSites      []*Site
+	Size          int
+	AssumedSize   int
+	NumSites      int
+	NumInputs     int
+	NumBodySites  int
+	NumStateSites int
+	NumOutputs    int
 }
 
 //site:

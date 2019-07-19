@@ -18,6 +18,7 @@ func NewCodeUnit() *CodeUnit {
 }
 
 func addBlock(codeUnit *CodeUnit, block *Block) {
+	block.Index = len(codeUnit.Code.Blocks)
 	codeUnit.Code.Blocks = append(codeUnit.Code.Blocks, block)
 }
 
@@ -71,17 +72,29 @@ func MustAddNewBranchBlock(codeUnit *CodeUnit, lookupName string, assumedSize in
 	if FindBranchBlock(codeUnit, lookupName) != nil {
 		panic(fmt.Errorf("repeating branch block with lookupName = '%s'", lookupName))
 	}
-	retbranch := &Branch{
-		AllSites:    make([]*Site, 0, 10),
-		AssumedSize: assumedSize,
+	ret := AddNewBranchBlock(codeUnit, 0, 0, 0, 0)
+	ret.LookupName = lookupName
+	ret.AssumedSize = assumedSize
+	return ret
+}
+
+func AddNewBranchBlock(codeUnit *CodeUnit, numInputs, numBody, numOutputs, numState int) *Block {
+	numsites := numInputs + numBody + numOutputs + numState
+	capsites := numsites
+	if capsites < 10 {
+		capsites = 10
 	}
 	ret := &Block{
-		BlockType:   BLOCK_BRANCH,
-		Branch:      retbranch,
-		LookupName:  lookupName,
-		AssumedSize: assumedSize,
+		BlockType: BLOCK_BRANCH,
+		Branch: &Branch{
+			AllSites:      make([]*Site, numsites, capsites),
+			NumInputs:     numInputs,
+			NumBodySites:  numBody,
+			NumOutputs:    numOutputs,
+			NumStateSites: numState,
+			NumSites:      numsites,
+		},
 	}
-
 	addBlock(codeUnit, ret)
 	return ret
 }
@@ -111,22 +124,26 @@ func GetInputSite(branch *Branch, idx int) *Site {
 	panic("input site index out of bounds")
 }
 
-func AddInputSite(branch *Branch, size int) *Site {
+func NewInputSite(size, index int) *Site {
 	if size == 0 {
-		panic("AddInputSite: size == 0")
+		panic("NewInputSite: size == 0")
 	}
-	ret := &Site{
-		SiteType:         SITE_INPUT,
-		Size:             size,
-		AssumedSize:      size,
-		Index:            branch.SiteIndexCount,
-		AddedToTheBranch: true,
+	return &Site{
+		SiteType: SITE_INPUT,
+		Size:     size,
+		Index:    index,
 	}
+}
+
+func AddInputSite(branch *Branch, size int) *Site {
+	ret := NewInputSite(size, branch.NumSites)
+	ret.AssumedSize = size
+	ret.AddedToTheBranch = true
 	branch.NumInputs++
-	branch.SiteIndexCount++
+	branch.NumSites++
 	branch.AllSites = append(branch.AllSites, ret)
-	if len(branch.AllSites) != branch.SiteIndexCount {
-		panic("AddInputSite: len(branch.AllSites) != branch.SiteIndexCount")
+	if len(branch.AllSites) != branch.NumSites {
+		panic("AddInputSite: len(branch.AllSites) != branch.NumSites")
 	}
 	return ret
 }
@@ -138,8 +155,8 @@ func MustAddNewNoninputSite(branch *Branch, site *Site) {
 	if FindSite(branch, site.LookupName) != nil {
 		panic(fmt.Errorf("repeated input site '%s'", site.LookupName))
 	}
-	site.Index = branch.SiteIndexCount
-	branch.SiteIndexCount++
+	site.Index = branch.NumSites
+	branch.NumSites++
 	switch site.SiteType {
 	case SITE_BODY:
 		branch.NumBodySites++
@@ -152,8 +169,8 @@ func MustAddNewNoninputSite(branch *Branch, site *Site) {
 	}
 	branch.AllSites = append(branch.AllSites, site)
 	site.AddedToTheBranch = true
-	if len(branch.AllSites) != branch.SiteIndexCount {
-		panic("MustAddNewNoninputSite: len(branch.AllSites) != branch.SiteIndexCount")
+	if len(branch.AllSites) != branch.NumSites {
+		panic("MustAddNewNoninputSite: len(branch.AllSites) != branch.NumSites")
 	}
 }
 
@@ -171,8 +188,8 @@ func AddOrUpdateSite(branch *Branch, site *Site) *Site {
 	ret.IsKnot = site.IsKnot
 	ret.Knot = site.Knot
 	ret.Merge = site.Merge
-	if len(branch.AllSites) != branch.SiteIndexCount {
-		panic("AddOrUpdateSite: len(branch.AllSites) != branch.SiteIndexCount")
+	if len(branch.AllSites) != branch.NumSites {
+		panic("AddOrUpdateSite: len(branch.AllSites) != branch.NumSites")
 	}
 	return ret
 }
@@ -185,9 +202,9 @@ func MustAddUnfinishedStateSite(branch *Branch, lookupName string, assumedSize i
 		LookupName:  lookupName,
 		SiteType:    SITE_STATE,
 		AssumedSize: assumedSize,
-		Index:       branch.SiteIndexCount,
+		Index:       branch.NumSites,
 	}
-	branch.SiteIndexCount++
+	branch.NumSites++
 	branch.NumStateSites++
 	branch.AllSites = append(branch.AllSites, ret)
 	return ret

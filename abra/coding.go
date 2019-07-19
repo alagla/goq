@@ -1,6 +1,7 @@
 package abra
 
 import (
+	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
 	"strings"
 )
@@ -213,4 +214,52 @@ func Bytes2Trits(bytes []byte) Trits {
 		ret[i] = int8(t)
 	}
 	return ret
+}
+
+var tryteAlpabet = map[byte][3]int8{
+	'9': {0, 0, 0},    //    0
+	'A': {1, 0, 0},    //    1
+	'B': {-1, 1, 0},   //	    2
+	'C': {0, 1, 0},    //	    3
+	'D': {1, 1, 0},    //	    4
+	'E': {-1, -1, 1},  //	    5
+	'F': {0, -1, 1},   //	    6
+	'G': {1, -1, 1},   //	    7
+	'H': {-1, 0, 1},   //	    8
+	'I': {0, 0, 1},    //	    9
+	'J': {1, 0, 1},    //	   10
+	'K': {-1, 1, 1},   //	   11
+	'L': {0, 1, 1},    //	   12
+	'M': {1, 1, 1},    //	   13
+	'N': {-1, -1, -1}, //	  -13
+	'O': {0, -1, -1},  //	  -12
+	'P': {1, -1, -1},  //	  -11
+	'Q': {-1, 0, -1},  //	  -10
+	'R': {0, 0, -1},   //	   -9
+	'S': {1, 0, -1},   //	   -8
+	'T': {-1, 1, -1},  //	   -7
+	'U': {0, 1, -1},   //	   -6
+	'V': {1, 1, -1},   //	   -5
+	'W': {-1, -1, 0},  //	   -4
+	'X': {0, -1, 0},   //	   -3
+	'Y': {1, -1, 0},   //	   -2
+	'Z': {-1, 0, 0},   //    -1
+}
+
+func Trytes2Trits(trytes string) (Trits, error) {
+	ret := make(Trits, len(trytes)*3)
+	c := 0
+	for i, t := range []byte(trytes) {
+		trits, ok := tryteAlpabet[t]
+		if !ok {
+			return nil, fmt.Errorf("wrong tryte character at pos %d", i)
+		}
+		ret[c] = trits[0]
+		c++
+		ret[c] = trits[1]
+		c++
+		ret[c] = trits[2]
+		c++
+	}
+	return ret, nil
 }

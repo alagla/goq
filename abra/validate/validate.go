@@ -73,7 +73,7 @@ func GetStats(branch *Branch) *BranchStats {
 }
 
 func ValidateBranch(branch *Branch, lookupName string) error {
-	if branch.NumInputs+branch.NumBodySites+branch.NumStateSites+branch.NumOutputs != branch.SiteIndexCount {
+	if branch.NumInputs+branch.NumBodySites+branch.NumStateSites+branch.NumOutputs != branch.NumSites {
 		return fmt.Errorf("something wrong with enumerating sites in branch '%s'", lookupName)
 	}
 	for _, s := range branch.AllSites {
@@ -146,8 +146,8 @@ func checkSiteIndices(branch *Branch, site *Site) error {
 	if site.Index < 0 {
 		return fmt.Errorf("invalid site: 'site.Index < 0'")
 	}
-	if site.Index < 0 || site.Index >= branch.SiteIndexCount {
-		return fmt.Errorf("invalid site: 'site.Index < 0 || site.Index >= branch.SiteIndexCount'")
+	if site.Index < 0 || site.Index >= branch.NumSites {
+		return fmt.Errorf("invalid site: 'site.Index < 0 || site.Index >= branch.NumSites'")
 	}
 	if site.IsKnot {
 		for _, s := range site.Knot.Sites {
