@@ -5,6 +5,7 @@ import (
 	"github.com/lunfardo314/goq/abra"
 	cabra "github.com/lunfardo314/goq/abra/construct"
 	gabra "github.com/lunfardo314/goq/abra/generate"
+	rabra "github.com/lunfardo314/goq/abra/read"
 	vabra "github.com/lunfardo314/goq/abra/validate"
 	"github.com/lunfardo314/goq/analyzeyaml"
 	. "github.com/lunfardo314/goq/cfg"
@@ -79,6 +80,18 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	var tritsecho trinary.Trits
+	tritsecho, err = rabra.Trytes2Trits(trytecode)
+	Logf(0, "reading back %d trits from trytes", len(tritsecho))
+
+	Logf(0, "parsing back generated tritcode")
+	var codeEcho *abra.CodeUnit
+	codeEcho, err = rabra.ParseTritcode(tritsecho)
+	if err != nil {
+		panic(err)
+	}
+	Logf(0, "tritcode version is '%d'", codeEcho.Code.TritcodeVersion)
 }
 
 type sizeInfo struct{ size, assumedSize int }
