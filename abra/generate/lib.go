@@ -1,39 +1,22 @@
 package generate
 
 import (
-	"bytes"
 	. "github.com/iotaledger/iota.go/trinary"
 	. "github.com/lunfardo314/goq/abra"
 )
 
-type Tritcode struct {
-	Buf bytes.Buffer
+type Tritcode Trits
+
+func NewTritcode() Tritcode {
+	return make(Trits, 0, 4096)
 }
 
-func NewTritcode() *Tritcode {
-	return &Tritcode{}
+func WriteTrits(tcode Tritcode, trits Trits) Tritcode {
+	return append(tcode, trits...)
 }
 
-func (tcode *Tritcode) writeTrits(trits Trits) error {
-	for _, v := range trits {
-		_, err := tcode.Buf.Write([]byte{byte(v)})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (tcode *Tritcode) MustWriteTrits(trits Trits) {
-	if err := tcode.writeTrits(trits); err != nil {
-		panic(err)
-	}
-}
-
-func (tcode *Tritcode) MustWritePosInt(n int) {
-	if err := tcode.writeTrits(MustInt2PosIntAsPerSpec(n)); err != nil {
-		panic(err)
-	}
+func WritePosInt(tcode Tritcode, n int) Tritcode {
+	return WriteTrits(tcode, MustInt2PosIntAsPerSpec(n))
 }
 
 //code:
@@ -48,7 +31,7 @@ func (tcode *Tritcode) MustWritePosInt(n int) {
 
 // always returns trits with len(trits) % 3 == 0
 
-func (tcode *Tritcode) MustWriteCode(code *Code) int {
+func WriteCode(tcode Tritcode, code *Code) Tritcode {
 	switch {
 	case code.NumLUTs > len(code.Blocks):
 		panic("inconsistent Code 1")
@@ -58,52 +41,52 @@ func (tcode *Tritcode) MustWriteCode(code *Code) int {
 		panic("inconsistent Code 3")
 	}
 
-	tcode.MustWritePosInt(code.TritcodeVersion)
+	tcode = WritePosInt(tcode, code.TritcodeVersion)
 
-	tcode.MustWritePosInt(code.NumLUTs)
+	tcode = WritePosInt(tcode, code.NumLUTs)
 	// Expected to be sorted, first LUTs
 	// write LUTs
 	for i := 0; i < code.NumLUTs; i++ {
 		if code.Blocks[i].BlockType != BLOCK_LUT {
 			panic("inconsistent Code 4")
 		}
-		tcode.MustWriteLUTTrits(code.Blocks[i].LUT)
+		tcode = WriteLUTTrits(tcode, code.Blocks[i].LUT)
 	}
 
-	tcode.MustWritePosInt(code.NumBranches)
+	tcode = WritePosInt(tcode, code.NumBranches)
 	// second Branches
 	// write Branches
 	for i := code.NumLUTs; i < code.NumLUTs+code.NumBranches; i++ {
 		if code.Blocks[i].BlockType != BLOCK_BRANCH {
 			panic("inconsistent Code 5")
 		}
-		tcode.MustWriteBranchTrits(code.Blocks[i].Branch)
+		tcode = WriteBranchTrits(tcode, code.Blocks[i].Branch)
 	}
 
-	tcode.MustWritePosInt(code.NumExternalBlocks)
+	tcode = WritePosInt(tcode, code.NumExternalBlocks)
 	// second Branches
 	// write Branches
 	for i := code.NumLUTs + code.NumBranches; i < len(code.Blocks); i++ {
 		if code.Blocks[i].BlockType != BLOCK_EXTERNAL {
 			panic("inconsistent Code 6")
 		}
-		tcode.MustWriteExternalBlockTrits(code.Blocks[i].ExternalBlock)
+		tcode = tcode.WriteExternalBlockTrits(code.Blocks[i].ExternalBlock)
 	}
 	// make len(result) % 3 == 0
-	rem := tcode.Buf.Len() % 3
-	for i := 0; i < rem; i++ {
-		tcode.MustWriteTrits(Trits{0})
+	rem := len(tcode) % 3
+	for ; rem%3 != 0; rem = (rem + 1) % 3 {
+		tcode = WriteTrits(tcode, Trits{0})
 	}
-	if tcode.Buf.Len()%3 != 0 {
+	if len(tcode)%3 != 0 {
 		panic("tcode.Buf.Len() % 3 != 0")
 	}
-	return tcode.Buf.Len()
+	return tcode
 }
 
-func (tcode *Tritcode) MustWriteLUTTrits(lut *LUT) {
+func WriteLUTTrits(tcode Tritcode, lut *LUT) Tritcode {
 	tlut := TritEncodeLUTBinary(lut.Binary)
-	tcode.MustWritePosInt(len(tlut)) // must be 35
-	tcode.MustWriteTrits(tlut)
+	tcode = WritePosInt(tcode, len(tlut)) // must be 35
+	return WriteTrits(tcode, tlut)
 }
 
 //branch:
@@ -117,7 +100,7 @@ func (tcode *Tritcode) MustWriteLUTTrits(lut *LUT) {
 //, memory latch site definitions...
 //]
 
-func (tcode *Tritcode) MustWriteBranchTrits(branch *Branch) {
+func WriteBranchTrits(tcode Tritcode, branch *Branch) Tritcode {
 	switch {
 	case branch.NumInputs > branch.SiteIndexCount:
 		panic("something wrong with enumerating sites in branch 1")
@@ -130,64 +113,65 @@ func (tcode *Tritcode) MustWriteBranchTrits(branch *Branch) {
 	}
 	// first writing branch to determine length in trits
 	tbranch := NewTritcode()
-	tbranch.MustWritePosInt(branch.NumInputs)
+	tbranch = WritePosInt(tbranch, branch.NumInputs)
 
 	for i := 0; i < branch.NumInputs; i++ {
 		if branch.AllSites[i].SiteType != SITE_INPUT {
 			panic("input site expected")
 		}
-		tbranch.MustWritePosInt(branch.AllSites[i].Size)
+		tbranch = WritePosInt(tbranch, branch.AllSites[i].Size)
 	}
-	tbranch.MustWritePosInt(branch.NumBodySites)
-	tbranch.MustWritePosInt(branch.NumOutputs)
-	tbranch.MustWritePosInt(branch.NumStateSites)
+	tbranch = WritePosInt(tbranch, branch.NumBodySites)
+	tbranch = WritePosInt(tbranch, branch.NumOutputs)
+	tbranch = WritePosInt(tbranch, branch.NumStateSites)
 
 	for i := branch.NumInputs; i < branch.NumInputs+branch.NumBodySites; i++ {
 		if branch.AllSites[i].SiteType != SITE_BODY {
 			panic("body site expected")
 		}
-		tbranch.MustWriteSiteDefinition(branch.AllSites[i])
+		tbranch = tbranch.WriteSiteDefinition(branch.AllSites[i])
 	}
 	for i := branch.NumInputs + branch.NumBodySites; i < branch.NumInputs+branch.NumBodySites+branch.NumOutputs; i++ {
 		if branch.AllSites[i].SiteType != SITE_OUTPUT {
 			panic("output site expected")
 		}
-		tbranch.MustWriteSiteDefinition(branch.AllSites[i])
+		tbranch = tbranch.WriteSiteDefinition(branch.AllSites[i])
 	}
 
 	for i := branch.NumInputs + branch.NumBodySites + branch.NumOutputs; i < branch.SiteIndexCount; i++ {
 		if branch.AllSites[i].SiteType != SITE_STATE {
 			panic("state site expected")
 		}
-		tbranch.MustWriteSiteDefinition(branch.AllSites[i])
+		tbranch = tbranch.WriteSiteDefinition(branch.AllSites[i])
 	}
 
 	// writing block
-	tcode.MustWritePosInt(len(tbranch.Buf.Bytes()))
-	tcode.MustWriteTrits(Bytes2Trits(tbranch.Buf.Bytes()))
+	tcode = WritePosInt(tcode, len(tbranch))
+	tcode = WriteTrits(tcode, tbranch)
+	return tcode
 }
 
-func (tcode *Tritcode) MustWriteSiteDefinition(site *Site) {
+func (tcode Tritcode) WriteSiteDefinition(site *Site) Tritcode {
 	if site.SiteType == SITE_INPUT {
-		tcode.MustWritePosInt(site.Size)
-		return
+		return WritePosInt(tcode, site.Size)
 	}
 	if site.IsKnot {
-		tcode.MustWriteTrits(Trits{-1})
-		tcode.MustWritePosInt(len(site.Knot.Sites))
+		tcode = WriteTrits(tcode, Trits{-1})
+		tcode = WritePosInt(tcode, len(site.Knot.Sites))
 		for _, s := range site.Knot.Sites {
-			tcode.MustWritePosInt(s.Index)
+			tcode = WritePosInt(tcode, s.Index)
 		}
-		tcode.MustWritePosInt(site.Knot.Block.Index)
+		tcode = WritePosInt(tcode, site.Knot.Block.Index)
 	} else {
-		tcode.MustWriteTrits(Trits{1})
-		tcode.MustWritePosInt(len(site.Merge.Sites))
+		tcode = WriteTrits(tcode, Trits{1})
+		tcode = WritePosInt(tcode, len(site.Merge.Sites))
 		for _, s := range site.Merge.Sites {
-			tcode.MustWritePosInt(s.Index)
+			tcode = WritePosInt(tcode, s.Index)
 		}
 	}
+	return tcode
 }
 
-func (tcode *Tritcode) MustWriteExternalBlockTrits(external *ExternalBlock) {
+func (tcode Tritcode) WriteExternalBlockTrits(external *ExternalBlock) Tritcode {
 	panic("implement me")
 }

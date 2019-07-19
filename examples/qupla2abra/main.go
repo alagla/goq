@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
 	cabra "github.com/lunfardo314/goq/abra/construct"
 	gabra "github.com/lunfardo314/goq/abra/generate"
@@ -8,14 +9,19 @@ import (
 	"github.com/lunfardo314/goq/analyzeyaml"
 	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/readyaml"
+	"io/ioutil"
 	"sort"
 )
 
-const yamlToLoad = "C:/Users/evaldas/Documents/proj/Go/src/github.com/lunfardo314/goq/examples/modules/QuplaTests.yml"
+const (
+	moduleName  = "QuplaTests"
+	yamlPath    = "C:/Users/evaldas/Documents/proj/Go/src/github.com/lunfardo314/goq/examples/modules/"
+	siteDataDir = "C:/Users/evaldas/Documents/proj/site_data/tritcode/"
+)
 
 func main() {
-	Logf(0, "Loading Qupla module from %v", yamlToLoad)
-	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(yamlToLoad)
+	Logf(0, "Loading Qupla module from %v")
+	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(yamlPath + moduleName + ".yml")
 	if err != nil {
 		Logf(0, "Error while parsing YAML file: %v", err)
 		moduleYAML = nil
@@ -50,13 +56,29 @@ func main() {
 	Logf(0, "Generating Abra tritcode")
 
 	tritcode := gabra.NewTritcode()
-	numtrits := tritcode.MustWriteCode(codeUnit.Code)
-	Logf(0, "Number of trits generated: %d", numtrits)
+	tritcode = gabra.WriteCode(tritcode, codeUnit.Code)
+	Logf(0, "Number of trits generated: %d", len(tritcode))
 
-	trytecode := abra.MustBTrits2Bytes(tritcode.Buf.Bytes())
+	trytecode := trinary.MustTritsToTrytes(tritcode)
 	Logf(0, "Number of trytes generated: %d", len(trytecode))
-
 	Logf(0, "First 200 of trytes: %s...", string(trytecode[:200]))
+
+	packedtrits := trinary.TritsToBytes(tritcode)
+	Logf(0, "Number of bytes in packed trits (5 trits per byte) generated: %d", len(packedtrits))
+
+	fname := siteDataDir + moduleName + ".abra.trytes"
+	Logf(0, "writing trytes to %s", fname)
+	err = ioutil.WriteFile(fname, []byte(trytecode), 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	fname = siteDataDir + moduleName + ".abra.packed"
+	Logf(0, "writing packed trits to %s", fname)
+	err = ioutil.WriteFile(fname, packedtrits, 0644)
+	if err != nil {
+		panic(err)
+	}
 }
 
 type sizeInfo struct{ size, assumedSize int }

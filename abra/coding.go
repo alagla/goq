@@ -196,21 +196,3 @@ func Bytes2Trits(bytes []byte) Trits {
 	}
 	return ret
 }
-
-const tryteAlphabet = "9ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-func MustBTrits2Bytes(tbytes []byte) []byte {
-	if len(tbytes)%3 != 0 {
-		panic("trits slice size must be a multiple of 3")
-	}
-
-	o := make([]byte, len(tbytes)/3)
-	for i := 0; i < len(tbytes)/3; i++ {
-		j := int8(tbytes[i*3] + tbytes[i*3+1]*3 + tbytes[i*3+2]*9)
-		if j < 0 {
-			j += int8(len(tryteAlphabet))
-		}
-		o[i] = tryteAlphabet[j]
-	}
-	return o
-}
