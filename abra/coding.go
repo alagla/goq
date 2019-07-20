@@ -80,7 +80,7 @@ func BinaryEncodedLUTFromString(strRepr string) uint64 {
 
 func StringFromBinaryEncodedLUT(binary uint64) string {
 	ret := make([]byte, 27)
-	for i := 0; i < 27; i++ {
+	for i := 26; i >= 0; i-- {
 		switch binary & 0x3 {
 		case TRIT_NULL:
 			ret[i] = '@'

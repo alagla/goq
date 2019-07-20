@@ -220,8 +220,23 @@ func finalizeBranch(codeUnit *abra.CodeUnit, branch *abra.Branch, branchDef *bra
 		branch.AllSites[i] = construct.NewInputSite(branchDef.inputLengths[i], i)
 	}
 	var err error
+	offs := branch.NumInputs
 	for i := 0; i < branch.NumBodySites; i++ {
-		err = finalizeSite(codeUnit, branch, branch.AllSites[branch.NumInputs+i], branchDef.bodySiteDefs[i])
+		err = finalizeSite(codeUnit, branch, branch.AllSites[offs+i], branchDef.bodySiteDefs[i])
+		if err != nil {
+			return err
+		}
+	}
+	offs += branch.NumBodySites
+	for i := 0; i < branch.NumOutputs; i++ {
+		err = finalizeSite(codeUnit, branch, branch.AllSites[offs+i], branchDef.outputSiteDefs[i])
+		if err != nil {
+			return err
+		}
+	}
+	offs += branch.NumOutputs
+	for i := 0; i < branch.NumStateSites; i++ {
+		err = finalizeSite(codeUnit, branch, branch.AllSites[offs+i], branchDef.stateSiteDefs[i])
 		if err != nil {
 			return err
 		}

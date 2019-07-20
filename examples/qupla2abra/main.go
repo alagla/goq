@@ -44,7 +44,7 @@ func main() {
 
 	Logf(0, "------ validating entire code unit")
 	vabra.CalcAllSizes(codeUnit)
-	errs := vabra.Validate(codeUnit)
+	errs := vabra.Validate(codeUnit, true)
 	if len(errs) == 0 {
 		Logf(0, "code unit validate OK")
 		printSizes(codeUnit)
@@ -96,6 +96,29 @@ func main() {
 	Logf(0, "number of branch blocks is '%d'", codeEcho.Code.NumBranches)
 	Logf(0, "number of external blocks is '%d'", codeEcho.Code.NumExternalBlocks)
 
+	Logf(0, "calculating sizes")
+	vabra.CalcAllSizes(codeEcho)
+
+	Logf(0, "validating generated tritcode")
+	errs = vabra.Validate(codeEcho, false)
+	if len(errs) == 0 {
+		Logf(0, "code unit validate OK")
+		printSizes(codeUnit)
+	} else {
+		Logf(0, "Validation errors in code unit")
+		for _, err := range errs {
+			Logf(0, "    ->  %v", err)
+		}
+	}
+
+	errs = vabra.CompareCodeUnits(codeUnit, codeEcho)
+	if len(errs) == 0 {
+		Logf(0, "original and echo code units are equal")
+	} else {
+		for _, err := range errs {
+			Logf(0, "%v", err)
+		}
+	}
 }
 
 type sizeInfo struct{ size, assumedSize int }

@@ -5,10 +5,10 @@ import (
 	. "github.com/lunfardo314/goq/abra"
 )
 
-func Validate(codeUnit *CodeUnit) []error {
+func Validate(codeUnit *CodeUnit, assumeSizes bool) []error {
 	ret := make([]error, 0, 10)
 	for _, block := range codeUnit.Code.Blocks {
-		if block.AssumedSize != block.Size || block.Size == 0 {
+		if (assumeSizes && block.AssumedSize != block.Size) || block.Size == 0 {
 			ret = append(ret, fmt.Errorf("AssumedSize (%d) != Size (%d) in block '%s'",
 				block.AssumedSize, block.Size, block.LookupName))
 		}
@@ -21,7 +21,7 @@ func Validate(codeUnit *CodeUnit) []error {
 		case BLOCK_BRANCH:
 			if err = ValidateBranch(block.Branch, block.LookupName); err != nil {
 				ret = append(ret, fmt.Errorf("ValidateBranch for '%s': '%s'", block.LookupName, err))
-			} else if err = ValidateBranchSizes(block.Branch, block.LookupName); err != nil {
+			} else if err = ValidateBranchSizes(block.Branch, block.LookupName, assumeSizes); err != nil {
 				ret = append(ret, fmt.Errorf("ValidateBranchSizes for '%s': '%s'", block.LookupName, err))
 			}
 		case BLOCK_EXTERNAL:
@@ -90,13 +90,13 @@ func ValidateBranch(branch *Branch, lookupName string) error {
 	return nil
 }
 
-func ValidateBranchSizes(branch *Branch, lookupName string) error {
+func ValidateBranchSizes(branch *Branch, lookupName string, assumeSizes bool) error {
 	if branch.Size == 0 || GetBranchInputSize(branch) == 0 {
 		return fmt.Errorf("wrong branch size %d in '%s'", branch.Size, lookupName)
 	}
 	for _, s := range branch.AllSites {
 
-		if s.Size == 0 || s.Size != s.AssumedSize {
+		if s.Size == 0 || (assumeSizes && s.Size != s.AssumedSize) {
 			return fmt.Errorf("site.AssumedSize (%d) != site.Size (%d) in site '%s' of block '%s'",
 				s.AssumedSize, s.Size, s.LookupName, lookupName)
 		}
