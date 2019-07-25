@@ -124,7 +124,6 @@ type LUT struct {
 
 type Branch struct {
 	AllSites      []*Site
-	Size          int
 	AssumedSize   int
 	NumSites      int
 	NumInputs     int
@@ -210,6 +209,7 @@ type Block struct {
 	ExternalBlock *ExternalBlock
 	// lookup name, compile time only
 	LookupName  string
-	Size        int
+	SizeOut     int
+	SizeIn      int
 	AssumedSize int
 }

@@ -36,7 +36,7 @@ func CompareBlocks(block1, block2 *abra.Block, assumedIndex int) []error {
 	if block1.Index != block2.Index {
 		ret = append(ret, fmt.Errorf("block #%d: block1.Index != block2.Index", assumedIndex))
 	}
-	if block1.Size != block2.Size {
+	if block1.SizeOut != block2.SizeOut {
 		ret = append(ret, fmt.Errorf("block #%d: block1.Size != block2.Size", assumedIndex))
 	}
 	if block1.BlockType != block2.BlockType {

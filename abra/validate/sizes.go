@@ -1,32 +1,35 @@
 package validate
 
-import . "github.com/lunfardo314/goq/abra"
+import (
+	. "github.com/lunfardo314/goq/abra"
+)
 
 func setZeroSizes(codeUnit *CodeUnit) {
 	for _, b := range codeUnit.Code.Blocks {
 		switch b.BlockType {
-		case BLOCK_LUT:
-			b.Size = 0
-		case BLOCK_EXTERNAL:
-			b.Size = 0
+		case BLOCK_LUT, BLOCK_EXTERNAL:
+			b.SizeOut = 0
+			b.SizeIn = 0
 		case BLOCK_BRANCH:
-			b.Size = 0
-			setZeroSizesInBranch(b.Branch)
+			b.SizeOut = 0
+			b.SizeIn = 0
+			for _, s := range b.Branch.AllSites {
+				if s.SiteType != SITE_INPUT {
+					s.Size = 0
+				}
+			}
 		}
 	}
 }
 
 func CalcAllSizes(codeUnit *CodeUnit) {
 	setZeroSizes(codeUnit)
-
-	notFinished := true
-	var saveSize int
-	for notFinished {
-		notFinished = false
+	changedBlock := true
+	for changedBlock {
+		changedBlock = false
 		for _, block := range codeUnit.Code.Blocks {
-			saveSize = block.Size
-			CalcSizesInBlock(block)
-			notFinished = notFinished || saveSize != block.Size
+			changed := CalcSizesInBlock(block)
+			changedBlock = changedBlock || changed
 		}
 	}
 }
@@ -41,60 +44,73 @@ func GetBranchInputSize(branch *Branch) int {
 	return ret
 }
 
-func setZeroSizesInBranch(branch *Branch) {
-	for _, s := range branch.AllSites {
-		if s.SiteType != SITE_INPUT {
-			s.Size = 0
-		}
-	}
-	branch.Size = 0
-}
-
-func CalcSizesInBlock(block *Block) {
+func CalcSizesInBlock(block *Block) bool {
+	//cfg.Logf(0, "calculating size block #%d", block.Index)
 	switch block.BlockType {
 	case BLOCK_LUT:
-		block.Size = 1
-		return
+		if block.SizeOut != 1 || block.SizeIn != 3 {
+			block.SizeOut = 1
+			block.SizeIn = 3
+			return true
+		}
+		return false
 	case BLOCK_EXTERNAL:
 		panic("implement me")
 	case BLOCK_BRANCH:
-		CalcSizesInBranch(block.Branch)
-		block.Size = block.Branch.Size
-		return
+		return CalcSizesInBranchBlock(block)
 	}
 	panic("wrong block type")
 }
 
-func CalcSizesInBranch(branch *Branch) {
-	for _, s := range branch.AllSites {
-		CalcSiteSize(s)
+func CalcSizesInBranchBlock(block *Block) bool {
+	if block.BlockType != BLOCK_BRANCH {
+		panic("inconsistency")
 	}
-	branch.Size = 0
+	anything_changed := false
+	saveIn := block.SizeIn
+	saveOut := block.SizeOut
+
+	branch := block.Branch
+	block.SizeIn = GetBranchInputSize(branch)
+
+	anySiteChanged := true
+	for anySiteChanged {
+		anySiteChanged = false
+		for _, s := range branch.AllSites {
+			changed := CalcSiteSize(s)
+			anySiteChanged = anySiteChanged || changed
+			anything_changed = anything_changed || anySiteChanged
+		}
+	}
+
+	block.SizeOut = 0
 	for _, s := range branch.AllSites {
 		if s.SiteType == SITE_OUTPUT {
 			if s.Size == 0 {
-				branch.Size = 0
-				return
+				block.SizeOut = 0
+				break
 			}
-			branch.Size += s.Size
+			block.SizeOut += s.Size
 		}
 	}
+	return anything_changed || saveIn != block.SizeIn || saveOut != block.SizeOut
 }
 
-func CalcSiteSize(site *Site) {
-	if site.SiteType == SITE_INPUT {
-		return
-	}
-	if site.IsKnot {
-		site.Size = CalcKnotSize(site.Knot)
-	} else {
-		site.Size = CalcMergeSize(site.Merge)
+func CalcSiteSize(site *Site) bool {
+	saveSize := site.Size
+	if site.SiteType != SITE_INPUT {
+		if site.IsKnot {
+			site.Size = CalcKnotSize(site.Knot)
+		} else {
+			site.Size = CalcMergeSize(site.Merge)
+		}
 	}
 	site.CalculatedSize = true
+	return saveSize != site.Size
 }
 
 func CalcKnotSize(knot *Knot) int {
-	return knot.Block.Size
+	return knot.Block.SizeOut
 }
 
 func GetKnotInputSize(knot *Knot) int {

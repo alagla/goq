@@ -8,20 +8,20 @@ import (
 func Validate(codeUnit *CodeUnit, assumeSizes bool) []error {
 	ret := make([]error, 0, 10)
 	for _, block := range codeUnit.Code.Blocks {
-		if (assumeSizes && block.AssumedSize != block.Size) || block.Size == 0 {
+		if (assumeSizes && block.AssumedSize != block.SizeOut) || block.SizeOut == 0 {
 			ret = append(ret, fmt.Errorf("AssumedSize (%d) != Size (%d) in block '%s'",
-				block.AssumedSize, block.Size, block.LookupName))
+				block.AssumedSize, block.SizeOut, block.LookupName))
 		}
 		var err error
 		switch block.BlockType {
 		case BLOCK_LUT:
-			if block.Size != 1 {
+			if block.SizeOut != 1 {
 				ret = append(ret, fmt.Errorf("LUT size != 1 in '%s'", block.LookupName))
 			}
 		case BLOCK_BRANCH:
 			if err = ValidateBranch(block.Branch, block.LookupName); err != nil {
 				ret = append(ret, fmt.Errorf("ValidateBranch for '%s': '%s'", block.LookupName, err))
-			} else if err = ValidateBranchSizes(block.Branch, block.LookupName, assumeSizes); err != nil {
+			} else if err = ValidateBranchBlockSizes(block, block.LookupName, assumeSizes); err != nil {
 				ret = append(ret, fmt.Errorf("ValidateBranchSizes for '%s': '%s'", block.LookupName, err))
 			}
 		case BLOCK_EXTERNAL:
@@ -90,9 +90,13 @@ func ValidateBranch(branch *Branch, lookupName string) error {
 	return nil
 }
 
-func ValidateBranchSizes(branch *Branch, lookupName string, assumeSizes bool) error {
-	if branch.Size == 0 || GetBranchInputSize(branch) == 0 {
-		return fmt.Errorf("wrong branch size %d in '%s'", branch.Size, lookupName)
+func ValidateBranchBlockSizes(block *Block, lookupName string, assumeSizes bool) error {
+	if block.BlockType != BLOCK_BRANCH {
+		panic("inconsistency")
+	}
+	branch := block.Branch
+	if block.SizeOut == 0 || block.SizeIn == 0 {
+		return fmt.Errorf("wrong branch block size in '%s'", lookupName)
 	}
 	for _, s := range branch.AllSites {
 
@@ -107,13 +111,13 @@ func ValidateBranchSizes(branch *Branch, lookupName string, assumeSizes bool) er
 			switch {
 			case s.Knot.Block.BlockType == BLOCK_LUT:
 				if 3 != GetKnotInputSize(s.Knot) {
-					return fmt.Errorf("sum of sizes of the inputs (%d) != branch size (%d) in knot '%s' of branch '%s'",
-						GetKnotInputSize(s.Knot), GetBranchInputSize(s.Knot.Block.Branch), s.LookupName, lookupName)
+					return fmt.Errorf("sum of sizes of the inputs (%d) != {%d} in knot '%s' of branch '%s'",
+						GetKnotInputSize(s.Knot), 3, s.LookupName, lookupName)
 				}
 			case s.Knot.Block.BlockType == BLOCK_BRANCH:
-				if s.Knot.Block.Branch.Size != GetKnotInputSize(s.Knot) {
+				if s.Knot.Block.SizeIn != GetKnotInputSize(s.Knot) {
 					return fmt.Errorf("sum of sizes of the inputs (%d) != branch out size (%d) in knot '%s' of branch '%s'",
-						GetKnotInputSize(s.Knot), s.Knot.Block.Size, s.LookupName, lookupName)
+						GetKnotInputSize(s.Knot), s.Knot.Block.SizeOut, s.LookupName, lookupName)
 				}
 			case s.Knot.Block.BlockType == BLOCK_EXTERNAL:
 				panic("implement me")

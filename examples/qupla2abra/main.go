@@ -21,8 +21,9 @@ const (
 )
 
 func main() {
-	Logf(0, "Loading Qupla module from %v")
-	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(yamlPath + moduleName + ".yml")
+	fin := yamlPath + moduleName + ".yml"
+	Logf(0, "Loading Qupla module from %v", fin)
+	moduleYAML, err := readyaml.NewQuplaModuleFromYAML(fin)
 	if err != nil {
 		Logf(0, "Error while parsing YAML file: %v", err)
 		moduleYAML = nil
@@ -42,8 +43,9 @@ func main() {
 	codeUnit := cabra.NewCodeUnit()
 	module.GetAbra(codeUnit)
 
-	Logf(0, "------ validating entire code unit")
+	Logf(0, "------ calculating sizes")
 	vabra.CalcAllSizes(codeUnit)
+	Logf(0, "------ validating code unit")
 	errs := vabra.Validate(codeUnit, true)
 	if len(errs) == 0 {
 		Logf(0, "code unit validate OK")
@@ -129,7 +131,7 @@ func printSizes(codeUnit *abra.CodeUnit) {
 	names := make([]string, 0, len(codeUnit.Code.Blocks))
 	for _, b := range codeUnit.Code.Blocks {
 		names = append(names, b.LookupName)
-		blockMap[b.LookupName] = &sizeInfo{size: b.Size, assumedSize: b.AssumedSize}
+		blockMap[b.LookupName] = &sizeInfo{size: b.SizeOut, assumedSize: b.AssumedSize}
 	}
 	sort.Strings(names)
 	for _, n := range names {
