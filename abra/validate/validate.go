@@ -104,11 +104,19 @@ func ValidateBranchSizes(branch *Branch, lookupName string, assumeSizes bool) er
 			return fmt.Errorf("inconsistent site '%s' in branch '%s'", s.LookupName, lookupName)
 		}
 		if s.SiteType != SITE_INPUT && s.IsKnot {
-			if s.Knot.Block.BlockType == BLOCK_BRANCH {
-				if GetBranchInputSize(s.Knot.Block.Branch) != GetKnotInputSize(s.Knot) {
+			switch {
+			case s.Knot.Block.BlockType == BLOCK_LUT:
+				if 3 != GetKnotInputSize(s.Knot) {
 					return fmt.Errorf("sum of sizes of the inputs (%d) != branch size (%d) in knot '%s' of branch '%s'",
 						GetKnotInputSize(s.Knot), GetBranchInputSize(s.Knot.Block.Branch), s.LookupName, lookupName)
 				}
+			case s.Knot.Block.BlockType == BLOCK_BRANCH:
+				if s.Knot.Block.Branch.Size != GetKnotInputSize(s.Knot) {
+					return fmt.Errorf("sum of sizes of the inputs (%d) != branch out size (%d) in knot '%s' of branch '%s'",
+						GetKnotInputSize(s.Knot), s.Knot.Block.Size, s.LookupName, lookupName)
+				}
+			case s.Knot.Block.BlockType == BLOCK_EXTERNAL:
+				panic("implement me")
 			}
 		}
 	}

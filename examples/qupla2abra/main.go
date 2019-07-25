@@ -95,7 +95,8 @@ func main() {
 	Logf(0, "number of LUT blocks is '%d'", codeEcho.Code.NumLUTs)
 	Logf(0, "number of branch blocks is '%d'", codeEcho.Code.NumBranches)
 	Logf(0, "number of external blocks is '%d'", codeEcho.Code.NumExternalBlocks)
-
+	Logf(0, "first 40 trits of tritecho: %v ...", tritsecho[:40])
+	Logf(0, "last 40 trits of tritecho: ... %v", tritsecho[len(tritsecho)-40:])
 	Logf(0, "calculating sizes")
 	vabra.CalcAllSizes(codeEcho)
 

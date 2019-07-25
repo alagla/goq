@@ -5,6 +5,7 @@ import (
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
 	"github.com/lunfardo314/goq/abra/construct"
+	"github.com/lunfardo314/goq/cfg"
 )
 
 type tritReader struct {
@@ -121,6 +122,7 @@ func ParseBranchBlock(tReader *tritReader, codeUnit *abra.CodeUnit) (*branchSite
 	if err != nil {
 		return nil, err
 	}
+	cfg.Logf(0, "reading branch len %d trits", blen)
 	var trits Trits
 	trits, err = readNTrits(tReader, blen)
 	if err != nil {

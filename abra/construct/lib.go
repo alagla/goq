@@ -5,7 +5,7 @@ import (
 	. "github.com/lunfardo314/goq/abra"
 )
 
-const TRITCODE_VERSION = 0
+const TRITCODE_VERSION = 3
 
 func NewCodeUnit() *CodeUnit {
 	return &CodeUnit{
