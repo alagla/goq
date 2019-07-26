@@ -46,6 +46,12 @@ func main() {
 	Logf(0, "------ calculating sizes")
 	vabra.CalcAllSizes(codeUnit)
 	Logf(0, "------ validating code unit")
+
+	printSitesFun := func(block_idx int) bool {
+		return block_idx == 128
+	}
+	abra.PrintBlocks(codeUnit, printSitesFun, 2)
+
 	errs := vabra.Validate(codeUnit, true)
 	if len(errs) == 0 {
 		Logf(0, "code unit validate OK")

@@ -30,48 +30,6 @@ func Validate(codeUnit *CodeUnit, assumeSizes bool) []error {
 	}
 	return ret
 }
-
-type BranchStats struct {
-	NumSites      int
-	NumInputs     int
-	NumBodySites  int
-	NumStateSites int
-	NumOutputs    int
-	NumKnots      int
-	NumMerges     int
-	InputSizes    []int
-	InputSize     int
-}
-
-func GetStats(branch *Branch) *BranchStats {
-	ret := &BranchStats{
-		InputSizes: make([]int, 0, 5),
-	}
-	for _, s := range branch.AllSites {
-		switch s.SiteType {
-		case SITE_INPUT:
-			ret.NumInputs++
-			ret.InputSizes = append(ret.InputSizes, s.Size)
-		case SITE_BODY:
-			ret.NumBodySites++
-		case SITE_STATE:
-			ret.NumStateSites++
-		case SITE_OUTPUT:
-			ret.NumOutputs++
-		}
-		if s.IsKnot {
-			ret.NumKnots++
-		} else {
-			ret.NumMerges++
-		}
-	}
-	ret.NumSites = len(branch.AllSites)
-	for _, s := range ret.InputSizes {
-		ret.InputSize += s
-	}
-	return ret
-}
-
 func ValidateBranch(branch *Branch, lookupName string) error {
 	if branch.NumInputs+branch.NumBodySites+branch.NumStateSites+branch.NumOutputs != branch.NumSites {
 		return fmt.Errorf("something wrong with enumerating sites in branch '%s'", lookupName)
