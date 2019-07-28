@@ -1,7 +1,6 @@
 package validate
 
 import (
-	"fmt"
 	. "github.com/lunfardo314/goq/abra"
 )
 
@@ -64,9 +63,6 @@ func CalcSizesInBlock(block *Block) bool {
 }
 
 func CalcSizesInBranchBlock(block *Block) bool {
-	if block.Index == 36 {
-		fmt.Println("kuku")
-	}
 	if block.BlockType != BLOCK_BRANCH {
 		panic("inconsistency")
 	}

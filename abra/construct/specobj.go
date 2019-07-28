@@ -80,7 +80,7 @@ func GetConcatBlockForSize(codeUnit *CodeUnit, size int) *Block {
 	if ret != nil {
 		return ret
 	}
-	ret = MustAddNewBranchBlock(codeUnit, lookupName, size)
+	ret = MustAddNewBranchBlock(codeUnit, lookupName, "", size)
 	input := AddInputSite(ret.Branch, size)
 	output := NewMergeSite(size, "", input)
 
@@ -109,7 +109,7 @@ func GetSliceBranchBlock(codeUnit *CodeUnit, inputSize, offset, size int) *Block
 	if ret != nil {
 		return ret
 	}
-	ret = MustAddNewBranchBlock(codeUnit, lookupName, size)
+	ret = MustAddNewBranchBlock(codeUnit, lookupName, "", size)
 
 	if offset != 0 {
 		AddInputSite(ret.Branch, offset)
@@ -146,7 +146,7 @@ func GetNullifyBranchBlock(codeUnit *CodeUnit, size int, trueFalse bool) *Block 
 	if ret != nil {
 		return ret
 	}
-	ret = MustAddNewBranchBlock(codeUnit, lookupName, size)
+	ret = MustAddNewBranchBlock(codeUnit, lookupName, "", size)
 	AddInputSite(ret.Branch, 1) // condition
 	for i := 0; i < size; i++ {
 		AddInputSite(ret.Branch, 1) // arg

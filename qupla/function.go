@@ -200,7 +200,7 @@ func (def *Function) GetAbraBranchBlock(codeUnit *abra.CodeUnit) *abra.Block {
 	if ret != nil {
 		return ret
 	}
-	ret = cabra.MustAddNewBranchBlock(codeUnit, lookupName, def.Size())
+	ret = cabra.MustAddNewBranchBlock(codeUnit, lookupName, def.Name, def.Size())
 
 	for _, vi := range def.Sites {
 		if vi.IsParam {

@@ -89,6 +89,13 @@ func main() {
 		panic(err)
 	}
 
+	fname = siteDataDir + moduleName + ".abra.test"
+	Logf(0, "writing Abra tests to %s", fname)
+	err = module.WriteAbraTests(codeUnit, fname)
+	if err != nil {
+		panic(err)
+	}
+
 	var tritsecho trinary.Trits
 	tritsecho, err = abra.Trytes2Trits(trytecode)
 	Logf(0, "reading back %d trits from trytes", len(tritsecho))

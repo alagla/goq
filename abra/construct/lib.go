@@ -40,8 +40,9 @@ func AddNewLUTBlock(codeUnit *CodeUnit, strRepr string, name string) (*Block, er
 			Binary: BinaryEncodedLUTFromString(strRepr),
 			Name:   name,
 		},
-		LookupName:  strRepr,
-		AssumedSize: 1,
+		LookupName:   strRepr,
+		QuplaFunName: name,
+		AssumedSize:  1,
 	}
 	addBlock(codeUnit, block)
 	return block, nil
@@ -68,12 +69,13 @@ func FindBranchBlock(codeUnit *CodeUnit, lookupName string) *Block {
 	return nil
 }
 
-func MustAddNewBranchBlock(codeUnit *CodeUnit, lookupName string, assumedSize int) *Block {
+func MustAddNewBranchBlock(codeUnit *CodeUnit, lookupName string, quplaFunName string, assumedSize int) *Block {
 	if FindBranchBlock(codeUnit, lookupName) != nil {
 		panic(fmt.Errorf("repeating branch block with lookupName = '%s'", lookupName))
 	}
 	ret := AddNewBranchBlock(codeUnit, 0, 0, 0, 0)
 	ret.LookupName = lookupName
+	ret.QuplaFunName = quplaFunName
 	ret.AssumedSize = assumedSize
 	return ret
 }
@@ -248,4 +250,13 @@ func NewExternalBlock(external *ExternalBlock) *Block {
 		BlockType:     BLOCK_EXTERNAL,
 		ExternalBlock: external,
 	}
+}
+
+func FindBlockByQuplaName(codeUnit *CodeUnit, quplaName string) (int, *Block) {
+	for idx, b := range codeUnit.Code.Blocks {
+		if b.QuplaFunName == quplaName {
+			return idx, b
+		}
+	}
+	return -1, nil
 }

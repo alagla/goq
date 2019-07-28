@@ -208,8 +208,9 @@ type Block struct {
 	LUT           *LUT
 	ExternalBlock *ExternalBlock
 	// lookup name, compile time only
-	LookupName  string
-	SizeOut     int
-	SizeIn      int
-	AssumedSize int
+	LookupName   string
+	QuplaFunName string
+	SizeOut      int
+	SizeIn       int
+	AssumedSize  int
 }
