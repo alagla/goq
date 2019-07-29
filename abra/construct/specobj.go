@@ -165,3 +165,18 @@ func GetNullifyBranchBlock(codeUnit *CodeUnit, size int, trueFalse bool) *Block 
 	}
 	return ret
 }
+
+func GetConstTritVectorBlock(codeUnit *CodeUnit, val Trits) *Block {
+	lookupName := TritsToString(val) + "_const_branch"
+	ret := FindBranchBlock(codeUnit, lookupName)
+	if ret != nil {
+		return ret
+	}
+	ret = MustAddNewBranchBlock(codeUnit, lookupName, "", len(val))
+	AddInputSite(ret.Branch, 1) // any input
+	cs := GetTritVectorConstSite(codeUnit, ret.Branch, val)
+	output := NewMergeSite(len(val), lookupName+"_out", cs)
+	MustAddNewNoninputSite(ret.Branch, output)
+	MoveBodyToOutput(ret.Branch, output)
+	return ret
+}

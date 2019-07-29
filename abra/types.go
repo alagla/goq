@@ -130,6 +130,7 @@ type Branch struct {
 	NumBodySites  int
 	NumStateSites int
 	NumOutputs    int
+	Source        string
 }
 
 //site:

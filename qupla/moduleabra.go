@@ -84,13 +84,9 @@ func (module *QuplaModule) WriteAbraTests(codeUnit *abra.CodeUnit, fname string)
 		if !ok {
 			continue
 		}
-		isFloat := "0"
-		if exec.isFloat {
-			isFloat = "1"
-		}
 		abra_idx, _ := cabra.FindBlockByQuplaName(codeUnit, fun.FuncDef.Name)
-		_, err = fmt.Fprintf(w, "test %3d %3d %s %s %s %s // %s\n",
-			idx, abra_idx, concatArgs(exec), utils.TritsToString(exec.expected), boolStr(exec.isFloat), isFloat, exec.GetSource())
+		_, err = fmt.Fprintf(w, "test %3d %3d %s %s %s // %s\n",
+			idx, abra_idx, concatArgs(exec), utils.TritsToString(exec.expected), boolStr(exec.isFloat), exec.GetSource())
 		if err != nil {
 			return err
 		}
