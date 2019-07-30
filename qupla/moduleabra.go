@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/lunfardo314/goq/abra"
 	cabra "github.com/lunfardo314/goq/abra/construct"
+	"github.com/lunfardo314/goq/abra/generate"
 	vabra "github.com/lunfardo314/goq/abra/validate"
 	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/utils"
@@ -80,17 +81,30 @@ func (module *QuplaModule) WriteAbraTests(codeUnit *abra.CodeUnit, fname string)
 			continue
 		}
 
-		fun, ok := exec.Expr.(*FunctionExpr)
+		funExpr, ok := exec.Expr.(*FunctionExpr)
 		if !ok {
 			continue
 		}
-		abra_idx, _ := cabra.FindBlockByQuplaName(codeUnit, fun.FuncDef.Name)
-		_, err = fmt.Fprintf(w, "test %3d %3d %s %s %s // %s\n",
-			idx, abra_idx, concatArgs(exec), utils.TritsToString(exec.expected), boolStr(exec.isFloat), exec.GetSource())
+		abra_idx, _ := cabra.FindBlockByQuplaName(codeUnit, funExpr.FuncDef.Name)
+		input := ""
+		for _, subExpr := range funExpr.GetSubexpressions() {
+			if valExpr, ok := subExpr.(*ValueExpr); ok {
+				input += utils.TritsToString(valExpr.TritValue)
+			} else {
+				input += "?"
+			}
+		}
+		tst := &generate.AbraTest{
+			BlockIndex: abra_idx,
+			Input:      input,
+			Expected:   utils.TritsToString(exec.expected),
+			IsFloat:    exec.isFloat,
+			Comment:    exec.GetSource(),
+		}
+		err = generate.WriteAbraTest(w, tst, idx)
 		if err != nil {
 			return err
 		}
-
 	}
 	return nil
 }
