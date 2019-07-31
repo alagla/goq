@@ -135,7 +135,7 @@ func GetNullifyLUTBlock(codeUnit *CodeUnit, trueFalse bool) *Block {
 	if ret != nil {
 		return ret
 	}
-	return MustAddNewLUTBlock(codeUnit, strRepr, fmt.Sprintf("nullify_%v", trueFalse))
+	return MustAddNewLUTBlock(codeUnit, strRepr, fmt.Sprintf("nullify_%v_lut", trueFalse))
 }
 
 // finds of creates nullify branch block

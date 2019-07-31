@@ -48,6 +48,15 @@ func AddNewLUTBlock(codeUnit *CodeUnit, strRepr string, name string) (*Block, er
 	return block, nil
 }
 
+func FindBlock(codeUnit *CodeUnit, lookupName string) *Block {
+	for _, b := range codeUnit.Code.Blocks {
+		if b.LookupName == lookupName {
+			return b
+		}
+	}
+	return nil
+}
+
 func FindLUTBlock(codeUnit *CodeUnit, lookupName string) *Block {
 	for _, b := range codeUnit.Code.Blocks {
 		if b.BlockType == BLOCK_LUT && b.LookupName == lookupName {

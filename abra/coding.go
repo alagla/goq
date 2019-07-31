@@ -3,6 +3,7 @@ package abra
 import (
 	"fmt"
 	. "github.com/iotaledger/iota.go/trinary"
+	"github.com/lunfardo314/goq/utils"
 	"strings"
 )
 
@@ -13,22 +14,26 @@ const (
 	TRIT_NULL   = 0x0003
 )
 
+func MustTritToByte(t int8) byte {
+	switch t {
+	case -1:
+		return '-'
+	case 0:
+		return '0'
+	case 1:
+		return '1'
+	default:
+		panic("wrong trit")
+	}
+}
+
 func TritsToString(trits Trits) string {
 	if trits == nil {
 		return "<nil>"
 	}
 	b := make([]byte, len(trits), len(trits))
 	for i := range trits {
-		switch trits[i] {
-		case -1:
-			b[i] = '-'
-		case 0:
-			b[i] = '0'
-		case 1:
-			b[i] = '1'
-		default:
-			b[i] = '@'
-		}
+		b[i] = MustTritToByte(trits[i])
 	}
 	return string(b)
 }
@@ -155,48 +160,22 @@ func TritFromByteRepr(c byte) int8 {
 
 // true = 1, false = -
 
-// nullify true/false (return second arg when first is 1 (true) / - (false)
-// true  --> "@@-@@0@@1@@-@@0@@1@@-@@0@@1"
-// false --> "-@@0@@1@@-@@0@@1@@-@@0@@1@@"
-
-// --- = @ / -  (-13)
-// 0-- = @ / @  (-12)
-// 1-- = - / @  (-11)
-// -0- = @ / 0 (-10)
-// 00- = @ / @  (-9)
-// 10- = 0 / @  (-8)
-// -1- = @ / 1 (-7)
-// 01- = @ / @  (-6)
-// 11- = 1 / @  (-5)
-// --0 = @ / - (-4)
-// 0-0 = @ / @  (-3)
-// 1-0 = - / @  (-2)
-// -00 = @ / 0 (-1)
-// 000 = @ / @  (0)
-// 100 = 0 / @  (1)
-// -10 = @ / 1 (2)
-// 010 = @ / @  (3)
-// 110 = 1 / @  (4)
-// --1 = @ / - (5)
-// 0-1 = @ / @  (6)
-// 1-1 = - / @  (7)
-// -01 = @ / 0 (8)
-// 001 = @ / @  (9)
-// 101 = 0 / @  (10)
-// -11 = @ / 1 (11)
-// 011 = @ / @  (12)
-// 111 = 1 / @  (13)
-
 func GetNullifyLUTRepr(trueFalse bool) string {
+	ret := make([]byte, 27)
+	var cond int8
 	if trueFalse {
-		return "@@-@@0@@1@@-@@0@@1@@-@@0@@1"
+		cond = 1
 	} else {
-		return "-@@0@@1@@-@@0@@1@@-@@0@@1@@"
+		cond = -1
 	}
-}
-
-func MustEncodeTritsToBytes(trits Trits) []byte {
-	return []byte(MustTritsToTrytes(trits))
+	for i, tripl := range utils.GetTriplets() {
+		if tripl[0] == cond {
+			ret[i] = MustTritToByte(tripl[1])
+		} else {
+			ret[i] = '@'
+		}
+	}
+	return string(ret)
 }
 
 func TritEncodeLUTBinary(lutBin uint64) Trits {
@@ -204,14 +183,6 @@ func TritEncodeLUTBinary(lutBin uint64) Trits {
 	ret = PadTrits(ret, 35)
 	if len(ret) != 35 {
 		panic("wrong LUT tritcode")
-	}
-	return ret
-}
-
-func Bytes2Trits(bytes []byte) Trits {
-	ret := make(Trits, len(bytes))
-	for i, t := range bytes {
-		ret[i] = int8(t)
 	}
 	return ret
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/lunfardo314/goq/abra/construct"
 	"github.com/lunfardo314/goq/abra/generate"
 	"github.com/lunfardo314/goq/abra/validate"
-	"github.com/lunfardo314/goq/utils"
 	"io/ioutil"
 	"os"
 )
@@ -22,7 +21,7 @@ const (
 func main() {
 	fmt.Println("Generating test code unit...")
 	codeUnit := construct.NewCodeUnit()
-	constructObjects(codeUnit)
+	tests := constructObjectsAndTests(codeUnit)
 
 	fmt.Println("Calculating sizes...")
 	validate.CalcAllSizes(codeUnit)
@@ -68,11 +67,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	tests := createTests(codeUnit)
-	fmt.Printf("Generates %d tests\n", len(tests))
+
 	fname = siteDataDir + moduleName + ".abra.test"
 
-	fmt.Printf("Writing Abra tests to %s\n", fname)
+	assignBlockIndicesToTests(codeUnit, tests)
+
+	fmt.Printf("Writing %d Abra tests to %s\n", len(tests), fname)
 	err = writeTestsToFile(tests, fname)
 	if err != nil {
 		panic(err)
@@ -81,56 +81,14 @@ func main() {
 	fmt.Printf("Ciao..")
 }
 
-func constructObjects(codeUnit *abra.CodeUnit) {
-	construct.GetNullifyBranchBlock(codeUnit, 1, true)
-	construct.GetNullifyBranchBlock(codeUnit, 3, true)
-	construct.GetNullifyBranchBlock(codeUnit, 9, true)
-
-	construct.GetNullifyBranchBlock(codeUnit, 1, false)
-	construct.GetNullifyBranchBlock(codeUnit, 3, false)
-	construct.GetNullifyBranchBlock(codeUnit, 9, false)
-
-	construct.GetConcatBlockForSize(codeUnit, 1)
-	construct.GetConcatBlockForSize(codeUnit, 3)
-	construct.GetConcatBlockForSize(codeUnit, 9)
-
-	construct.GetSliceBranchBlock(codeUnit, 1, 0, 1)
-	construct.GetSliceBranchBlock(codeUnit, 3, 0, 1)
-	construct.GetSliceBranchBlock(codeUnit, 3, 0, 2)
-	construct.GetSliceBranchBlock(codeUnit, 3, 1, 2)
-	construct.GetSliceBranchBlock(codeUnit, 3, 0, 3)
-
-	construct.GetConstTritVectorBlock(codeUnit, trinary.Trits{0})
-	construct.GetConstTritVectorBlock(codeUnit, trinary.Trits{1})
-	construct.GetConstTritVectorBlock(codeUnit, trinary.Trits{-1})
-
-	construct.GetConstTritVectorBlock(codeUnit, trinary.Trits{-1, -1, -1})
-	construct.GetConstTritVectorBlock(codeUnit, trinary.Trits{-1, 0, 0})
-	construct.GetConstTritVectorBlock(codeUnit, trinary.Trits{1, 0, -1})
-}
-
-func createTests(codeUnit *abra.CodeUnit) []*generate.AbraTest {
-	ret := make([]*generate.AbraTest, 0, len(codeUnit.Code.Blocks))
-
-	// gen tests for luts
-	for _, b := range codeUnit.Code.Blocks {
-		if b.BlockType != abra.BLOCK_LUT {
-			continue
+func assignBlockIndicesToTests(codeUnit *abra.CodeUnit, tests []*generate.AbraTest) {
+	for _, t := range tests {
+		block := construct.FindBlock(codeUnit, t.Comment)
+		if block == nil {
+			panic("can't find " + t.Comment)
 		}
-		strRepr := abra.StringFromBinaryEncodedLUT(b.LUT.Binary)
-		for i, tripl := range utils.GetTriplets() {
-			t := generate.AbraTest{
-				BlockIndex: b.Index,
-				Input:      utils.TritsToString(tripl),
-				Expected:   string([]byte{[]byte(strRepr)[i]}),
-				IsFloat:    false,
-				Comment:    b.LookupName,
-			}
-			ret = append(ret, &t)
-		}
+		t.BlockIndex = block.Index
 	}
-
-	return ret
 }
 
 func writeTestsToFile(tests []*generate.AbraTest, fname string) error {
