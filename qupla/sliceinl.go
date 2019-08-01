@@ -3,6 +3,7 @@ package qupla
 import (
 	. "github.com/iotaledger/iota.go/trinary"
 	"github.com/lunfardo314/goq/abra"
+	"github.com/lunfardo314/goq/abra/construct"
 )
 
 type SliceInline struct {
@@ -16,7 +17,20 @@ type SliceInline struct {
 }
 
 func (e *SliceInline) GetAbraSite(branch *abra.Branch, codeUnit *abra.CodeUnit, lookupName string) *abra.Site {
-	panic("implement me")
+	expr := e.GetSubExpr(0)
+	theSite := expr.GetAbraSite(branch, codeUnit, lookupName)
+	if e.NoSlice {
+		// no actual slicing
+		return theSite
+	}
+	// for actual slicing we have to have a slicing branch
+	slicingBranchBlock := construct.GetSliceBranchBlock(codeUnit, expr.Size(), e.Offset, e.size)
+	var ret *abra.Site
+
+	ret = construct.NewKnotSite(e.Size(), lookupName+"inl_slice", slicingBranchBlock, theSite)
+	return construct.AddOrUpdateSite(branch, ret)
+
+	return ret
 }
 
 func NewSliceInline(sliceExpr *SliceExpr, expr ExpressionInterface) *SliceInline {

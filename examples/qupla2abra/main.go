@@ -10,6 +10,7 @@ import (
 	"github.com/lunfardo314/goq/analyzeyaml"
 	. "github.com/lunfardo314/goq/cfg"
 	"github.com/lunfardo314/goq/readyaml"
+	"github.com/lunfardo314/goq/transform"
 	"io/ioutil"
 	"sort"
 )
@@ -36,6 +37,11 @@ func main() {
 		return
 	}
 	module.PrintStats()
+
+	stats1 := make(map[string]int)
+	transform.OptimizeModule(module, stats1)
+	Logf(0, "Optimization stats for %v (1st optimization)", moduleName)
+	LogStats(0, stats1)
 
 	Logf(0, "------------------------")
 	Logf(0, "generating Abra code")
